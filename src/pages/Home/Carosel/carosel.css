@@ -86,7 +86,7 @@
   border: none;
   width: 10px;
   height: 10px;
-  background: #c5c5c5;
+  background: #757575;
   border-radius: 50%;
   margin: 0 5px;
   padding: 5px;
@@ -98,7 +98,7 @@
 }
 
 .dot.active {
-  background: #000;
+  background: #FFF;
 }
 
 .arrowContainer {
