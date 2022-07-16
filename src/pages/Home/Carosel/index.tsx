@@ -50,7 +50,7 @@ const Carosel = ({ children, className, slideContainerClass }: CaroselProps) => 
   return (
     <div className={className}>
       <div className="navigation-wrapper shadow-2xl">
-        <div ref={sliderRef} className={`keen-slider w-full min-h-[20vh] ${slideContainerClass}`} onKeyUp={handleKeyUp} tabIndex={0}>
+        <div ref={sliderRef} className={`keen-slider w-full h-[30vh] min-h-[10em] ${slideContainerClass}`} onKeyUp={handleKeyUp} tabIndex={0}>
           {children}
         </div>
         {loaded && instanceRef.current && (
