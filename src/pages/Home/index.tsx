@@ -1,24 +1,21 @@
 import Text from '@/misc/Text';
 import Carosel from './Carosel';
-import Slide from './Carosel/Slide';
+import Frontend from './Carosel/Slides/Frontend';
 
 const txt = Text.home;
 
 const Home = () => (
-  <div className="bg-slate-900">
-    <Carosel className="h-[25vh]">
-      <Slide className="">
-        <div>hi</div>
-      </Slide>
-      <Slide className="bg-white">
-        <div>hi</div>
-      </Slide>
+  <div className="h-full">
+    <div className="text-5xl text-center py-5 text-white h-[10vh] min-h-[2em] min-w-fit">{txt.title}</div>
+    <Carosel className="h-[35vh] min-h-[5em]">
+      <Frontend />
+      <Frontend />
     </Carosel>
-    <div className=" h-[75vh]">
-      <div className="w-screen h-screen grid grid-cols-2 align-middle justify-center ">
-        <div className="text-2xl text-center text-white bg-slate-700 m-auto p-5 rounded-xl max-w-[45vw]">{txt.content}</div>
-        <div className="text-5xl text-center m-auto text-white">{txt.title}</div>
-      </div>
+    <div className="min-h-[5em] grid 2xl:grid-cols-3 md:grid-cols-2 grid-cols-1 align-middle justify-center gap-4 p-5">
+      <div className="text-2xl text-center text-white bg-slate-700 p-5 rounded-xl md:max-w-[45vw] row-span-2">{txt.content}</div>
+      <div className="h-[51vh] text-2xl text-center text-white bg-slate-700 p-5 rounded-xl md:max-w-[45vw] order-2">{txt.content}</div>
+      <div className="h-[50vh] text-2xl text-center text-white bg-slate-700 p-5 rounded-xl md:max-w-[45vw] order-2">{txt.content}</div>
+      <div className="h-[50vh] text-2xl text-center text-white bg-slate-700 p-5 rounded-xl md:max-w-[45vw] order-2">{txt.content}</div>
     </div>
   </div>
 
