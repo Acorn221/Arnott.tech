@@ -11,7 +11,7 @@ const Slide = ({
   children,
 }: SlideProps) => (
   <div className={`keen-slider__slide text-center flex w-full items-center min-h-[30vh] bg-slate-400 ${className}`}>
-    <div className="m-auto">{children}</div>
+    {children}
   </div>
 );
 
