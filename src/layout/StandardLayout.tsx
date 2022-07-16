@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router';
 
 const StandardLayout = () => (
-  <div className="overflow-x-hidden">
+  <div className="h-full">
     <Outlet />
   </div>
 );
