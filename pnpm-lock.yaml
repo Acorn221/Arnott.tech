@@ -2,6 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@animxyz/core': ^0.6.6
+  '@animxyz/react': ^0.6.6
   '@egjs/react-flicking': ^4.7.2
   '@types/node': ^17.0.35
   '@types/react': ^18.0.0
@@ -34,6 +35,7 @@ specifiers:
 
 dependencies:
   '@animxyz/core': 0.6.6
+  '@animxyz/react': 0.6.6_biqbaboplfbrettd7655fr4n2y
   '@egjs/react-flicking': 4.9.1
   clsx: 1.2.1
   devicon: github.com/devicons/devicon/1119b9f84c0290e0f0b38982099a2bd027a48bf1
@@ -78,6 +80,20 @@ packages:
 
   /@animxyz/core/0.6.6:
     resolution: {integrity: sha512-NtAA/G0Gq3hzAiL6yuE/4U8IgHMPUl3MxbWUbhO443T9UCsf9rBY94P5aK79Zd+/529FeoNdDphIOcOZLsI2sA==}
+    dev: false
+
+  /@animxyz/react/0.6.6_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-2Akz++LtrSFi6iunRvXu4cAYcF2MwO+ec8vSrs+FIiRTzxC5sUwbQzyZzNj05VI7+Fm4X/lw5krNijmGMqEBAA==}
+    peerDependencies:
+      react: ^17.0.2
+      react-dom: ^17.0.2
+    dependencies:
+      '@animxyz/core': 0.6.6
+      clsx: 1.2.1
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-transition-group: 4.4.2_biqbaboplfbrettd7655fr4n2y
     dev: false
 
   /@babel/code-frame/7.18.6:
@@ -968,7 +984,6 @@ packages:
 
   /csstype/3.1.0:
     resolution: {integrity: sha512-uX1KG+x9h5hIJsaKR9xHUeUraxf8IODOwq9JLNPq6BwB04a/xgpq3rcx47l5BZu5zBPlgD342tdke3Hom/nJRA==}
-    dev: true
 
   /damerau-levenshtein/1.0.8:
     resolution: {integrity: sha512-sdQSFB7+llfUcQHUQO3+B8ERRj0Oa4w9POWMI/puGtuf7gFywGmkaLCElnudfTiKZV+NvHqL0ifzdrI8Ro7ESA==}
@@ -1062,6 +1077,13 @@ packages:
     dependencies:
       esutils: 2.0.3
     dev: true
+
+  /dom-helpers/5.2.1:
+    resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
+    dependencies:
+      '@babel/runtime': 7.18.6
+      csstype: 3.1.0
+    dev: false
 
   /electron-to-chromium/1.4.192:
     resolution: {integrity: sha512-8nCXyIQY9An88NXAp+PuPy5h3/w5ZY7Iu2lag65Q0XREprcat5F8gKhoHsBUnQcFuCRnmevpR8yEBYRU3d2HDw==}
@@ -2439,6 +2461,20 @@ packages:
       react: ^16.3.0 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 18.2.0
+    dev: false
+
+  /react-transition-group/4.4.2_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-/RNYfRAMlZwDSr6z4zNKV6xu53/e2BuaBbGhbyYIXTrmgu/bGHzmqOs7mJSJBHy9Ud+ApHx3QjrkKSp1pxvlFg==}
+    peerDependencies:
+      react: '>=16.6.0'
+      react-dom: '>=16.6.0'
+    dependencies:
+      '@babel/runtime': 7.18.6
+      dom-helpers: 5.2.1
+      loose-envify: 1.4.0
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react/18.2.0:
