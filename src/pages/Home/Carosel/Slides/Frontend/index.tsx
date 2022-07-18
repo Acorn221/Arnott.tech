@@ -5,6 +5,7 @@ import JavascriptIcon from 'devicon/icons/javascript/javascript-plain.svg';
 import EslintIcon from 'devicon/icons/eslint/eslint-original.svg';
 import MaterialUiIcon from 'devicon/icons/materialui/materialui-original.svg';
 import ReduxIcon from 'devicon/icons/redux/redux-original.svg';
+
 import Text from '@/misc/Text';
 import Slide from '../Slide';
 
@@ -25,6 +26,7 @@ const Frontend = () => (
           <img src={ReduxIcon} className="h-20" />
         </div>
       </div>
+
       <div className="flex-1 align-middle m-auto">
         <div className="p-3 mr-6 md:mr-12 text-xl md:text-3xl">{txt.text}</div>
       </div>
