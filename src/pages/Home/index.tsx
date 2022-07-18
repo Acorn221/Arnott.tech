@@ -6,7 +6,7 @@ import Tools from './Carosel/Slides/Tools';
 
 const txt = Text.home;
 
-const fadeAnimation = 'fade in-out duration-4';
+const fadeAnimation = 'fade in-out delay-4 duration-4';
 
 const Home = () => (
   <div className="h-full">
