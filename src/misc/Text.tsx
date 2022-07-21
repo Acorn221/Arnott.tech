@@ -2,7 +2,7 @@ const Text = {
   home: {
     title: 'James Arnott',
     boxes: [
-      "Hi, I'm a Computer Science Student / Web Developer "
+      "Hi, I'm a Computer Science Student / Software Developer "
       + "from Royal Holloway, University of London. I'm currently "
       + 'in my final year of studies there. I like doing full stack '
       + 'web development and doing web-based projects mainly.',
