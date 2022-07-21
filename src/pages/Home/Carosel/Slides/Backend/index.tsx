@@ -1,12 +1,15 @@
+import { XyzTransitionGroup } from '@animxyz/react';
+
 import TypeScriptIcon from 'devicon/icons/typescript/typescript-plain.svg';
 import JavascriptIcon from 'devicon/icons/javascript/javascript-plain.svg';
 import GraphQLIcon from 'devicon/icons/graphql/graphql-plain.svg';
 import PostgresIcon from 'devicon/icons/postgresql/postgresql-plain.svg';
 import FlaskIcon from 'devicon/icons/flask/flask-original.svg';
 import GoIcon from 'devicon/icons/go/go-original-wordmark.svg';
-import { FaAws } from 'react-icons/fa';
-import { SiNextdotjs } from 'react-icons/si';
-import { DiPython, DiMysql } from 'react-icons/di';
+import PythonIcon from 'devicon/icons/python/python-original.svg';
+import MySQLIcon from 'devicon/icons/mysql/mysql-original.svg';
+import NextJSIcon from 'devicon/icons/nextjs/nextjs-line.svg';
+import AWSIcon from 'devicon/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg';
 import LambdaIcon from './assets/lambda.svg';
 import DynamoDBIcon from './assets/dynamoDB.svg';
 
@@ -21,22 +24,22 @@ const iconStyles = `h-[${iconVh}]`;
 
 const Backend = () => (
   <Slide className="bg-gradient-to-r from-yellow-700 to-red-700 text-white text-3xl">
-    <div className="flex w-full h-full">
-      <div className="flex-1 h-full flex justify-center align-middle ">
-        <div className="m-auto brightness-0 invert grid grid-cols-4 gap-2 ">
-          <img src={TypeScriptIcon} className={iconStyles} />
-          <img src={JavascriptIcon} className={iconStyles} />
-          <img src={GraphQLIcon} className={iconStyles} />
-          <img src={PostgresIcon} className={iconStyles} />
-          <DiPython size={iconVh} />
-          <img src={FlaskIcon} className={iconStyles} />
-          <img src={GoIcon} className={iconStyles} />
-          <DiMysql size={iconVh} />
-          <SiNextdotjs size={iconVh} />
-          <FaAws size={iconVh} />
-          <img src={DynamoDBIcon} className={iconStyles} />
-          <img src={LambdaIcon} className={iconStyles} />
-        </div>
+    <div className="flex w-full h-full md:flex-row flex-col-reverse">
+      <div className="flex-1 h-full flex justify-center align-middle">
+        <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 p-10">
+          <img src={TypeScriptIcon} style={{ height: iconVh }} />
+          <img src={JavascriptIcon} style={{ height: iconVh }} />
+          <img src={GraphQLIcon} style={{ height: iconVh }} />
+          <img src={PostgresIcon} style={{ height: iconVh }} />
+          <img src={PythonIcon} style={{ height: iconVh }} />
+          <img src={FlaskIcon} style={{ height: iconVh }} />
+          <img src={GoIcon} style={{ height: iconVh }} />
+          <img src={MySQLIcon} style={{ height: iconVh }} />
+          <img src={NextJSIcon} style={{ height: iconVh }} />
+          <img src={AWSIcon} style={{ height: iconVh }} />
+          <img src={DynamoDBIcon} style={{ height: iconVh, width: iconVh }} />
+          <img src={LambdaIcon} style={{ height: iconVh, width: iconVh }} />
+        </XyzTransitionGroup>
       </div>
 
       <div className="flex-1 align-middle m-auto">
