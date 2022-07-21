@@ -16,20 +16,18 @@ const txt = Text.home.slides.frontend;
 
 const iconVh = '8vh';
 
-const iconStyles = `h-[${iconVh}]`;
-
 const Frontend = () => (
   <Slide className="bg-gradient-to-r from-yellow-700 to-red-700 text-white text-3xl">
-    <div className="flex w-full h-full">
-      <div className="flex-1 h-full flex justify-center align-middle ">
-        <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 ">
-          <img src={TypeScriptIcon} className={iconStyles} />
-          <img src={JavascriptIcon} className={iconStyles} />
-          <img src={ReactIcon} className={iconStyles} />
-          <img src={TailwindCss} className={iconStyles} />
-          <img src={ReduxIcon} className={iconStyles} />
-          <img src={MaterialUiIcon} className={iconStyles} />
-          <img src={JestIcon} className={iconStyles} />
+    <div className="flex w-full h-full md:flex-row flex-col-reverse">
+      <div className="flex-1 h-full flex justify-center align-middle">
+        <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 p-10">
+          <img src={TypeScriptIcon} style={{ height: iconVh }} />
+          <img src={JavascriptIcon} style={{ height: iconVh }} />
+          <img src={ReactIcon} style={{ height: iconVh }} />
+          <img src={TailwindCss} style={{ height: iconVh }} />
+          <img src={ReduxIcon} style={{ height: iconVh }} />
+          <img src={MaterialUiIcon} style={{ height: iconVh }} />
+          <img src={JestIcon} style={{ height: iconVh }} />
         </XyzTransitionGroup>
       </div>
 
