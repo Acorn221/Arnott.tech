@@ -18,31 +18,29 @@ import Slide from '../Slide';
 
 const txt = Text.home.slides.backend;
 
-const iconVh = '8vh';
-
-const iconStyles = `h-[${iconVh}]`;
+const iconStyles = 'h-[12vmin] md:h-[8vh]';
 
 const Backend = () => (
   <Slide className="bg-gradient-to-r from-yellow-700 to-red-700 text-white text-3xl">
     <div className="flex w-full h-full md:flex-row flex-col-reverse">
-      <div className="flex-1 h-full flex justify-center align-middle">
-        <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 p-10">
-          <img src={TypeScriptIcon} style={{ height: iconVh }} />
-          <img src={JavascriptIcon} style={{ height: iconVh }} />
-          <img src={GraphQLIcon} style={{ height: iconVh }} />
-          <img src={PostgresIcon} style={{ height: iconVh }} />
-          <img src={PythonIcon} style={{ height: iconVh }} />
-          <img src={FlaskIcon} style={{ height: iconVh }} />
-          <img src={GoIcon} style={{ height: iconVh }} />
-          <img src={MySQLIcon} style={{ height: iconVh }} />
-          <img src={NextJSIcon} style={{ height: iconVh }} />
-          <img src={AWSIcon} style={{ height: iconVh }} />
-          <img src={DynamoDBIcon} style={{ height: iconVh, width: iconVh }} />
-          <img src={LambdaIcon} style={{ height: iconVh, width: iconVh }} />
+      <div className="flex-auto h-full flex justify-center align-middle">
+        <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-10">
+          <img src={TypeScriptIcon} className={iconStyles} />
+          <img src={JavascriptIcon} className={iconStyles} />
+          <img src={GraphQLIcon} className={iconStyles} />
+          <img src={PostgresIcon} className={iconStyles} />
+          <img src={PythonIcon} className={iconStyles} />
+          <img src={FlaskIcon} className={iconStyles} />
+          <img src={GoIcon} className={iconStyles} />
+          <img src={MySQLIcon} className={iconStyles} />
+          <img src={NextJSIcon} className={iconStyles} />
+          <img src={AWSIcon} className={iconStyles} />
+          <img src={DynamoDBIcon} className={iconStyles} />
+          <img src={LambdaIcon} className={iconStyles} />
         </XyzTransitionGroup>
       </div>
 
-      <div className="flex-1 align-middle m-auto">
+      <div className="md:flex-1 flex-none align-middle m-auto">
         <div className="p-3 mr-6 md:mr-12 text-xl md:text-3xl">{txt.text}</div>
       </div>
     </div>
