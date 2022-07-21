@@ -18,7 +18,7 @@ import Slide from '../Slide';
 
 const txt = Text.home.slides.backend;
 
-const iconStyles = 'h-[12vmin] md:h-[8vh]';
+const iconStyles = 'h-[12vmin] max-h-[8vh]';
 
 const Backend = () => (
   <Slide className="bg-gradient-to-r from-yellow-700 to-red-700 text-white text-3xl">
