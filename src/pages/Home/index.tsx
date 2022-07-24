@@ -19,7 +19,7 @@ const Home = () => (
     <XyzTransition appear xyz={`${fadeAnimation} up-2`}>
       <div>
         <Carosel className="h-[35vh] min-h-[5em]">
-          <Backend index={0} />
+          <Frontend index={0} />
           <Frontend index={1} />
 
           {/* <Tools /> */}

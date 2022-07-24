@@ -11,6 +11,7 @@ import { useContext, useEffect, useState } from 'react';
 import { CaroselContext } from '@/pages/Home/Carosel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
+import IconContainer from '../util/IconContainer';
 
 const txt = Text.home.slides.frontend;
 
@@ -36,8 +37,14 @@ const Frontend = ({ index }: FrontendInterface) => {
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-10">
-            <img src={TypeScriptIcon} className={iconStyles} />
+          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10">
+            <IconContainer icon={TypeScriptIcon} tooltipText="Typescript" />
+            <IconContainer icon={JavascriptIcon} tooltipText="Javascript" />
+            <IconContainer icon={ReactIcon} tooltipText="React" />
+            <IconContainer icon={MaterialUiIcon} tooltipText="Material UI" />
+            <IconContainer icon={ReduxIcon} tooltipText="Redux" />
+            <IconContainer icon={TailwindCss} tooltipText="Tailwind CSS" />
+            <IconContainer icon={JestIcon} tooltipText="Jest" />
             <img src={JavascriptIcon} className={iconStyles} />
             <img src={ReactIcon} className={iconStyles} />
             <img src={TailwindCss} className={iconStyles} />
