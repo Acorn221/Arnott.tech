@@ -10,11 +10,7 @@ const txt = Text.home.slides.backend;
 
 const iconStyles = 'h-[9vmin] max-h-[8vh] min-h-[6vh]';
 
-interface BackendInterface {
-  index: number;
-}
-
-const Backend = ({ index }: BackendInterface) => {
+const Backend = ({ index }: {index: number}) => {
   const currentSlide = useContext(CaroselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {

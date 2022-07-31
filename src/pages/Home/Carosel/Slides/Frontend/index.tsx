@@ -11,11 +11,7 @@ const txt = Text.home.slides.frontend;
 
 const iconStyles = 'h-[12vmin] max-h-[8vh]';
 
-interface FrontendInterface {
-  index: number;
-}
-
-const Frontend = ({ index }: FrontendInterface) => {
+const Frontend = ({ index }: {index: number}) => {
   const currentSlide = useContext(CaroselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
