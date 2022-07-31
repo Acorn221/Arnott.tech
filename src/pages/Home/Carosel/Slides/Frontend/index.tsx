@@ -15,7 +15,42 @@ import IconContainer from '../util/IconContainer';
 
 const txt = Text.home.slides.frontend;
 
-const iconStyles = 'h-[12vmin] max-h-[10vh]';
+interface IconInterface {
+  icon: string;
+  tooltipText: string;
+}
+
+/**
+ * The icons array,
+ * which contains the icons to be displayed in the carosel.
+ * There is no need for translation with these names.
+ */
+const icons: IconInterface[] = [
+  {
+    icon: TypeScriptIcon,
+    tooltipText: 'TypeScript',
+  },
+  {
+    icon: JavascriptIcon,
+    tooltipText: 'Javascript',
+  },
+  {
+    icon: ReactIcon,
+    tooltipText: 'React',
+  },
+  {
+    icon: MaterialUiIcon,
+    tooltipText: 'Material-UI',
+  },
+  {
+    icon: ReduxIcon,
+    tooltipText: 'Redux',
+  },
+  {
+    icon: JestIcon,
+    tooltipText: 'Jest',
+  },
+];
 
 interface FrontendInterface {
   index: number;
@@ -37,20 +72,15 @@ const Frontend = ({ index }: FrontendInterface) => {
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10">
-            <IconContainer icon={TypeScriptIcon} tooltipText="Typescript" />
-            <IconContainer icon={JavascriptIcon} tooltipText="Javascript" />
-            <IconContainer icon={ReactIcon} tooltipText="React" />
-            <IconContainer icon={MaterialUiIcon} tooltipText="Material UI" />
-            <IconContainer icon={ReduxIcon} tooltipText="Redux" />
-            <IconContainer icon={TailwindCss} tooltipText="Tailwind CSS" />
-            <IconContainer icon={JestIcon} tooltipText="Jest" />
-            <img src={JavascriptIcon} className={iconStyles} />
-            <img src={ReactIcon} className={iconStyles} />
-            <img src={TailwindCss} className={iconStyles} />
-            <img src={ReduxIcon} className={iconStyles} />
-            <img src={MaterialUiIcon} className={iconStyles} />
-            <img src={JestIcon} className={iconStyles} />
+          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4">
+            { /* Unfortunatley there is a glitch with the animXYZ animation library, and the div parents have to be in this component */}
+            {
+              icons.map((icon) => (
+                <div>
+                  <IconContainer icon={icon.icon} tooltipText={icon.tooltipText} />
+                </div>
+              ))
+            }
           </XyzTransitionGroup>
           )}
         </div>
