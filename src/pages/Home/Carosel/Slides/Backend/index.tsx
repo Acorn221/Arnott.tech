@@ -1,23 +1,10 @@
 import { XyzTransitionGroup } from '@animxyz/react';
-
-import TypeScriptIcon from 'devicon/icons/typescript/typescript-plain.svg';
-import JavascriptIcon from 'devicon/icons/javascript/javascript-plain.svg';
-import GraphQLIcon from 'devicon/icons/graphql/graphql-plain.svg';
-import PostgresIcon from 'devicon/icons/postgresql/postgresql-plain.svg';
-import FlaskIcon from 'devicon/icons/flask/flask-original.svg';
-import GoIcon from 'devicon/icons/go/go-original-wordmark.svg';
-import PythonIcon from 'devicon/icons/python/python-original.svg';
-import MySQLIcon from 'devicon/icons/mysql/mysql-original.svg';
-import NextJSIcon from 'devicon/icons/nextjs/nextjs-line.svg';
-import AWSIcon from 'devicon/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg';
 import { useContext, useEffect, useState } from 'react';
-import LambdaIcon from './assets/lambda.svg';
-import DynamoDBIcon from './assets/dynamoDB.svg';
-
 import { CaroselContext } from '@/pages/Home/Carosel/';
-
 import Text from '@/misc/Text';
 import Slide from '../Slide';
+import IconContainer from '../util/IconContainer';
+import { BackendIcons } from '../util/Icons';
 
 const txt = Text.home.slides.backend;
 
@@ -44,18 +31,13 @@ const Backend = ({ index }: BackendInterface) => {
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
           <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-auto">
-            <img src={TypeScriptIcon} className={iconStyles} />
-            <img src={JavascriptIcon} className={iconStyles} />
-            <img src={GraphQLIcon} className={iconStyles} />
-            <img src={PostgresIcon} className={iconStyles} />
-            <img src={PythonIcon} className={iconStyles} />
-            <img src={FlaskIcon} className={iconStyles} />
-            <img src={GoIcon} className={iconStyles} />
-            <img src={MySQLIcon} className={iconStyles} />
-            <img src={NextJSIcon} className={iconStyles} />
-            <img src={AWSIcon} className={iconStyles} />
-            <img src={DynamoDBIcon} className={iconStyles} />
-            <img src={LambdaIcon} className={iconStyles} />
+            {
+              BackendIcons.map((icon) => (
+                <div>
+                  <IconContainer icon={icon.icon} tooltipText={icon.tooltipText} iconStyles={iconStyles} />
+                </div>
+              ))
+            }
           </XyzTransitionGroup>
           )}
         </div>

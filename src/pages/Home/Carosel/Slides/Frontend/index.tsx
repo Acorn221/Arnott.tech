@@ -1,13 +1,7 @@
 import { XyzTransitionGroup } from '@animxyz/react';
 
-import TailwindCss from 'devicon/icons/tailwindcss/tailwindcss-plain.svg';
-import ReactIcon from 'devicon/icons/react/react-original.svg';
-import TypeScriptIcon from 'devicon/icons/typescript/typescript-plain.svg';
-import JavascriptIcon from 'devicon/icons/javascript/javascript-plain.svg';
-import JestIcon from 'devicon/icons/jest/jest-plain.svg';
-import MaterialUiIcon from 'devicon/icons/materialui/materialui-original.svg';
-import ReduxIcon from 'devicon/icons/redux/redux-original.svg';
 import { useContext, useEffect, useState } from 'react';
+import { FrontendIcons } from '../util/Icons';
 import { CaroselContext } from '@/pages/Home/Carosel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
@@ -15,42 +9,7 @@ import IconContainer from '../util/IconContainer';
 
 const txt = Text.home.slides.frontend;
 
-interface IconInterface {
-  icon: string;
-  tooltipText: string;
-}
-
-/**
- * The icons array,
- * which contains the icons to be displayed in the carosel.
- * There is no need for translation with these names.
- */
-const icons: IconInterface[] = [
-  {
-    icon: TypeScriptIcon,
-    tooltipText: 'TypeScript',
-  },
-  {
-    icon: JavascriptIcon,
-    tooltipText: 'Javascript',
-  },
-  {
-    icon: ReactIcon,
-    tooltipText: 'React',
-  },
-  {
-    icon: MaterialUiIcon,
-    tooltipText: 'Material-UI',
-  },
-  {
-    icon: ReduxIcon,
-    tooltipText: 'Redux',
-  },
-  {
-    icon: JestIcon,
-    tooltipText: 'Jest',
-  },
-];
+const iconStyles = 'h-[12vmin] max-h-[8vh]';
 
 interface FrontendInterface {
   index: number;
@@ -75,9 +34,9 @@ const Frontend = ({ index }: FrontendInterface) => {
           <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4">
             { /* Unfortunatley there is a glitch with the animXYZ animation library, and the div parents have to be in this component */}
             {
-              icons.map((icon) => (
+              FrontendIcons.map((icon) => (
                 <div>
-                  <IconContainer icon={icon.icon} tooltipText={icon.tooltipText} />
+                  <IconContainer icon={icon.icon} tooltipText={icon.tooltipText} iconStyles={iconStyles} />
                 </div>
               ))
             }
