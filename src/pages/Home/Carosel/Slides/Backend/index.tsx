@@ -8,7 +8,7 @@ import { BackendIcons } from '../util/Icons';
 
 const txt = Text.home.slides.backend;
 
-const iconStyles = 'h-[12vmin] max-h-[8vh]';
+const iconStyles = 'h-[9vmin] max-h-[8vh] min-h-[6vh]';
 
 interface BackendInterface {
   index: number;
@@ -30,7 +30,7 @@ const Backend = ({ index }: BackendInterface) => {
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-auto">
+          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-auto p-1">
             {
               BackendIcons.map((icon) => (
                 <div>
