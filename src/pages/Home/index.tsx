@@ -9,6 +9,11 @@ const txt = Text.home;
 
 const fadeAnimation = 'fade in-out delay-4 duration-24';
 
+const slides = [
+  Frontend,
+  Backend,
+];
+
 const Home = () => (
   <div className="h-full">
     <XyzTransition appear xyz={`${fadeAnimation} down-2`}>
@@ -19,10 +24,11 @@ const Home = () => (
     <XyzTransition appear xyz={`${fadeAnimation} up-2`}>
       <div>
         <Carosel className="h-[35vh] min-h-[5em]">
-          <Frontend index={0} />
-          <Backend index={1} />
-
-          {/* <Tools /> */}
+          {
+            slides.map((Slide, index) => (
+              <Slide index={index} />
+            ))
+          }
         </Carosel>
       </div>
     </XyzTransition>
