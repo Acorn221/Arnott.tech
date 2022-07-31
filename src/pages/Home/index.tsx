@@ -2,7 +2,7 @@ import { XyzTransition, XyzTransitionGroup } from '@animxyz/react';
 import Text from '@/misc/Text';
 import Carosel from './Carosel';
 import Frontend from './Carosel/Slides/Frontend';
-import Tools from './Carosel/Slides/Tools';
+import DevTools from './Carosel/Slides/DevTools';
 import Backend from './Carosel/Slides/Backend';
 
 const txt = Text.home;
@@ -12,6 +12,7 @@ const fadeAnimation = 'fade in-out delay-4 duration-24';
 const slides = [
   Frontend,
   Backend,
+  DevTools,
 ];
 
 const Home = () => (

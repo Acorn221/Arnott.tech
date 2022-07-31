@@ -15,6 +15,9 @@ const Text = {
       backend: {
         text: 'The Backend Web Technologies I\'m Familiar With',
       },
+      devTools: {
+        text: 'The DevTools I\'m Familiar With',
+      },
     },
   },
 };
