@@ -12,11 +12,12 @@ const StyledToolTip = styled(({ className, ...props }: TooltipProps) => (
 interface IconContainerProps {
 	icon: string;
 	tooltipText: string;
+  iconStyles?: string;
 }
 
-const IconContainer = ({ icon, tooltipText }: IconContainerProps) => (
+const IconContainer = ({ icon, tooltipText, iconStyles }: IconContainerProps) => (
   <StyledToolTip title={tooltipText} placement="top" arrow>
-    <img src={icon} className="h-[12vmin] max-h-[8vh]" />
+    <img src={icon} className={iconStyles} />
   </StyledToolTip>
 );
 
