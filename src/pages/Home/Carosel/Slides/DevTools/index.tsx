@@ -1,7 +1,7 @@
 import { XyzTransitionGroup } from '@animxyz/react';
 
 import { useContext, useEffect, useState } from 'react';
-import {  DevToolsIcons } from '../util/Icons';
+import { DevToolsIcons } from '../util/Icons';
 import { CaroselContext } from '@/pages/Home/Carosel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
