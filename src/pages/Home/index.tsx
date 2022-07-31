@@ -20,7 +20,7 @@ const Home = () => (
       <div>
         <Carosel className="h-[35vh] min-h-[5em]">
           <Frontend index={0} />
-          <Frontend index={1} />
+          <Backend index={1} />
 
           {/* <Tools /> */}
         </Carosel>
