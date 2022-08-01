@@ -4,6 +4,7 @@ import Carosel from './Carosel';
 import Frontend from './Carosel/Slides/Frontend';
 import DevTools from './Carosel/Slides/DevTools';
 import Backend from './Carosel/Slides/Backend';
+import OtherPrograms from './Carosel/Slides/OtherPrograms';
 
 const txt = Text.home;
 
@@ -13,6 +14,7 @@ const slides = [
   Frontend,
   Backend,
   DevTools,
+  OtherPrograms,
 ];
 
 const Home = () => (

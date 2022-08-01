@@ -18,6 +18,9 @@ const Text = {
       devTools: {
         text: 'The DevTools I\'m Familiar With',
       },
+      otherPrograms: {
+        text: 'Other Programs I\'m comfortable with',
+      },
     },
   },
 };
