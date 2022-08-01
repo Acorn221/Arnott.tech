@@ -16,12 +16,19 @@ import GitIcon from 'devicon/icons/git/git-original.svg';
 import VScodeIcon from 'devicon/icons/vscode/vscode-original.svg';
 import ChromeIcon from 'devicon/icons/chrome/chrome-plain.svg';
 import JestIcon from 'devicon/icons/jest/jest-plain.svg';
+import PhotoshopIcon from 'devicon/icons/photoshop/photoshop-plain.svg';
+import SlackIcon from 'devicon/icons/slack/slack-original.svg';
+import GSuiteIcon from 'devicon/icons/google/google-plain.svg';
+import ExcelIcon from './assets/excel.svg';
 import DynamoDBIcon from './assets/dynamoDB.svg';
 import LambdaIcon from './assets/lambda.svg';
 import ViteIcon from './assets/vite.svg';
 import PostmanIcon from './assets/postman.svg';
 import GitKrakenIcon from './assets/gitkraken.svg';
 import EslintIcon from './assets/eslint.svg';
+import DiscordIcon from './assets/discord.svg';
+import Teams from './assets/teams.svg';
+import OnshapeIcon from './assets/onshape.svg';
 
 interface IconInterface {
   icon: string;
@@ -143,5 +150,36 @@ export const DevToolsIcons: IconInterface[] = [
   {
     icon: PostmanIcon,
     tooltipText: 'Postman',
+  },
+];
+
+export const OtherProgramsIcons: IconInterface[] = [
+  {
+    icon: PhotoshopIcon,
+    tooltipText: 'Photoshop',
+  },
+  {
+    icon: ExcelIcon,
+    tooltipText: 'Excel',
+  },
+  {
+    icon: GSuiteIcon,
+    tooltipText: 'Google GSuite Apps',
+  },
+  {
+    icon: SlackIcon,
+    tooltipText: 'Slack',
+  },
+  {
+    icon: DiscordIcon,
+    tooltipText: 'Discord',
+  },
+  {
+    icon: Teams,
+    tooltipText: 'Microsoft Teams',
+  },
+  {
+    icon: OnshapeIcon,
+    tooltipText: 'Onshape (cloud based CAD)',
   },
 ];
