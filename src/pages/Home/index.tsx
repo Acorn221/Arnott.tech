@@ -1,4 +1,4 @@
-import { XyzTransition, XyzTransitionGroup } from '@animxyz/react';
+import { XyzTransition } from '@animxyz/react';
 import Text from '@/misc/Text';
 import Carosel from './Carosel';
 import Frontend from './Carosel/Slides/Frontend';
