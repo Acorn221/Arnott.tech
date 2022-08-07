@@ -32,7 +32,7 @@ const OtherPrograms = ({ index }: {index: number}) => {
             {
               OtherProgramsIcons.map((icon) => (
                 <div>
-                  <IconContainer icon={icon.icon} tooltipText={icon.tooltipText} iconStyles={iconStyles} />
+                  <IconContainer icon={icon} iconStyles={iconStyles} />
                 </div>
               ))
             }

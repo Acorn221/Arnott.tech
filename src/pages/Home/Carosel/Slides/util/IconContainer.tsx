@@ -1,5 +1,6 @@
 import Tooltip, { tooltipClasses, TooltipProps } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
+import { IconInterface } from './Icons';
 
 const StyledToolTip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -10,14 +11,13 @@ const StyledToolTip = styled(({ className, ...props }: TooltipProps) => (
 }));
 
 interface IconContainerProps {
-	icon: string;
-	tooltipText: string;
+	icon: IconInterface;
   iconStyles?: string;
 }
 
-const IconContainer = ({ icon, tooltipText, iconStyles }: IconContainerProps) => (
-  <StyledToolTip title={tooltipText} placement="top" arrow>
-    <img src={icon} className={iconStyles} />
+const IconContainer = ({ icon, iconStyles }: IconContainerProps) => (
+  <StyledToolTip title={icon.tooltipText} placement="top" arrow>
+    <img src={icon.icon} className={iconStyles} />
   </StyledToolTip>
 );
 

@@ -10,7 +10,7 @@ const Slide = ({
   className,
   children,
 }: SlideProps) => (
-  <div className={`keen-slider__slide text-center flex w-full items-center min-h-[30vh] bg-slate-400 ${className}`}>
+  <div className={`keen-slider__slide text-center flex w-full items-center min-h-[30vh] ${className}`}>
     {children}
   </div>
 );

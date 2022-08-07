@@ -36,7 +36,7 @@ const Home = () => (
       </div>
     </XyzTransition>
     <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
-      <div className="min-h-[5em] grid 2xl:grid-cols-3 md:grid-cols-2 grid-cols-1 align-middle justify-center gap-4 p-5">
+      {/*<div className="min-h-[5em] grid 2xl:grid-cols-3 md:grid-cols-2 grid-cols-1 align-middle justify-center gap-4 p-5">
         {
           txt.boxes.map((box) => (
             <div key={Math.random()} className="text-2xl text-center text-white bg-slate-700 p-5 rounded-xl md:max-w-[45vw] order-2">
@@ -44,7 +44,7 @@ const Home = () => (
             </div>
           ))
         }
-      </div>
+      </div>*/}
     </XyzTransition>
   </div>
 

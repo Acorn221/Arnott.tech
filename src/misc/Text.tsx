@@ -1,16 +1,16 @@
 const Text = {
   home: {
     title: 'James Arnott',
-    boxes: [
+    intro: [
       "Hi, I'm a Computer Science Student / Software Developer "
-      + "from Royal Holloway, University of London. I'm currently "
-      + 'in my final year of studies there. I like doing full stack '
-      + 'web development and doing web-based projects mainly.',
+        + "from Royal Holloway, University of London. I'm currently "
+        + 'in my final year of studies there. I like doing full stack '
+        + 'web development and doing web-based projects mainly.',
       'This website is currently in development',
     ],
     slides: {
       frontend: {
-        text: 'The Frontend Web Technologies I\'m Familiar With',
+        text: 'The Frontend Web Technologies I Have Used',
       },
       backend: {
         text: 'The Backend Web Technologies I\'m Familiar With',

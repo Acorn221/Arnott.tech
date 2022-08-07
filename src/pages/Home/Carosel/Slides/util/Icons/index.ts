@@ -30,7 +30,7 @@ import DiscordIcon from './assets/discord.svg';
 import Teams from './assets/teams.svg';
 import OnshapeIcon from './assets/onshape.svg';
 
-interface IconInterface {
+export interface IconInterface {
   icon: string;
   tooltipText: string;
   confidence?: number;

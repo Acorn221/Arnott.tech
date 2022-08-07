@@ -30,7 +30,7 @@ const Backend = ({ index }: {index: number}) => {
             {
               BackendIcons.map((icon) => (
                 <div>
-                  <IconContainer icon={icon.icon} tooltipText={icon.tooltipText} iconStyles={iconStyles} />
+                  <IconContainer icon={icon} iconStyles={iconStyles} />
                 </div>
               ))
             }
