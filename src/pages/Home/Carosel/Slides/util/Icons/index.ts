@@ -33,6 +33,7 @@ import OnshapeIcon from './assets/onshape.svg';
 interface IconInterface {
   icon: string;
   tooltipText: string;
+  confidence?: number;
 }
 
 /**
@@ -64,6 +65,7 @@ export const FrontendIcons: IconInterface[] = [
   {
     icon: ReduxIcon,
     tooltipText: 'Redux',
+    confidence: 0.5,
   },
   {
     icon: ViteIcon,
@@ -99,6 +101,7 @@ export const BackendIcons: IconInterface[] = [
   {
     icon: GoIcon,
     tooltipText: 'GoLang',
+    confidence: 0.5,
   },
   {
     icon: MySQLIcon,
@@ -107,6 +110,7 @@ export const BackendIcons: IconInterface[] = [
   {
     icon: NextJSIcon,
     tooltipText: 'NextJS',
+    confidence: 0.3,
   },
   {
     icon: AWSIcon,
@@ -115,10 +119,12 @@ export const BackendIcons: IconInterface[] = [
   {
     icon: LambdaIcon,
     tooltipText: 'AWS Lambda',
+    confidence: 0.5,
   },
   {
     icon: DynamoDBIcon,
     tooltipText: 'AWS DynamoDB',
+    confidence: 0.5,
   },
 ];
 
