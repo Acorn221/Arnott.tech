@@ -22,7 +22,7 @@ const Backend = ({ index }: {index: number}) => {
   }, [currentSlide]);
 
   return (
-    <Slide className="bg-gradient-to-r from-yellow-700 to-red-700 text-white text-3xl">
+    <Slide className="bg-gradient-to-r from-fuchsia-700 to-blue-700 text-white text-3xl">
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
         <div className="md:flex-1 flex-2 h-full flex justify-center align-middle">
           {seen && (
