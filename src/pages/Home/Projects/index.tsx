@@ -5,14 +5,14 @@ const txt = Text.home.projects;
 const Projects = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     {txt.arr.map((project) => (
-      <div className="flex flex-col justify-center align-middle bg-slate-700 rounded-2xl">
+      <div className="flex flex-col justify-center align-middle bg-zinc-800/75 rounded-2xl">
         {
 					project.link && (
 	<a
   href={project.link.url}
   target="_blank"
   rel="noopener noreferrer"
-  className="text-xl underline hover:text-gray-300 my-2 mx-auto p-2 hover:bg-slate-800 rounded-2xl"
+  className="text-xl underline hover:text-gray-300 my-2 mx-auto p-2 hover:bg-zinc-700 rounded-2xl"
 	>
   <div className="p-2">
     {project.link.text}

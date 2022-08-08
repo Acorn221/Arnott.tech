@@ -40,14 +40,14 @@ const Home = () => (
       <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
         <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 p-5 max-w-[1280px]">
           <div className="text-white flex-col flex gap-4 text-center">
-            <div className="text-3xl p-2 bg-slate-600/75 rounded-xl">
+            <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
               {txt.intro.title}
               <div className="bg-white p-[2px] rounded-full mt-1" />
             </div>
-            <div className="text-2xl p-5 bg-slate-700 rounded-xl">
+            <div className="text-2xl p-5 bg-zinc-800/75 rounded-xl">
               {txt.intro.text}
             </div>
-            <div className="text-3xl p-2 bg-slate-600/75 rounded-xl">
+            <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
               {txt.projects.title}
               <div className="bg-white p-[2px] rounded-full mt-1" />
             </div>
