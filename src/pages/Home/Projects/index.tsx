@@ -3,17 +3,29 @@ import Text from '@/misc/Text';
 const txt = Text.home.projects;
 
 const Projects = () => (
-  <div className="flex-col flex bg-slate-700">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     {txt.arr.map((project) => (
-      <div className="flex flex-col justify-center align-middle">
-        {project.photo && (
-        <img src={project.photo} alt={project.title} className="w-64 rounded-full m-auto" />
-        )}
-        <div className="">
+      <div className="flex flex-col justify-center align-middle bg-slate-700 rounded-2xl">
+        {
+					project.link && (
+	<a
+  href={project.link.url}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-xl underline hover:text-gray-300 mt-2 m-auto p-2 hover:bg-slate-800 rounded-2xl"
+	>
+  {project.link.text}
+  <img src={project.photo} alt={project.title} className="w-64 cursor-pointer " />
+	</a>
+					)
+				}
+        <div className="text-3xl">
           {project.title}
         </div>
-        <div className="bg-white p-[2px] rounded-full mt-1" />
-        <div className="">
+        <div className="flex justify-center align-middle">
+          <div className="bg-white p-[2px] rounded-full w-9/12 mt-1 m-auto" />
+        </div>
+        <div className="text-2xl m-3">
           {project.text}
         </div>
       </div>
