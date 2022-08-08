@@ -33,7 +33,7 @@ const Text = {
           text: 'This is a tool to help create test Common Transfer Forms (CTFs). '
           + 'They are an XML standard created by the department for education '
           + 'as a standard to allow for the transfer of data between MIS systems '
-          + 'used in schools and local authorities.',
+          + 'used in schools and local authorities. This was build using Typescript.',
           link: {
             text: 'View on Github',
             url: 'https://github.com/arcio-uk/Common-transfer-file-CTF-Test-Data-Generator',
