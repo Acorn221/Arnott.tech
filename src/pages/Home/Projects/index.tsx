@@ -23,7 +23,7 @@ const Projects = () => (
 	</a>
 					)
 				}
-        <div className="text-3xl">
+        <div className="text-3xl m-2">
           {project.title}
         </div>
         <div className="flex justify-center align-middle">
