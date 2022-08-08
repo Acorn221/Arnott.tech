@@ -5,6 +5,7 @@ import Frontend from './Carosel/Slides/Frontend';
 import DevTools from './Carosel/Slides/DevTools';
 import Backend from './Carosel/Slides/Backend';
 import OtherPrograms from './Carosel/Slides/OtherPrograms';
+import Projects from './Projects';
 
 const txt = Text.home;
 
@@ -41,11 +42,16 @@ const Home = () => (
           <div className="text-white flex-col flex gap-4 text-center">
             <div className="text-3xl p-2 bg-slate-600 rounded-xl">
               {txt.intro.title}
-              <div className="bg-white p-[2px] rounded-full" />
+              <div className="bg-white p-[2px] rounded-full mt-1" />
             </div>
             <div className="text-2xl p-5 bg-slate-700 rounded-xl">
               {txt.intro.text}
             </div>
+            <div className="text-3xl p-2 bg-slate-600 rounded-xl">
+              {txt.projects.title}
+              <div className="bg-white p-[2px] rounded-full mt-1" />
+            </div>
+            <Projects />
           </div>
         </div>
       </XyzTransition>
