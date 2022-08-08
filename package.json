@@ -10,6 +10,7 @@
   "dependencies": {
     "@animxyz/core": "^0.6.6",
     "@animxyz/react": "^0.6.6",
+    "@babel/core": "^7.0.0",
     "@egjs/react-flicking": "^4.7.2",
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
@@ -19,7 +20,6 @@
     "keen-slider": "^6.6.14",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-helmet": "^6.1.0",
     "react-icons": "^4.4.0",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",
