@@ -12,10 +12,14 @@ const Projects = () => (
   href={project.link.url}
   target="_blank"
   rel="noopener noreferrer"
-  className="text-xl underline hover:text-gray-300 mt-2 m-auto p-2 hover:bg-slate-800 rounded-2xl"
+  className="text-xl underline hover:text-gray-300 my-2 mx-auto p-2 hover:bg-slate-800 rounded-2xl"
 	>
-  {project.link.text}
-  <img src={project.photo} alt={project.title} className="w-64 cursor-pointer " />
+  <div className="p-2">
+    {project.link.text}
+  </div>
+  {
+		project.photo && <img src={project.photo} alt={project.title} className="w-64 cursor-pointer " />
+	}
 	</a>
 					)
 				}
