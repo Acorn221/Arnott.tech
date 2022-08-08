@@ -16,16 +16,27 @@ const Text = {
       arr: [
         {
           title: 'Lighter Fuel, For Tinder',
-          text: 'This chrome extension is an 𝑎𝑐𝑐𝑒𝑙𝑒𝑟𝑎𝑛𝑡 for Tinder users.'
+          text: 'This chrome extension is an 𝑎𝑐𝑐𝑒𝑙𝑒𝑟𝑎𝑛𝑡 for Tinder users. '
           + 'It helps users quickly and efficiently identify fake profiles '
           + 'and potential scams. It displays the \'Last Modified\' Header value, '
           + 'which indicates when profile was created by showing when the profile '
           + 'photos were uploaded. Then it also allows for 1 click reverse image '
           + 'search to see if the photo has been uploaded online already.',
-          photo: LighterFuelLogo,
           link: {
             text: 'View on Github',
             url: 'https://github.com/Acorn221/LighterFuel-For-Tinder',
+          },
+          photo: LighterFuelLogo,
+        },
+        {
+          title: 'Common Transfer Form Generator',
+          text: 'This is a tool to help create test Common Transfer Forms (CTFs). '
+          + 'They are an XML standard created by the department for education '
+          + 'as a standard to allow for the transfer of data between MIS systems '
+          + 'used in schools and local authorities.',
+          link: {
+            text: 'View on Github',
+            url: 'https://github.com/arcio-uk/Common-transfer-file-CTF-Test-Data-Generator',
           },
         },
       ],
