@@ -10,7 +10,7 @@ const StandardLayout = () => (
       <Outlet />
     </main>
     <footer className="sticky top-[100vh]">
-      <div className="text-center p-3 bg-gradient-to-r from-orange-400 to-red-400 text-white font-semibold z-10">
+      <div className="text-center p-3 bg-gradient-to-r bg-sky-900/75 text-white font-semibold z-10">
         {txt.content}
         <AiFillHeart className="fill-red-600 inline align-middle ml-2" />
       </div>
