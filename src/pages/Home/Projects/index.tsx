@@ -1,3 +1,4 @@
+import { XyzTransition } from '@animxyz/react';
 import Text from '@/misc/Text';
 
 const txt = Text.home.projects;
@@ -18,7 +19,11 @@ const Projects = () => (
     {project.link.text}
   </div>
   {
-		project.photo && <img src={project.photo} alt={project.title} className="w-64 cursor-pointer " />
+		project.photo && (
+  <XyzTransition appear xyz="fade in-out delay-8">
+    <img src={project.photo} alt={project.title} className="w-64 cursor-pointer " />
+  </XyzTransition>
+		)
 	}
 	</a>
 					)
