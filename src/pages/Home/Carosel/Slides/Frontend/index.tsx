@@ -27,8 +27,13 @@ const Frontend = ({ index }: {index: number}) => {
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4">
-            { /* Unfortunatley there is a glitch with the animXYZ animation library, and the div parents have to be in this component */}
+          <XyzTransitionGroup
+            appear
+            xyz="fade flip-up flip-left delay-5 stagger"
+            className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4"
+          >
+            { /* Unfortunatley there is a glitch with the animXYZ animation library,
+            and the div parents have to be in this component */}
             {
               FrontendIcons.map((icon) => (
                 <div>

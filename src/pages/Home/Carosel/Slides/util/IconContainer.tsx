@@ -17,7 +17,7 @@ interface IconContainerProps {
 
 const IconContainer = ({ icon, iconStyles }: IconContainerProps) => (
   <StyledToolTip title={icon.tooltipText} placement="top" arrow>
-    <img src={icon.icon} className={iconStyles} />
+    <img src={icon.icon} alt={icon.tooltipText} className={iconStyles} />
   </StyledToolTip>
 );
 

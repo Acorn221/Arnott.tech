@@ -28,7 +28,8 @@ const DevTools = ({ index }: {index: number}) => {
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
           <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4">
-            { /* Unfortunatley there is a glitch with the animXYZ animation library, and the div parents have to be in this component */}
+            { /* Unfortunatley there is a glitch with the animXYZ animation library,
+             and the div parents have to be in this component */}
             {
               DevToolsIcons.map((icon) => (
                 <div>
