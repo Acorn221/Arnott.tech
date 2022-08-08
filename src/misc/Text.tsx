@@ -43,13 +43,13 @@ const Text = {
     },
     slides: {
       frontend: {
-        text: 'The Frontend Web Technologies I Have Used',
+        text: 'The Frontend Web Technologies I Use',
       },
       backend: {
-        text: 'The Backend Web Technologies I\'m Familiar With',
+        text: 'The Backend Web Technologies Technologies I Use',
       },
       devTools: {
-        text: 'The DevTools I\'m Familiar With',
+        text: 'The DevTools I Use',
       },
       otherPrograms: {
         text: 'Other Programs I\'m comfortable with',
