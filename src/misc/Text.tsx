@@ -55,6 +55,18 @@ const Text = {
         text: 'Other Programs I\'m comfortable with',
       },
     },
+    contactMe: {
+      title: 'Contact Me',
+      linkedIn: {
+        text: 'LinkedIn',
+      },
+      email: {
+        text: 'Email (Mailto)',
+      },
+      gmail: {
+        text: 'Email (Gmail)',
+      },
+    },
   },
   layout: {
     footer: {
