@@ -70,7 +70,7 @@ const Text = {
   },
   layout: {
     footer: {
-      content: 'Copyright © James Arnott, Built from the ground up with React and Typescript',
+      content: 'Copyright © James Arnott, Built from the ground up with React and Typescript, Deployed with AWS Amplify',
     },
   },
 };

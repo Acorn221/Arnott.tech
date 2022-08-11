@@ -8,7 +8,7 @@ import { BackendIcons } from '../util/Icons';
 
 const txt = Text.home.slides.backend;
 
-const iconStyles = 'h-[9vmin] max-h-[8vmin] min-h-[6vmin]';
+const iconStyles = 'h-[9vmin] max-h-[8vmin] min-h-[6vmin] max-w-[8vmin]';
 
 const Backend = ({ index }: {index: number}) => {
   const currentSlide = useContext(CaroselContext);
