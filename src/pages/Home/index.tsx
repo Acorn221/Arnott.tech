@@ -1,6 +1,7 @@
 import { XyzTransition } from '@animxyz/react';
 import { AiFillLinkedin } from 'react-icons/ai';
 import { MdEmail } from 'react-icons/md';
+import { SiGmail } from 'react-icons/si';
 import { useState } from 'react';
 import Text from '@/misc/Text';
 import Carosel from './Carosel';
@@ -29,6 +30,11 @@ const Home = () => {
   const requestEmail = () => {
     setEmail(getEmail());
     return email;
+  };
+
+  const getGmailLink = () => {
+    requestEmail();
+    return `https://mail.google.com/mail/u/0/?fs=1&to=${email}&su=I'm%20here%20from%20J4A.uk!&tf=cm`;
   };
   return (
     <div className="h-full text-white">
@@ -71,16 +77,33 @@ const Home = () => {
                 <div className="flex w-full text-center justify-center m-2">
                   <a href="https://www.linkedin.com/in/james-arnott-341705143/" target="_blank" rel="noopener noreferrer" className="flex-1 justify-center">
                     <StyledToolTip placement="top" arrow title="James-Arnott-341705143">
-                      <div className="m-auto w-[15vmin]">
+                      <div className="m-auto w-[15vmin] flex-col flex">
                         <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
+                        <div>
+                          Linked In
+                        </div>
                       </div>
                     </StyledToolTip>
                   </a>
 
                   <div onClick={() => window.open(`mailto:${requestEmail()}`)} className="flex-1 justify-center ">
                     <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
-                      <div className="m-auto w-[15vmin]">
+                      <div className="m-auto w-[15vmin] flex-col flex">
                         <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
+                        <div>
+                          Email (MailTo)
+                        </div>
+                      </div>
+                    </StyledToolTip>
+                  </div>
+
+                  <div onClick={() => window.open(getGmailLink())} className="flex-1 justify-center ">
+                    <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
+                      <div className="m-auto w-[15vmin] flex-col flex">
+                        <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
+                        <div>
+                          Email (Gmail)
+                        </div>
                       </div>
                     </StyledToolTip>
                   </div>
