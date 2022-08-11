@@ -34,7 +34,7 @@ const Home = () => {
 
   const getGmailLink = () => {
     requestEmail();
-    return `https://mail.google.com/mail/u/0/?fs=1&to=${email}&su=I'm%20here%20from%20J4A.uk!&tf=cm`;
+    return `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(email)}&su=I'm%20here%20from%20J4A.uk!&tf=cm`;
   };
   return (
     <div className="h-full text-white">
@@ -72,7 +72,7 @@ const Home = () => {
               <Projects />
               <div className="rounded-xl bg-zinc-800/75 p-5 flex-col flex">
                 <div className="underline text-center text-3xl">
-                  Contact Me
+                  {txt.contactMe.title}
                 </div>
                 <div className="flex w-full text-center justify-center m-2">
                   <a href="https://www.linkedin.com/in/james-arnott-341705143/" target="_blank" rel="noopener noreferrer" className="flex-1 justify-center">
@@ -80,7 +80,7 @@ const Home = () => {
                       <div className="m-auto w-[15vmin] flex-col flex">
                         <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
                         <div>
-                          Linked In
+                          {txt.contactMe.linkedIn.text}
                         </div>
                       </div>
                     </StyledToolTip>
@@ -91,7 +91,7 @@ const Home = () => {
                       <div className="m-auto w-[15vmin] flex-col flex">
                         <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
                         <div>
-                          Email (MailTo)
+                          {txt.contactMe.email.text}
                         </div>
                       </div>
                     </StyledToolTip>
@@ -102,7 +102,7 @@ const Home = () => {
                       <div className="m-auto w-[15vmin] flex-col flex">
                         <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
                         <div>
-                          Email (Gmail)
+                          {txt.contactMe.gmail.text}
                         </div>
                       </div>
                     </StyledToolTip>
