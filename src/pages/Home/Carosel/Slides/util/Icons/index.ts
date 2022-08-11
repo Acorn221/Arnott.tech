@@ -6,7 +6,6 @@ import MaterialUiIcon from 'devicon/icons/materialui/materialui-original.svg';
 import ReduxIcon from 'devicon/icons/redux/redux-original.svg';
 import GraphQLIcon from 'devicon/icons/graphql/graphql-plain.svg';
 import PostgresIcon from 'devicon/icons/postgresql/postgresql-plain.svg';
-import FlaskIcon from 'devicon/icons/flask/flask-original.svg';
 import GoIcon from 'devicon/icons/go/go-original-wordmark.svg';
 import PythonIcon from 'devicon/icons/python/python-original.svg';
 import MySQLIcon from 'devicon/icons/mysql/mysql-original.svg';
@@ -29,6 +28,7 @@ import EslintIcon from './assets/eslint.svg';
 import DiscordIcon from './assets/discord.svg';
 import Teams from './assets/teams.svg';
 import OnshapeIcon from './assets/onshape.svg';
+import AmplifyIcon from './assets/ampliify.svg';
 
 export interface IconInterface {
   icon: string;
@@ -95,10 +95,6 @@ export const BackendIcons: IconInterface[] = [
     tooltipText: 'Python',
   },
   {
-    icon: FlaskIcon,
-    tooltipText: 'Flask',
-  },
-  {
     icon: GoIcon,
     tooltipText: 'GoLang',
     confidence: 0.5,
@@ -125,6 +121,10 @@ export const BackendIcons: IconInterface[] = [
     icon: DynamoDBIcon,
     tooltipText: 'AWS DynamoDB',
     confidence: 0.5,
+  },
+  {
+    icon: AmplifyIcon,
+    tooltipText: 'AWS Amplify',
   },
 ];
 

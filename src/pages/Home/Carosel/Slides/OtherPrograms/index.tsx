@@ -9,7 +9,7 @@ import IconContainer from '../util/IconContainer';
 
 const txt = Text.home.slides.otherPrograms;
 
-const iconStyles = 'h-[12vmin] max-h-[8vh]';
+const iconStyles = 'h-[12vmin] max-h-[8vh] max-w-[8vmin]';
 
 const OtherPrograms = ({ index }: {index: number}) => {
   const currentSlide = useContext(CaroselContext);
