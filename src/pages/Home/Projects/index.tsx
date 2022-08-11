@@ -13,7 +13,7 @@ const Projects = () => (
   href={project.link.url}
   target="_blank"
   rel="noopener noreferrer"
-  className="text-xl underline hover:text-gray-300 my-2 mx-auto p-2 hover:bg-zinc-700 rounded-2xl"
+  className="md:text-2xl text-xl underline hover:text-gray-300 my-2 mx-auto p-2 hover:bg-zinc-700 rounded-2xl"
 	>
   <div className="p-2">
     {project.link.text}
@@ -34,7 +34,7 @@ const Projects = () => (
         <div className="flex justify-center align-middle">
           <div className="bg-white p-[2px] rounded-full w-9/12 mt-1 m-auto" />
         </div>
-        <div className="text-2xl m-3">
+        <div className="md:text-2xl text-xl m-3">
           {project.text}
         </div>
       </div>

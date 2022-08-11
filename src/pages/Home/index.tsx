@@ -62,7 +62,7 @@ const Home = () => {
                 {txt.intro.title}
                 <div className="bg-white p-[2px] rounded-full mt-1" />
               </div>
-              <div className="text-2xl p-5 bg-zinc-800/75 rounded-xl">
+              <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
                 {txt.intro.text}
               </div>
               <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
