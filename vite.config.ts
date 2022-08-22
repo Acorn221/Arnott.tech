@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: `${__dirname}/.env` });
 
-const ASSET_URL = (process.env.ASSET_URL && process.env.APP_ENV === 'local') || '/J4a-website/';
+const ASSET_URL = (process.env.ASSET_URL && process.env.APP_ENV === 'local') ? process.env.ASSET_URL : '/J4a-website/';
 
 // https://vitejs.dev/config/
 export default defineConfig({
