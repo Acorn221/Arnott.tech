@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-
+rm -rf dist
 # abort on errors
 set -e
 
@@ -10,7 +10,7 @@ npm run build
 cd dist
 
 # if you are deploying to a custom domain
-# echo 'www.example.com' > CNAME
+echo 'www.j4a.uk' > CNAME
 
 git init
 git checkout -b main
@@ -19,6 +19,6 @@ git commit -m 'deploy'
 
 
 # if you are deploying to https://<USERNAME>.github.io/<REPO>
-git push -f git@github.com:Acorn221/J4a-website.git main:gh-pages
+git push -f git@github.com:Acorn221/Acorn221.git main:gh-pages
 
 cd -
