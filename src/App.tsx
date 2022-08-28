@@ -15,6 +15,7 @@ const App = () => (
     <Routes>
       <Route element={<StandardLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="J4a-website/" element={<Home />} />
         <Route path="/*" element={<NotFound />} />
       </Route>
     </Routes>
