@@ -39,6 +39,14 @@ const Text = {
             url: 'https://github.com/arcio-uk/Common-transfer-file-CTF-Test-Data-Generator',
           },
         },
+        {
+          title: 'Arcio',
+          text: 'Arcio was a project I worked on with my friends, the goal was to create a Management Information System (MIS) to help schools and universities mark attendance and manage timetables in a more efficient manner. It was unforntunately never completed due to issues with funding and our university work getting in the way. It was a good learning experience though, we had learnt a lot about the technologies we used and how to work in a team well. I\'ve opensourced the code to demonstrate mine and my team\'s skills and experience. I worked mainly on the database side, along with the frontend design and some of the backend.',
+          link: {
+            text: 'View the organisation on Github',
+            url: 'https://github.com/arcio-uk',
+          },
+        },
       ],
     },
     slides: {
