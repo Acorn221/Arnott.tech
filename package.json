@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist -r git@github.com:Acorn221/Acorn221.git -b gh-pages"
+    "deploy": "npm run build && Copy \"dist/index.html\" \"dist/404.html\" && gh-pages -d dist -r git@github.com:Acorn221/Acorn221.git -b gh-pages"
   },
   "dependencies": {
     "@animxyz/core": "^0.6.6",
