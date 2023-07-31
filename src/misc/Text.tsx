@@ -29,14 +29,19 @@ const Text = {
           photo: LighterFuelLogo,
         },
         {
-          title: 'Common Transfer Form Generator',
-          text: 'This is a tool to help create test Common Transfer Forms (CTFs). '
-          + 'They are an XML standard created by the department for education '
-          + 'as a standard to allow for the transfer of data between MIS systems '
-          + 'used in schools and local authorities. This was build using Typescript.',
+          title: 'Alzheimer\'s and Skin Cancer Classification through Transfer Learning',
+          text: 'This was my final year project for my degree. I compared different base models for transfer learning, to help classify diseases, along with analysing then optimising their outputs.',
           link: {
             text: 'View on Github',
-            url: 'https://github.com/arcio-uk/Common-transfer-file-CTF-Test-Data-Generator',
+            url: 'https://github.com/Acorn221/RHUL-Final-Year-Project/',
+          },
+        },
+        {
+          title: 'Hopalong Redux Enhanced',
+          text: 'This is a fork of the Hopalong Redux project, which uses the Hopalong Attractor to generate fractal images. I\'ve optimised it for lower resolution screens with machine learning, so the patterns more distinctly appear. This was used on the Computing Society hosted 80s90s00s nights',
+          link: {
+            text: 'View on Github',
+            url: 'https://github.com/Acorn221/hopalong-redux',
           },
         },
         {
@@ -45,6 +50,17 @@ const Text = {
           link: {
             text: 'View the organisation on Github',
             url: 'https://github.com/arcio-uk',
+          },
+        },
+        {
+          title: 'Common Transfer Form Generator',
+          text: 'This is a tool to help create test Common Transfer Forms (CTFs). '
+          + 'They are an XML standard created by the department for education '
+          + 'as a standard to allow for the transfer of data between MIS systems '
+          + 'used in schools and local authorities. This was build using Typescript.',
+          link: {
+            text: 'View on Github',
+            url: 'https://github.com/arcio-uk/Common-transfer-file-CTF-Test-Data-Generator',
           },
         },
       ],
