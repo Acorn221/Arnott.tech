@@ -1,4 +1,5 @@
 import LighterFuelLogo from '@/pages/Home/Projects/assets/LighterFuel512.png';
+import Snap2CalLogo from '@/pages/Home/Projects/assets/snap2cal.png';
 
 const Text = {
   home: {
@@ -34,7 +35,8 @@ const Text = {
           link: {
             text: 'View on The Chrome Web Store',
             url: 'https://chrome.google.com/webstore/detail/snap2calendar-birthday-ex/hejjegjbfaabkgaejceenfeeeocbocmk',
-          }
+          },
+          photo: Snap2CalLogo,
         },
         {
           title: 'Alzheimer\'s and Skin Cancer Classification through Transfer Learning',
