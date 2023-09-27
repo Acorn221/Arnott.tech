@@ -29,6 +29,14 @@ const Text = {
           photo: LighterFuelLogo,
         },
         {
+          title: 'Snap2Calendar Bithday Export',
+          text: 'This extension lets you export birthdays from Snapchat to your Calendar, with notifications!',
+          link: {
+            text: 'View on The Chrome Web Store',
+            url: 'https://chrome.google.com/webstore/detail/snap2calendar-birthday-ex/hejjegjbfaabkgaejceenfeeeocbocmk',
+          }
+        },
+        {
           title: 'Alzheimer\'s and Skin Cancer Classification through Transfer Learning',
           text: 'This was my final year project for my degree. I compared different base models for transfer learning, to help classify diseases, along with analysing then optimising their outputs.',
           link: {
