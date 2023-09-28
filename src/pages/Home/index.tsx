@@ -2,7 +2,8 @@ import { XyzTransition } from '@animxyz/react';
 import { AiFillLinkedin } from 'react-icons/ai';
 import { MdEmail } from 'react-icons/md';
 import { SiGmail } from 'react-icons/si';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import ReactGA from 'react-ga4';
 import Text from '@/misc/Text';
 import Carosel from './Carosel';
 import Frontend from './Carosel/Slides/Frontend';
@@ -27,6 +28,10 @@ const slides = [
 const Home = () => {
   const [email, setEmail] = useState('/');
 
+  useEffect(() => {
+    ReactGA.send({ hitType: 'pageview', page: window.location.pathname, title: document.title });
+  });
+
   const requestEmail = () => {
     setEmail(getEmail());
     return email;
@@ -36,6 +41,28 @@ const Home = () => {
     requestEmail();
     return `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(email)}&su=I'm%20here%20from%20J4A.uk!&tf=cm`;
   };
+
+  const handleGmailLinkClick = () => {
+    ReactGA.send({
+      category: 'UrlClick', action: 'gmail-click', page: window.location.pathname, title: document.title,
+    });
+    window.open(getGmailLink());
+  };
+
+  const handleLinkedInLinkClick = () => {
+    ReactGA.send({
+      category: 'UrlClick', action: 'linkedin-click', page: window.location.pathname, title: document.title,
+    });
+    window.open('https://www.linkedin.com/in/james-arnott-341705143/');
+  };
+
+  const handleEmailLinkClick = () => {
+    ReactGA.send({
+      category: 'UrlClick', action: 'email-click', page: window.location.pathname, title: document.title,
+    });
+    window.open(`mailto:${requestEmail()}`);
+  };
+
   return (
     <div className="h-full text-white">
       <XyzTransition appear xyz={`${fadeAnimation} down-2`}>
@@ -75,7 +102,7 @@ const Home = () => {
                   {txt.contactMe.title}
                 </div>
                 <div className="flex w-full text-center justify-center m-2">
-                  <a href="https://www.linkedin.com/in/james-arnott-341705143/" target="_blank" rel="noopener noreferrer" className="flex-1 justify-center">
+                  <div className="flex-1 justify-center" onClick={() => handleLinkedInLinkClick()}>
                     <StyledToolTip placement="top" arrow title="James-Arnott-341705143">
                       <div className="m-auto w-[15vmin] flex-col flex">
                         <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
@@ -84,9 +111,9 @@ const Home = () => {
                         </div>
                       </div>
                     </StyledToolTip>
-                  </a>
+                  </div>
 
-                  <div onClick={() => window.open(`mailto:${requestEmail()}`)} className="flex-1 justify-center ">
+                  <div onClick={() => handleEmailLinkClick()} className="flex-1 justify-center ">
                     <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
                       <div className="m-auto w-[15vmin] flex-col flex">
                         <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
@@ -97,7 +124,7 @@ const Home = () => {
                     </StyledToolTip>
                   </div>
 
-                  <div onClick={() => window.open(getGmailLink())} className="flex-1 justify-center ">
+                  <div onClick={() => handleGmailLinkClick()} className="flex-1 justify-center ">
                     <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
                       <div className="m-auto w-[15vmin] flex-col flex">
                         <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
