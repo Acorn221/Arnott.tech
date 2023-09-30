@@ -6,7 +6,7 @@ import Text from '@/misc/Text';
 const txt = Text.layout.footer;
 
 const StandardLayout = () => (
-  <div className="flex flex-col h-screen justify-between">
+  <div className="flex flex-col min-h-screen justify-between">
     <main>
       <CookieConsent>This website uses cookies for analytics.</CookieConsent>
       <Outlet />
