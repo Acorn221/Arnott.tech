@@ -53,6 +53,7 @@ module.exports = {
       },
       variants: ['responsive', 'hover', 'reduced-motion'],
     }),
+    require('daisyui'),
   ],
   include: [
     'src',

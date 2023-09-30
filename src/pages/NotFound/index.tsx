@@ -5,6 +5,7 @@ import ReactGA from 'react-ga4';
 // The 404 not found page, with tailwind styling
 const NotFound = () => {
   useEffect(() => {
+    ReactGA.initialize('G-WW6JYGLDCW');
     ReactGA.send({ hitType: 'pageview', page: window.location.pathname, title: document.title });
   });
   return (

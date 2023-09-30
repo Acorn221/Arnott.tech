@@ -29,6 +29,7 @@ const Home = () => {
   const [email, setEmail] = useState('/');
 
   useEffect(() => {
+    ReactGA.initialize('G-WW6JYGLDCW');
     ReactGA.send({ hitType: 'pageview', page: window.location.pathname, title: document.title });
   });
 
