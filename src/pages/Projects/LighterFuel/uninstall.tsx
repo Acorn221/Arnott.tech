@@ -10,13 +10,6 @@ export const LighterfuelUninstall = () => {
     }]);
   });
 
-  const handleUninstallReason = (reason: string) => {
-    AnalyticsEvent([{
-      name: 'uninstall',
-      params: reason,
-    }]);
-  };
-
   return (
     <div className="min-h-screen w-screen bg-slate-900 flex justify-center align-middle">
       <div className="m-auto flex flex-col p-4 gap-4 bg-neutral-300">
