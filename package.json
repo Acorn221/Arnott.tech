@@ -21,6 +21,7 @@
     "devicon": "github:devicons/devicon",
     "keen-slider": "^6.6.14",
     "react": "^18.0.0",
+    "react-cookie-consent": "^8.0.1",
     "react-dom": "^18.0.0",
     "react-ga4": "^2.1.0",
     "react-icons": "^4.4.0",
