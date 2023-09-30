@@ -26,20 +26,14 @@ export const LighterfuelUninstall = () => {
             <img src={LighterFuelLogo} className="m-auto max-h-[10em] max-w-[10em]" alt="logo" />
           </div>
         </div>
-        <div className="flex flex-col gap-4">
-          <button className="btn btn-primary" onClick={() => handleUninstallReason('not_useful')}>
-            Not Useful
-          </button>
-          <button className="btn btn-primary" onClick={() => handleUninstallReason('not_working')}>
-            Not Working
-          </button>
-          <button className="btn btn-primary" onClick={() => handleUninstallReason('It Got In The Way')}>
-            It Got In The Way
-          </button>
-          <button className="btn btn-primary" onClick={() => handleUninstallReason('Other')}>
-            Other
-          </button>
-        </div>
+        <iframe
+          title="Uninstall Form"
+          src="https://docs.google.com/forms/d/e/1FAIpQLScrVM0Lwr2a28_TBzyDDHH4tJiJQNKtl5iywvlKrr3iG9tYjg/viewform?embedded=true"
+          className="h-[65vh] w-full m-auto"
+        >
+          Loading…
+
+        </iframe>
       </div>
     </div>
   );
