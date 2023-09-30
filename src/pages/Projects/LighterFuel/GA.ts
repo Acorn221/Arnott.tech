@@ -1,11 +1,11 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable import/prefer-default-export */
 if (!import.meta.env.VITE_PUBLIC_GTAG_ID) {
-  throw new Error('PLASMO_PUBLIC_GTAG_ID environment variable not set.');
+  throw new Error('VITE_PUBLIC_GTAG_ID environment variable not set.');
 }
 
 if (!import.meta.env.VITE_PUBLIC_SECRET_API_KEY) {
-  throw new Error('PLASMO_PUBLIC_SECRET_API_KEY environment variable not set.');
+  throw new Error('VITE_PUBLIC_SECRET_API_KEY environment variable not set.');
 }
 
 const GA_ENDPOINT = 'https://www.google-analytics.com/mp/collect';
