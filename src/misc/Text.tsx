@@ -1,5 +1,6 @@
 import LighterFuelLogo from '@/pages/Home/Projects/assets/LighterFuel512.png';
 import Snap2CalLogo from '@/pages/Home/Projects/assets/snap2cal.png';
+import JobStreamLogo from '@/pages/Home/Projects/assets/JobStreamLogo.svg';
 
 export type textType = {
   home: {
@@ -65,14 +66,14 @@ const Text: textType = {
       title: 'About Me',
       text: "I'm a Computer Science Graduate and Software Developer "
         + "from Royal Holloway, University of London. I'm currently "
-        + 'in my final year of studies there. I like doing full stack '
+        + 'working on my company J4A Industrues. I like doing full stack '
         + 'web development and doing web-based projects mainly, along with a variety of machine learning based projects',
     },
     projects: {
       title: 'Here are some of my projects.',
       arr: [
         {
-          title: 'Lighter Fuel, For Tinder',
+          title: 'LighterFuel, For Tinder',
           text: 'This chrome extension is an 𝑎𝑐𝑐𝑒𝑙𝑒𝑟𝑎𝑛𝑡 for Tinder users. '
           + 'It helps users quickly and efficiently identify fake profiles '
           + 'and potential scams. It displays the \'Last Modified\' Header value, '
@@ -94,6 +95,22 @@ const Text: textType = {
             },
           ],
           photo: LighterFuelLogo,
+        },
+        {
+          title: 'JobStream',
+          text: 'JobStream allows you to easily generate cover letters and answer questions on applications.'
+            + 'The goal for it is to allow users to apply to a variety of jobs quicker and more efficiently, whilst still making high quality applications.',
+          links: [
+            {
+              type: 'hosted',
+              url: 'https://jobstream.uk/',
+            },
+            {
+              type: 'chrome-web-store',
+              url: 'https://chromewebstore.google.com/detail/jobstream/ifflolleankklchmbldadfafffobjocj',
+            },
+          ],
+          photo: JobStreamLogo,
         },
         {
           title: 'Snap2Calendar Bithday Export',
