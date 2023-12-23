@@ -66,7 +66,7 @@ const Text: textType = {
       title: 'About Me',
       text: "I'm a Computer Science Graduate and Software Developer "
         + "from Royal Holloway, University of London. I'm currently "
-        + 'working on my company J4A Industrues. I like doing full stack '
+        + 'working on my company J4A Industries. I like doing full stack '
         + 'web development and doing web-based projects mainly, along with a variety of machine learning based projects',
     },
     projects: {
