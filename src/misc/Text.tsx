@@ -1,7 +1,7 @@
 import LighterFuelLogo from '@/pages/Home/Projects/assets/LighterFuel512.png';
 import Snap2CalLogo from '@/pages/Home/Projects/assets/snap2cal.png';
 import JobStreamLogo from '@/pages/Home/Projects/assets/JobStreamLogo.svg';
-import LinkedOutLogo from './assets/LinkedOutLogo.png';
+import LinkedOutLogo from '@/pages/Home/Projects/assets/LinkedOutLogo.png';
 
 export type textType = {
   home: {

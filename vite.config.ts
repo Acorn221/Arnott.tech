@@ -14,4 +14,9 @@ export default defineConfig({
   server: {
     host: true,
   },
+  build: {
+    rollupOptions: {
+      external: ['devicon/icons/tailwindcss/tailwindcss-plain.svg'],
+    },
+  },
 });
