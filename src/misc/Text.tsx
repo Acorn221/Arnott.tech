@@ -1,6 +1,7 @@
 import LighterFuelLogo from '@/pages/Home/Projects/assets/LighterFuel512.png';
 import Snap2CalLogo from '@/pages/Home/Projects/assets/snap2cal.png';
 import JobStreamLogo from '@/pages/Home/Projects/assets/JobStreamLogo.svg';
+import LinkedOutLogo from './assets/LinkedOutLogo.png';
 
 export type textType = {
   home: {
@@ -95,6 +96,25 @@ const Text: textType = {
             },
           ],
           photo: LighterFuelLogo,
+        },
+        {
+          title: 'LinkedOut',
+          text: 'LinkedOut adds 💩 reactions to LinkedIn',
+          photo: LinkedOutLogo,
+          links: [
+            {
+              type: 'chrome-web-store',
+              url: 'https://chromewebstore.google.com/detail/linkedout-dislikes-for-li/dlcpbhmggchfghnagkpifgddnhgolgfg',
+            },
+            {
+              type: 'firefox-web-store',
+              url: 'https://addons.mozilla.org/en-US/firefox/addon/linkedout/',
+            },
+            {
+              type: 'hosted',
+              url: 'https://linkedout.lol/',
+            },
+          ],
         },
         {
           title: 'JobStream',
