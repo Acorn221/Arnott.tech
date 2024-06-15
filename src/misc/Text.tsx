@@ -90,10 +90,6 @@ const Text: textType = {
               type: 'chrome-web-store',
               url: 'https://chrome.google.com/webstore/detail/lighterfuel-for-tinder/bmcnbhnpmbkcpkhnmknmnkgdeodfljnc',
             },
-            {
-              type: 'firefox-web-store',
-              url: 'https://addons.mozilla.org/en-GB/firefox/addon/lighterfuel-for-tinder/',
-            },
           ],
           photo: LighterFuelLogo,
         },
