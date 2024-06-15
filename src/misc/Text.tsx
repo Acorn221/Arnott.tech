@@ -99,7 +99,7 @@ const Text: textType = {
         },
         {
           title: 'LinkedOut',
-          text: 'LinkedOut adds 💩 reactions to LinkedIn',
+          text: 'LinkedOut simply adds anonymous 💩 reactions to LinkedIn. This does exactly what it says on the tin, and it does it well!',
           photo: LinkedOutLogo,
           links: [
             {
