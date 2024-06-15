@@ -18,7 +18,7 @@
     "@mui/material": "^5.9.1",
     "clsx": "^1.1.1",
     "daisyui": "^3.8.2",
-    "devicon": "github:devicons/devicon",
+    "devicon": "^2.16.0",
     "keen-slider": "^6.6.14",
     "react": "^18.0.0",
     "react-cookie-consent": "^8.0.1",

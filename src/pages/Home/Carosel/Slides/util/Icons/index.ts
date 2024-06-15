@@ -1,4 +1,4 @@
-import TailwindCss from 'devicon/icons/tailwindcss/tailwindcss-plain.svg';
+import TailwindCss from 'devicon/icons/tailwindcss/tailwindcss-original.svg';
 import ReactIcon from 'devicon/icons/react/react-original.svg';
 import TypeScriptIcon from 'devicon/icons/typescript/typescript-plain.svg';
 import JavascriptIcon from 'devicon/icons/javascript/javascript-plain.svg';
