@@ -5,7 +5,7 @@ import { SiGmail } from 'react-icons/si';
 import { useEffect, useState } from 'react';
 import ReactGA from 'react-ga4';
 import Text from '@/misc/Text';
-import Carosel from './Carousel';
+import Carousel from './Carousel';
 import Frontend from './Carousel/Slides/Frontend';
 import DevTools from './Carousel/Slides/DevTools';
 import Backend from './Carousel/Slides/Backend';
@@ -73,13 +73,13 @@ const Home = () => {
       </XyzTransition>
       <XyzTransition appear xyz={`${fadeAnimation} up-2`}>
         <div>
-          <Carosel className="h-[35vh] min-h-[5em]">
+          <Carousel className="h-[35vh] min-h-[5em]">
             {
             slides.map((Slide, index) => (
               <Slide index={index} />
             ))
           }
-          </Carosel>
+          </Carousel>
         </div>
       </XyzTransition>
       <div className="flex justify-center">

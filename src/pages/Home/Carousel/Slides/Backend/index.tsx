@@ -1,6 +1,6 @@
 import { XyzTransitionGroup } from '@animxyz/react';
 import { useContext, useEffect, useState } from 'react';
-import { CaroselContext } from '@/pages/Home/Carosel/';
+import { CarouselContext } from '@/pages/Home/Carousel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
 import IconContainer from '../util/IconContainer';
@@ -11,7 +11,7 @@ const txt = Text.home.slides.backend;
 const iconStyles = 'h-[9vmin] max-h-[8vmin] min-h-[6vmin] max-w-[8vmin]';
 
 const Backend = ({ index }: {index: number}) => {
-  const currentSlide = useContext(CaroselContext);
+  const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     if (!seen) {
