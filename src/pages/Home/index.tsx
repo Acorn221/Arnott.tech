@@ -13,6 +13,7 @@ import OtherPrograms from './Carousel/Slides/OtherPrograms';
 import Projects from './Projects';
 import { getEmail } from './util/misc';
 import StyledToolTip from '@/misc/StyledComponents/StyledToolTip';
+import FidgetSpinner from './Fidget-Spinner';
 
 const txt = Text.home;
 
@@ -82,6 +83,7 @@ const Home = () => {
           </Carousel>
         </div>
       </XyzTransition>
+      <FidgetSpinner />
       <div className="flex justify-center">
         <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
           <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 p-5 max-w-[1280px]">
