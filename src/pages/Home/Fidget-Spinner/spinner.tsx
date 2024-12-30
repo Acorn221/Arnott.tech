@@ -78,7 +78,7 @@ const Spinner: FC<FidgetSpinnerProps> = (props) => {
   });
 
   const rotationSpeed = useRef(0);
-  const targetSpeed = useRef(0);
+  const targetSpeed = useRef(30);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;

@@ -1,11 +1,11 @@
 import { Canvas } from '@react-three/fiber';
-import { Suspense } from 'react';
+import { FC, InputHTMLAttributes, Suspense } from 'react';
 import { OrbitControls, Environment } from '@react-three/drei';
 import Spinner from './spinner';
 
-const FidgetSpinner = () => (
+const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({ ...props }) => (
   <div
-    className="w-full h-96"
+    {...props}
   >
     <Canvas
       camera={{ position: [0, 4, 0], fov: 24, rotation: [-Math.PI / 2, 0, 0] }}

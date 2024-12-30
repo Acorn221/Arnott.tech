@@ -83,17 +83,23 @@ const Home = () => {
           </Carousel>
         </div>
       </XyzTransition>
-      <FidgetSpinner />
+
       <div className="flex justify-center">
         <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
           <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 p-5 max-w-[1280px]">
             <div className="flex-col flex gap-4 text-center">
-              <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
-                {txt.intro.title}
-                <div className="bg-white p-[2px] rounded-full mt-1" />
-              </div>
-              <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
-                {txt.intro.text}
+              <div className="flex flex-col md:flex-row gap-4">
+                <FidgetSpinner className="flex-1 h-96" />
+                <div className="flex-1">
+                  <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
+                    {txt.intro.title}
+                    <div className="bg-white p-[2px] rounded-full mt-1" />
+                  </div>
+                  <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
+                    {txt.intro.text}
+                  </div>
+                </div>
+
               </div>
               <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
                 {txt.projects.title}
