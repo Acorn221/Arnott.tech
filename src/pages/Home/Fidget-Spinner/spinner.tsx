@@ -10,6 +10,7 @@ interface FidgetSpinnerProps extends GroupProps {
   scale?: number | [number, number, number];
   position?: [number, number, number];
   setSpinCount: Dispatch<SetStateAction<number>>;
+  onLoad?: () => void;
 }
 
 const createMaterials = () => ({
@@ -49,14 +50,14 @@ const DRAG_MULTIPLIER = 0.05; // How much mouse movement affects spin
 const FRICTION_BASE = 0.999; // Base friction coefficient
 const MIN_DRAG_THRESHOLD = 3; // Minimum pixels of movement before drag is registered
 
-const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
+const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, onLoad, ...props }) => {
   const groupRef = useRef<THREE.Group>(null);
   const isDragging = useRef(false);
   const hasInitializedDrag = useRef(false);
   const previousMousePosition = useRef({ x: 0, y: 0 });
   const materials = useRef(createMaterials());
   const [isXray, setIsXray] = useState(false);
-  const angularVelocity = useRef(0);
+  const angularVelocity = useRef(10);
   const lastDragTime = useRef(0);
   const dragStartPosition = useRef({ x: 0, y: 0 });
   const lastRotation = useRef(0);
@@ -186,6 +187,9 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
       previousMousePosition.current = { x: e.clientX, y: e.clientY };
       lastDragTime.current = performance.now();
       document.body.style.cursor = 'grabbing';
+
+      // Stop the spinner's movement
+      angularVelocity.current = 0;
     }
   };
 
@@ -194,11 +198,6 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
       document.body.style.cursor = 'grab'; // Reset to grab cursor after dragging
       isDragging.current = false;
       hasInitializedDrag.current = false;
-
-      angularVelocity.current *= 2;
-
-      angularVelocity.current = Math.min(Math.abs(angularVelocity.current), MAX_ANGULAR_VELOCITY)
-        * Math.sign(angularVelocity.current);
     }
   };
 
@@ -210,23 +209,15 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
 
     if (totalDragX > MIN_DRAG_THRESHOLD) {
       const timeDelta = (currentTime - lastDragTime.current) / 1000;
-      const mouseMoveSpeed = timeDelta > 0 ? Math.abs(deltaX / timeDelta) : 0;
+      groupRef.current.rotation.y -= deltaX * DRAG_MULTIPLIER;
 
-      const MOUSE_STILL_THRESHOLD = 50;
-
-      if (mouseMoveSpeed < MOUSE_STILL_THRESHOLD) {
-        angularVelocity.current = 0;
-      } else {
-        groupRef.current.rotation.y -= deltaX * DRAG_MULTIPLIER;
-
-        if (timeDelta > 0) {
-          const instantVelocity = deltaX / timeDelta;
-          angularVelocity.current = THREE.MathUtils.lerp(
-            angularVelocity.current,
-            instantVelocity * DRAG_MULTIPLIER,
-            0.5,
-          );
-        }
+      if (timeDelta > 0) {
+        const instantVelocity = deltaX / timeDelta;
+        angularVelocity.current = THREE.MathUtils.lerp(
+          angularVelocity.current,
+          instantVelocity * DRAG_MULTIPLIER,
+          0.5,
+        );
       }
     }
 
@@ -245,19 +236,10 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
     handlePointerUp({} as ThreeEvent<PointerEvent>);
   };
 
-  const handleClick = () => {
-    const currentSpeed = Math.abs(angularVelocity.current);
-    if (currentSpeed < MIN_SPEED_FOR_CLICK) {
-      const boost = (1 + Math.random() * 2) * 0.1;
-      angularVelocity.current += boost;
-    }
-  };
-
   return (
     <group
       ref={groupRef}
       {...props}
-      onClick={handleClick}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
