@@ -9,9 +9,19 @@ interface FidgetSpinnerProps extends GroupProps {
   position?: [number, number, number];
 }
 
-// Create our material set
 const createMaterials = () => ({
-  ball: new THREE.MeshPhysicalMaterial({
+  // Amoungi + Text
+  '0.000000_0.000000_0.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#FFFFFF'),
+    // metalness: 0.9,
+    // roughness: 0.15,
+    // envMapIntensity: 1.0,
+    // clearcoat: 1.0,
+    // clearcoatRoughness: 0.1,
+  }),
+  // Bearing casing
+  '0.898039_0.898039_0.898039_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    // color: new THREE.Color('#FF0000'),
     color: new THREE.Color('#e8e8e8'),
     metalness: 1.0,
     roughness: 0.05,
@@ -19,27 +29,21 @@ const createMaterials = () => ({
     clearcoat: 1.0,
     clearcoatRoughness: 0.03,
   }),
-  case: new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#b0b0b0'),
-    metalness: 0.9,
-    roughness: 0.1,
-    envMapIntensity: 1.2,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.1,
-  }),
-  seal: new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#808080'),
-    metalness: 0.7,
+  // Bearing Seal
+  '0.000000_0.000000_1.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#0000FF'),
+    // metalness: 0.7,
     roughness: 0.3,
     envMapIntensity: 0.8,
   }),
-  body: new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#303040'),
-    metalness: 0.9,
-    roughness: 0.15,
-    envMapIntensity: 1.0,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.1,
+  // Main body of the spinner
+  '1.000000_0.000000_0.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#FF0000'),
+    metalness: 0.7,
+    roughness: 0.3,
+    // envMapIntensity: 1.2,
+    // clearcoat: 0.8,
+    // clearcoatRoughness: 0.1,
   }),
 });
 
@@ -49,31 +53,23 @@ const Spinner: FC<FidgetSpinnerProps> = (props) => {
   const previousMousePosition = useRef({ x: 0, y: 0 });
   const materials = useRef(createMaterials());
 
-  // Load the complete spinner model
   const { scene } = useGLTF('/fidget-spinner.gltf');
 
-  // Set initial rotation once the component mounts
   useEffect(() => {
     if (groupRef.current) {
       groupRef.current.rotation.set(Math.PI, 0, -Math.PI / 2);
     }
   }, []);
 
-  // Apply materials based on mesh names and entity types
   scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
 
-    const entityType = object.userData?.entity_type;
-    const name = object.name.toLowerCase();
+    const materialName = object.material?.name;
+    // @ts-ignore yeet
+    const mappedMaterial = materials.current[materialName] as THREE.Material;
 
-    if (name.includes('ball') || entityType === 'JFL') {
-      object.material = materials.current.ball;
-    } else if (name.includes('case')) {
-      object.material = materials.current.case;
-    } else if (name.includes('seal')) {
-      object.material = materials.current.seal;
-    } else if (name.includes('body')) {
-      object.material = materials.current.body;
+    if (mappedMaterial) {
+      object.material = mappedMaterial;
     }
 
     // Enable shadows
@@ -81,7 +77,6 @@ const Spinner: FC<FidgetSpinnerProps> = (props) => {
     object.receiveShadow = true;
   });
 
-  // Animation and interaction logic
   const rotationSpeed = useRef(0);
   const targetSpeed = useRef(0);
 
@@ -121,7 +116,6 @@ const Spinner: FC<FidgetSpinnerProps> = (props) => {
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
   };
 
-  // Spin boost on click
   const handleClick = () => {
     targetSpeed.current += 5 + Math.random() * 10;
   };

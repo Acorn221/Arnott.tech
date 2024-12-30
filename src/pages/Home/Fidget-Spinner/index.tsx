@@ -6,9 +6,11 @@ import Spinner from './spinner';
 const FidgetSpinner = () => (
   <div style={{ width: '100%', height: '400px' }}>
     <Canvas
-      camera={{ position: [0, 4, 0], fov: 50, rotation: [-Math.PI / 2, 0, 0] }}
+      camera={{ position: [0, 4, 0], fov: 24, rotation: [-Math.PI / 2, 0, 0] }}
+      shadows
+      gl={{ antialias: true }} // Enable anti-aliasing
     >
-      <Environment preset="sunset" background={false} />
+      <Environment preset="warehouse" background={false} />
 
       {/* Base ambient light */}
       <ambientLight intensity={0.2} />
@@ -55,7 +57,7 @@ const FidgetSpinner = () => (
       <Suspense fallback={null}>
         <Spinner
           position={[0, 0, 0]}
-          scale={35}
+          scale={20}
         />
       </Suspense>
     </Canvas>
