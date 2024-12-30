@@ -6,14 +6,6 @@ import * as path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  css: {
-    postcss: {
-      plugins: [
-        require('autoprefixer')(),
-        require('postcss-nested')(), // For nested CSS
-      ],
-    },
-  },
   plugins: [
     react(),
   ],
