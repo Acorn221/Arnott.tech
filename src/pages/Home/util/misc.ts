@@ -1,4 +1,4 @@
-const email = 'qhtlz@hyuvaa.aljo';
+const email = 'qhtlz@yuv.aa';
 
 const shift = -7;
 /**
