@@ -1,18 +1,17 @@
 import { XyzTransitionGroup } from '@animxyz/react';
-
 import { useContext, useEffect, useState } from 'react';
-import { FrontendIcons } from '../util/Icons';
-import { CaroselContext } from '@/pages/Home/Carosel/';
+import { CarouselContext } from '@/pages/Home/Carousel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
 import IconContainer from '../util/IconContainer';
+import { BackendIcons } from '../util/Icons';
 
-const txt = Text.home.slides.frontend;
+const txt = Text.home.slides.backend;
 
-const iconStyles = 'h-[12vmin] max-h-[8vh] max-w-[8vmin]';
+const iconStyles = 'h-[9vmin] max-h-[8vmin] min-h-[6vmin] max-w-[8vmin]';
 
-const Frontend = ({ index }: {index: number}) => {
-  const currentSlide = useContext(CaroselContext);
+const Backend = ({ index }: {index: number}) => {
+  const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     if (!seen) {
@@ -23,19 +22,13 @@ const Frontend = ({ index }: {index: number}) => {
   }, [currentSlide]);
 
   return (
-    <Slide className="bg-gradient-to-r from-pink-700 to-fuchsia-700 text-white text-3xl">
+    <Slide className="bg-gradient-to-r from-fuchsia-700 to-blue-700 text-white text-3xl">
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
-        <div className="flex-auto h-full flex justify-center align-middle">
+        <div className="md:flex-1 flex-2 h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup
-            appear
-            xyz="fade flip-up flip-left delay-5 stagger"
-            className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4"
-          >
-            { /* Unfortunatley there is a glitch with the animXYZ animation library,
-            and the div parents have to be in this component */}
+          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-auto p-1">
             {
-              FrontendIcons.map((icon) => (
+              BackendIcons.map((icon) => (
                 <div>
                   <IconContainer icon={icon} iconStyles={iconStyles} />
                 </div>
@@ -53,4 +46,4 @@ const Frontend = ({ index }: {index: number}) => {
   );
 };
 
-export default Frontend;
+export default Backend;

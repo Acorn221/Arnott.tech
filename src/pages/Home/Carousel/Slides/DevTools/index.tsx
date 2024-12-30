@@ -1,17 +1,18 @@
 import { XyzTransitionGroup } from '@animxyz/react';
+
 import { useContext, useEffect, useState } from 'react';
-import { CaroselContext } from '@/pages/Home/Carosel/';
+import { DevToolsIcons } from '../util/Icons';
+import { CarouselContext } from '@/pages/Home/Carousel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
 import IconContainer from '../util/IconContainer';
-import { BackendIcons } from '../util/Icons';
 
-const txt = Text.home.slides.backend;
+const txt = Text.home.slides.devTools;
 
-const iconStyles = 'h-[9vmin] max-h-[8vmin] min-h-[6vmin] max-w-[8vmin]';
+const iconStyles = 'h-[12vmin] max-h-[8vh] max-w-[8vmin]';
 
-const Backend = ({ index }: {index: number}) => {
-  const currentSlide = useContext(CaroselContext);
+const DevTools = ({ index }: {index: number}) => {
+  const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     if (!seen) {
@@ -22,13 +23,15 @@ const Backend = ({ index }: {index: number}) => {
   }, [currentSlide]);
 
   return (
-    <Slide className="bg-gradient-to-r from-fuchsia-700 to-blue-700 text-white text-3xl">
+    <Slide className="bg-gradient-to-r from-blue-700 to-purple-700 text-white text-3xl">
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
-        <div className="md:flex-1 flex-2 h-full flex justify-center align-middle">
+        <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 gap-2 md:p-auto p-1">
+          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4">
+            { /* Unfortunatley there is a glitch with the animXYZ animation library,
+             and the div parents have to be in this component */}
             {
-              BackendIcons.map((icon) => (
+              DevToolsIcons.map((icon) => (
                 <div>
                   <IconContainer icon={icon} iconStyles={iconStyles} />
                 </div>
@@ -46,4 +49,4 @@ const Backend = ({ index }: {index: number}) => {
   );
 };
 
-export default Backend;
+export default DevTools;

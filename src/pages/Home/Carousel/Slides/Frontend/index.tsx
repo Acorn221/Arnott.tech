@@ -1,18 +1,18 @@
 import { XyzTransitionGroup } from '@animxyz/react';
 
 import { useContext, useEffect, useState } from 'react';
-import { DevToolsIcons } from '../util/Icons';
-import { CaroselContext } from '@/pages/Home/Carosel/';
+import { FrontendIcons } from '../util/Icons';
+import { CarouselContext } from '@/pages/Home/Carousel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
 import IconContainer from '../util/IconContainer';
 
-const txt = Text.home.slides.devTools;
+const txt = Text.home.slides.frontend;
 
 const iconStyles = 'h-[12vmin] max-h-[8vh] max-w-[8vmin]';
 
-const DevTools = ({ index }: {index: number}) => {
-  const currentSlide = useContext(CaroselContext);
+const Frontend = ({ index }: {index: number}) => {
+  const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     if (!seen) {
@@ -23,15 +23,19 @@ const DevTools = ({ index }: {index: number}) => {
   }, [currentSlide]);
 
   return (
-    <Slide className="bg-gradient-to-r from-blue-700 to-purple-700 text-white text-3xl">
+    <Slide className="bg-gradient-to-r from-pink-700 to-fuchsia-700 text-white text-3xl">
       <div className="flex w-full h-full md:flex-row flex-col-reverse">
         <div className="flex-auto h-full flex justify-center align-middle">
           {seen && (
-          <XyzTransitionGroup appear xyz="fade flip-up flip-left delay-5 stagger" className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4">
+          <XyzTransitionGroup
+            appear
+            xyz="fade flip-up flip-left delay-5 stagger"
+            className="m-auto brightness-0 invert grid grid-cols-4 md:p-10 gap-4"
+          >
             { /* Unfortunatley there is a glitch with the animXYZ animation library,
-             and the div parents have to be in this component */}
+            and the div parents have to be in this component */}
             {
-              DevToolsIcons.map((icon) => (
+              FrontendIcons.map((icon) => (
                 <div>
                   <IconContainer icon={icon} iconStyles={iconStyles} />
                 </div>
@@ -49,4 +53,4 @@ const DevTools = ({ index }: {index: number}) => {
   );
 };
 
-export default DevTools;
+export default Frontend;

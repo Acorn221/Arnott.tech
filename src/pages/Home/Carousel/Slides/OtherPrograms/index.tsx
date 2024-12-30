@@ -2,7 +2,7 @@ import { XyzTransitionGroup } from '@animxyz/react';
 
 import React, { useContext, useEffect, useState } from 'react';
 import { OtherProgramsIcons } from '../util/Icons';
-import { CaroselContext } from '@/pages/Home/Carosel/';
+import { CarouselContext } from '@/pages/Home/Carousel/';
 import Text from '@/misc/Text';
 import Slide from '../Slide';
 import IconContainer from '../util/IconContainer';
@@ -12,7 +12,7 @@ const txt = Text.home.slides.otherPrograms;
 const iconStyles = 'h-[12vmin] max-h-[8vh] max-w-[8vmin]';
 
 const OtherPrograms = ({ index }: {index: number}) => {
-  const currentSlide = useContext(CaroselContext);
+  const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     if (!seen) {

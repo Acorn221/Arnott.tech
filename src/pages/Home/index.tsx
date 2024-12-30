@@ -5,14 +5,15 @@ import { SiGmail } from 'react-icons/si';
 import { useEffect, useState } from 'react';
 import ReactGA from 'react-ga4';
 import Text from '@/misc/Text';
-import Carosel from './Carosel';
-import Frontend from './Carosel/Slides/Frontend';
-import DevTools from './Carosel/Slides/DevTools';
-import Backend from './Carosel/Slides/Backend';
-import OtherPrograms from './Carosel/Slides/OtherPrograms';
+import Carousel from './Carousel';
+import Frontend from './Carousel/Slides/Frontend';
+import DevTools from './Carousel/Slides/DevTools';
+import Backend from './Carousel/Slides/Backend';
+import OtherPrograms from './Carousel/Slides/OtherPrograms';
 import Projects from './Projects';
 import { getEmail } from './util/misc';
 import StyledToolTip from '@/misc/StyledComponents/StyledToolTip';
+import FidgetSpinner from './Fidget-Spinner';
 
 const txt = Text.home;
 
@@ -73,25 +74,32 @@ const Home = () => {
       </XyzTransition>
       <XyzTransition appear xyz={`${fadeAnimation} up-2`}>
         <div>
-          <Carosel className="h-[35vh] min-h-[5em]">
+          <Carousel className="h-[35vh] min-h-[5em]">
             {
             slides.map((Slide, index) => (
               <Slide index={index} />
             ))
           }
-          </Carosel>
+          </Carousel>
         </div>
       </XyzTransition>
+
       <div className="flex justify-center">
         <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
           <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 p-5 max-w-[1280px]">
             <div className="flex-col flex gap-4 text-center">
-              <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
-                {txt.intro.title}
-                <div className="bg-white p-[2px] rounded-full mt-1" />
-              </div>
-              <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
-                {txt.intro.text}
+              <div className="flex flex-col lg:flex-row gap-4">
+                <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh]" />
+                <div className="flex-1">
+                  <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
+                    {txt.intro.title}
+                    <div className="bg-white p-[2px] rounded-full mt-1" />
+                  </div>
+                  <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
+                    {txt.intro.text}
+                  </div>
+                </div>
+
               </div>
               <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
                 {txt.projects.title}

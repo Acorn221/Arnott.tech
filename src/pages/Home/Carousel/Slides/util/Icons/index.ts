@@ -38,7 +38,7 @@ export interface IconInterface {
 
 /**
  * The icons array,
- * which contains the icons to be displayed in the carosel.
+ * which contains the icons to be displayed in the carousel.
  * There is no need for translation with these names.
  */
 export const FrontendIcons: IconInterface[] = [

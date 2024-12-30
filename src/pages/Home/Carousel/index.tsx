@@ -1,19 +1,19 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 import React, { useEffect, useState, createContext } from 'react';
 import { useKeenSlider } from 'keen-slider/react';
-import './carosel.css';
+import './carousel.css';
 import 'keen-slider/keen-slider.min.css';
 import Arrow from './Arrow';
 
-const CaroselContext = createContext(0);
+const CarouselContext = createContext(0);
 
-export interface CaroselProps {
+export interface CarouselProps {
   children: React.ReactNode;
   className?: string;
   slideContainerClass?: string;
 }
 
-const Carosel = ({ children, className, slideContainerClass }: CaroselProps) => {
+const Carousel = ({ children, className, slideContainerClass }: CarouselProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [lastChanged, setLastChanged] = useState(Date.now());
@@ -30,7 +30,7 @@ const Carosel = ({ children, className, slideContainerClass }: CaroselProps) => 
     },
   });
 
-  // allow the user to use arrow keys to navigate the carosel
+  // allow the user to use arrow keys to navigate the carousel
   const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'ArrowLeft') {
       instanceRef.current?.prev();
@@ -39,7 +39,7 @@ const Carosel = ({ children, className, slideContainerClass }: CaroselProps) => 
     }
   };
 
-  // set a delay for changing the carosel slide
+  // set a delay for changing the carousel slide
   useEffect(() => {
     if (nextSlideTimeout) window.clearTimeout(nextSlideTimeout);
     setnextSlideTimeout(window.setTimeout(() => {
@@ -53,11 +53,11 @@ const Carosel = ({ children, className, slideContainerClass }: CaroselProps) => 
 
     <div className={className}>
       <div className="navigation-wrapper shadow-2xl">
-        <CaroselContext.Provider value={currentSlide}>
+        <CarouselContext.Provider value={currentSlide}>
           <div ref={sliderRef} className={`keen-slider w-full h-[30vh] min-h-[10em] ${slideContainerClass}`} onKeyUp={handleKeyUp} tabIndex={0}>
             {children}
           </div>
-        </CaroselContext.Provider>
+        </CarouselContext.Provider>
         {loaded && instanceRef.current && (
           <>
             <Arrow
@@ -90,6 +90,6 @@ const Carosel = ({ children, className, slideContainerClass }: CaroselProps) => 
   );
 };
 
-export default Carosel;
+export default Carousel;
 
-export { CaroselContext };
+export { CarouselContext };
