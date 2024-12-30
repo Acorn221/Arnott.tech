@@ -63,11 +63,22 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
   const accumulatedRotation = useRef(0);
   const { scene } = useGLTF('/fidget-spinner.gltf');
 
+  const resetCursor = () => {
+    document.body.style.cursor = '';
+    isDragging.current = false;
+    hasInitializedDrag.current = false;
+  };
+
   useEffect(() => {
     if (groupRef.current) {
       groupRef.current.rotation.set(Math.PI, 0, -Math.PI / 2);
       lastRotation.current = groupRef.current.rotation.y;
     }
+
+    // Cleanup function to reset cursor when component unmounts
+    return () => {
+      resetCursor();
+    };
   }, []);
 
   useEffect(() => {
@@ -118,8 +129,22 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
         setIsXray((prev) => !prev);
       }
     };
+
+    const handleWindowMouseUp = () => {
+      if (isDragging.current) {
+        resetCursor();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener('mouseup', handleWindowMouseUp);
+    window.addEventListener('mouseleave', resetCursor);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('mouseup', handleWindowMouseUp);
+      window.removeEventListener('mouseleave', resetCursor);
+    };
   }, []);
 
   useFrame((state, delta) => {
@@ -168,9 +193,7 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     if (hasInitializedDrag.current) {
-      isDragging.current = false;
-      hasInitializedDrag.current = false;
-      document.body.style.cursor = 'grab';
+      resetCursor();
 
       // More modest velocity boost on release
       angularVelocity.current *= 2;
