@@ -75,7 +75,6 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
       lastRotation.current = groupRef.current.rotation.y;
     }
 
-    // Cleanup function to reset cursor when component unmounts
     return () => {
       resetCursor();
     };
@@ -152,10 +151,9 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
     if (!isDragging.current && angularVelocity.current !== 0) {
       const speed = Math.abs(angularVelocity.current);
 
-      // More gradual friction that scales with speed
       const frictionFactor = Math.max(
-        FRICTION_BASE - (speed * 0.0001), // Higher speeds get more friction
-        0.995, // Minimum friction coefficient
+        FRICTION_BASE - (speed * 0.0001),
+        0.995,
       );
 
       angularVelocity.current *= frictionFactor;
@@ -193,12 +191,12 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     if (hasInitializedDrag.current) {
-      resetCursor();
+      document.body.style.cursor = 'grab'; // Reset to grab cursor after dragging
+      isDragging.current = false;
+      hasInitializedDrag.current = false;
 
-      // More modest velocity boost on release
       angularVelocity.current *= 2;
 
-      // Ensure we don't exceed max velocity
       angularVelocity.current = Math.min(Math.abs(angularVelocity.current), MAX_ANGULAR_VELOCITY)
         * Math.sign(angularVelocity.current);
     }
@@ -210,25 +208,19 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
     const deltaX = e.clientX - previousMousePosition.current.x;
     const totalDragX = Math.abs(e.clientX - dragStartPosition.current.x);
 
-    // Only process movement if total drag distance exceeds threshold
     if (totalDragX > MIN_DRAG_THRESHOLD) {
-      // Calculate mouse movement speed
       const timeDelta = (currentTime - lastDragTime.current) / 1000;
       const mouseMoveSpeed = timeDelta > 0 ? Math.abs(deltaX / timeDelta) : 0;
 
-      // Threshold for considering the mouse "still" (in pixels per second)
       const MOUSE_STILL_THRESHOLD = 50;
 
       if (mouseMoveSpeed < MOUSE_STILL_THRESHOLD) {
-        // If mouse is moving very slowly or is still, stop the spinner
         angularVelocity.current = 0;
       } else {
-        // Apply movement to rotation
         groupRef.current.rotation.y -= deltaX * DRAG_MULTIPLIER;
 
         if (timeDelta > 0) {
           const instantVelocity = deltaX / timeDelta;
-          // Smooth velocity changes
           angularVelocity.current = THREE.MathUtils.lerp(
             angularVelocity.current,
             instantVelocity * DRAG_MULTIPLIER,
@@ -240,6 +232,17 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
 
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
     lastDragTime.current = currentTime;
+  };
+
+  const handlePointerEnter = () => {
+    document.body.style.cursor = 'grab';
+  };
+
+  const handlePointerLeave = () => {
+    if (!isDragging.current) {
+      document.body.style.cursor = '';
+    }
+    handlePointerUp({} as ThreeEvent<PointerEvent>);
   };
 
   const handleClick = () => {
@@ -258,7 +261,8 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, ...props }) => {
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerUp}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
     >
       <primitive object={scene} />
     </group>
