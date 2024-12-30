@@ -10,7 +10,7 @@ interface FidgetSpinnerProps extends GroupProps {
 }
 
 const createMaterials = () => ({
-  // Amoungi + Text
+  // Amoungi + Text - PRESENT IN CURRENT MODEL
   '0.000000_0.000000_0.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#FFFFFF'),
     // metalness: 0.9,
@@ -20,7 +20,7 @@ const createMaterials = () => ({
     // clearcoatRoughness: 0.1,
   }),
   // Bearing casing
-  '0.898039_0.898039_0.898039_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+  '0.647059_0.647059_0.647059_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     // color: new THREE.Color('#FF0000'),
     color: new THREE.Color('#e8e8e8'),
     metalness: 1.0,
@@ -29,14 +29,14 @@ const createMaterials = () => ({
     clearcoat: 1.0,
     clearcoatRoughness: 0.03,
   }),
-  // Bearing Seal
+  // Bearing Seal - PRESENT IN CURRENT MODEL
   '0.000000_0.000000_1.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#0000FF'),
     // metalness: 0.7,
     roughness: 0.3,
     envMapIntensity: 0.8,
   }),
-  // Main body of the spinner
+  // Main body of the spinner - PRESENT IN CURRENT MODEL
   '1.000000_0.000000_0.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#FF0000'),
     metalness: 0.7,
