@@ -4,7 +4,9 @@ import { OrbitControls, Environment } from '@react-three/drei';
 import Spinner from './spinner';
 
 const FidgetSpinner = () => (
-  <div style={{ width: '100%', height: '400px' }}>
+  <div
+    className="w-full h-96"
+  >
     <Canvas
       camera={{ position: [0, 4, 0], fov: 24, rotation: [-Math.PI / 2, 0, 0] }}
       shadows
