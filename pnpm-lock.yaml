@@ -44,12 +44,6 @@ importers:
       devicon:
         specifier: ^2.16.0
         version: 2.16.0
-      drei:
-        specifier: link:@types/@react-three/drei
-        version: link:@types/@react-three/drei
-      fiber:
-        specifier: link:@types/@react-three/fiber
-        version: link:@types/@react-three/fiber
       keen-slider:
         specifier: ^6.6.14
         version: 6.8.6
