@@ -22,7 +22,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({ ...props }) =>
         shadows
         gl={{ antialias: true }}
       >
-        <Environment preset="warehouse" background={false} />
+        <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 
         {/* Base ambient light */}
         <ambientLight intensity={0.2} />

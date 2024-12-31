@@ -2,7 +2,7 @@
 import {
   FC, useRef, useEffect, useState, SetStateAction, Dispatch,
 } from 'react';
-import { useGLTF, Html } from '@react-three/drei';
+import { useGLTF, Html, Preload } from '@react-three/drei';
 import * as THREE from 'three';
 import { useFrame, GroupProps, ThreeEvent } from '@react-three/fiber';
 
@@ -252,3 +252,5 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, onLoad, ...props }) => 
 };
 
 export default Spinner;
+
+useGLTF.preload('/fidget-spinner.gltf');
