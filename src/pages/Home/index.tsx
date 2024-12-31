@@ -85,11 +85,12 @@ const Home = () => {
       </XyzTransition>
 
       <div className="flex justify-center">
-        <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
-          <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 max-w-[1280px]">
-            <div className="flex-col flex gap-4 text-center">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh]" />
+        {/* <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}> */}
+        <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 max-w-[1280px]">
+          <div className="flex-col flex gap-4 text-center">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh]" />
+              <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
                 <div className="flex-1 px-5">
                   <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
                     {txt.intro.title}
@@ -99,56 +100,57 @@ const Home = () => {
                     {txt.intro.text}
                   </div>
                 </div>
+              </XyzTransition>
+            </div>
 
+            <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
+              {txt.projects.title}
+              <div className="bg-white p-[2px] rounded-full mt-1" />
+            </div>
+            <Projects />
+            <div className="rounded-xl bg-zinc-800/75 p-5 flex-col flex">
+              <div className="underline text-center text-3xl">
+                {txt.contactMe.title}
               </div>
-              <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
-                {txt.projects.title}
-                <div className="bg-white p-[2px] rounded-full mt-1" />
-              </div>
-              <Projects />
-              <div className="rounded-xl bg-zinc-800/75 p-5 flex-col flex">
-                <div className="underline text-center text-3xl">
-                  {txt.contactMe.title}
+              <div className="flex w-full text-center justify-center m-2">
+                <div className="flex-1 justify-center" onClick={() => handleLinkedInLinkClick()}>
+                  <StyledToolTip placement="top" arrow title="James-Arnott-341705143">
+                    <div className="m-auto w-[15vmin] flex-col flex">
+                      <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
+                      <div>
+                        {txt.contactMe.linkedIn.text}
+                      </div>
+                    </div>
+                  </StyledToolTip>
                 </div>
-                <div className="flex w-full text-center justify-center m-2">
-                  <div className="flex-1 justify-center" onClick={() => handleLinkedInLinkClick()}>
-                    <StyledToolTip placement="top" arrow title="James-Arnott-341705143">
-                      <div className="m-auto w-[15vmin] flex-col flex">
-                        <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
-                        <div>
-                          {txt.contactMe.linkedIn.text}
-                        </div>
-                      </div>
-                    </StyledToolTip>
-                  </div>
 
-                  <div onClick={() => handleEmailLinkClick()} className="flex-1 justify-center ">
-                    <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
-                      <div className="m-auto w-[15vmin] flex-col flex">
-                        <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
-                        <div>
-                          {txt.contactMe.email.text}
-                        </div>
+                <div onClick={() => handleEmailLinkClick()} className="flex-1 justify-center ">
+                  <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
+                    <div className="m-auto w-[15vmin] flex-col flex">
+                      <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
+                      <div>
+                        {txt.contactMe.email.text}
                       </div>
-                    </StyledToolTip>
-                  </div>
-
-                  <div onClick={() => handleGmailLinkClick()} className="flex-1 justify-center ">
-                    <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
-                      <div className="m-auto w-[15vmin] flex-col flex">
-                        <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
-                        <div>
-                          {txt.contactMe.gmail.text}
-                        </div>
-                      </div>
-                    </StyledToolTip>
-                  </div>
-
+                    </div>
+                  </StyledToolTip>
                 </div>
+
+                <div onClick={() => handleGmailLinkClick()} className="flex-1 justify-center ">
+                  <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
+                    <div className="m-auto w-[15vmin] flex-col flex">
+                      <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
+                      <div>
+                        {txt.contactMe.gmail.text}
+                      </div>
+                    </div>
+                  </StyledToolTip>
+                </div>
+
               </div>
             </div>
           </div>
-        </XyzTransition>
+        </div>
+        {/* </XyzTransition> */}
       </div>
 
     </div>
