@@ -57,7 +57,7 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, onLoad, ...props }) => 
   const previousMousePosition = useRef({ x: 0, y: 0 });
   const materials = useRef(createMaterials());
   const [isXray, setIsXray] = useState(false);
-  const angularVelocity = useRef(10);
+  const angularVelocity = useRef(5);
   const lastDragTime = useRef(0);
   const dragStartPosition = useRef({ x: 0, y: 0 });
   const lastRotation = useRef(0);
