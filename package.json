@@ -15,7 +15,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^5.16.13",
-    "@react-three/drei": "^9.120.4",
+    "@react-three/drei": "^9.120.5",
     "@react-three/fiber": "^8.17.10",
     "clsx": "^1.2.1",
     "daisyui": "^3.9.4",
