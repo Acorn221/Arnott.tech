@@ -2,7 +2,7 @@
 import { FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { GroupProps } from '@react-three/fiber';
+import { GroupProps, useFrame } from '@react-three/fiber';
 
 interface SpinnerModelProps extends GroupProps {
   isXray: boolean;
@@ -40,6 +40,7 @@ const createMaterials = () => ({
 
 const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
   const materials = useRef(createMaterials());
+  const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF('/fidget-spinner.gltf');
 
   // Initialize materials
@@ -86,7 +87,22 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
     });
   }, [isXray]);
 
-  return <primitive object={scene} {...props} />;
+  // Apply slight offset animation
+  useFrame((state) => {
+    if (groupRef.current) {
+      const addition = 0.01;
+      const maxOffset = 0.01; // Maximum offset in radians (about 3 degrees)
+
+      const offsetY = Math.cos(state.clock.elapsedTime * 2) * maxOffset + addition;
+      groupRef.current.rotation.z = offsetY;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <primitive object={scene} {...props} />
+    </group>
+  );
 };
 
 export default SpinnerModel;
