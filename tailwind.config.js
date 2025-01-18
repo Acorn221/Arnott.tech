@@ -39,6 +39,78 @@ module.exports = {
     },
   },
   plugins: [
+    function ({ addComponents, addBase }) {
+      addBase({
+        '@keyframes pulse': {
+          '0%': {
+            transform: 'scale(0.33)',
+          },
+          '80%, 100%': {
+            opacity: '0',
+          },
+        },
+        '@keyframes circle': {
+          '0%': {
+            transform: 'scale(0.8)',
+          },
+          '50%': {
+            transform: 'scale(1)',
+          },
+          '100%': {
+            transform: 'scale(0.8)',
+          },
+        },
+      });
+
+      const circles = {
+        '.circle-2, .circle-4, .circle-6, .circle-8': {
+          position: 'relative',
+          display: 'inline-block',
+          '&::before': {
+            content: '""',
+            position: 'relative',
+            display: 'block',
+            width: '250%',
+            height: '250%',
+            boxSizing: 'border-box',
+            marginLeft: '-75%',
+            marginTop: '-75%',
+            borderRadius: '25px',
+            backgroundColor: '#75daad',
+            animation: 'pulse 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            left: '0',
+            top: '0',
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#75daad',
+            borderRadius: '40px',
+            animation: 'circle 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite',
+          },
+        },
+        '.circle-2': {
+          width: '10px',
+          height: '10px',
+        },
+        '.circle-4': {
+          width: '20px',
+          height: '20px',
+        },
+        '.circle-6': {
+          width: '30px',
+          height: '30px',
+        },
+        '.circle-8': {
+          width: '40px',
+          height: '40px',
+        },
+      };
+      addComponents(circles);
+    },
     require('tailwindcss-animatecss')({
       classes: ['animate__animated', 'animate__fadeIn', 'animate__bounceIn', 'animate__lightSpeedOut', 'animate__rollIn', 'animate__backInUp', 'animate__fast', 'animate__faster', 'animate__backOutDown'],
       settings: {
@@ -57,6 +129,5 @@ module.exports = {
   ],
   include: [
     'src',
-    'types',
   ],
 };
