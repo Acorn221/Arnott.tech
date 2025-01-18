@@ -1,0 +1,94 @@
+/* eslint-disable no-param-reassign */
+import { FC, useRef, useEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
+import { GroupProps } from '@react-three/fiber';
+
+interface SpinnerModelProps extends GroupProps {
+  isXray: boolean;
+}
+
+const createMaterials = () => ({
+  // Amoungi + Text
+  '0.000000_0.000000_0.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#FFFFFF'),
+  }),
+  // Bearing casing
+  '0.647059_0.647059_0.647059_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#e8e8e8'),
+    metalness: 1.0,
+    roughness: 0.05,
+    envMapIntensity: 1.5,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.03,
+  }),
+  // Bearing Seal
+  '0.000000_0.000000_1.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#0000FF'),
+    roughness: 0.3,
+    envMapIntensity: 0.8,
+  }),
+  // Main body of the spinner
+  '1.000000_0.000000_0.000000_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#FF0000'),
+    metalness: 0.7,
+    roughness: 0.3,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.1,
+  }),
+});
+
+const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
+  const materials = useRef(createMaterials());
+  const { scene } = useGLTF('/fidget-spinner.gltf');
+
+  // Initialize materials
+  useEffect(() => {
+    const customMaterials = createMaterials();
+    materials.current = customMaterials;
+    scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.userData.materialKey = object.material.name;
+        const materialKey = object.material.name;
+        // @ts-ignore - materialKey is fine
+        if (customMaterials[materialKey]) {
+          // @ts-ignore - materialKey is fine
+          object.material = customMaterials[materialKey];
+          object.castShadow = true;
+          object.receiveShadow = true;
+        }
+      }
+    });
+  }, [scene]);
+
+  // Handle xray mode changes
+  useEffect(() => {
+    scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        if (isXray) {
+          object.material = new THREE.MeshPhysicalMaterial({
+            wireframe: true,
+            color: new THREE.Color('#bdc5c3'),
+            transparent: true,
+            opacity: 0.7,
+          });
+        } else {
+          const { materialKey } = object.userData;
+          // @ts-ignore - materialKey is fine
+          const originalMaterial = materials.current[materialKey];
+          if (originalMaterial) {
+            object.material = originalMaterial;
+            object.castShadow = true;
+            object.receiveShadow = true;
+          }
+        }
+      }
+    });
+  }, [isXray]);
+
+  return <primitive object={scene} {...props} />;
+};
+
+export default SpinnerModel;
+
+useGLTF.preload('/fidget-spinner.gltf');

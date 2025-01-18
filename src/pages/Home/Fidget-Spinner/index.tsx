@@ -3,7 +3,7 @@ import {
   FC, InputHTMLAttributes, Suspense, useState,
 } from 'react';
 import { OrbitControls, Environment } from '@react-three/drei';
-import Spinner from './spinner';
+import InteractiveSpinner from './interactive-spinner';
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({ ...props }) => {
   const [spinCount, setSpinCount] = useState(0);
@@ -43,7 +43,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({ ...props }) =>
 
         {/* Scene content */}
         <Suspense fallback={null}>
-          <Spinner
+          <InteractiveSpinner
             position={[0, 0, 0]}
             scale={20}
             setSpinCount={setSpinCount}
