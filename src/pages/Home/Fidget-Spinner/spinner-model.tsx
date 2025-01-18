@@ -92,9 +92,11 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
     if (groupRef.current) {
       const addition = 0.01;
       const maxOffset = 0.01; // Maximum offset in radians (about 3 degrees)
+      const offsetX = Math.sin(state.clock.elapsedTime * 2) * maxOffset;
+      const offsetY = Math.cos(state.clock.elapsedTime * 2) * maxOffset;
 
-      const offsetY = Math.cos(state.clock.elapsedTime * 2) * maxOffset + addition;
       groupRef.current.rotation.z = offsetY;
+      groupRef.current.rotation.x = offsetX;
     }
   });
 
