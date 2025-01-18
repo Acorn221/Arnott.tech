@@ -6,6 +6,13 @@ import { useGLTF, Html, Preload } from '@react-three/drei';
 import * as THREE from 'three';
 import { useFrame, GroupProps, ThreeEvent } from '@react-three/fiber';
 
+interface RotationPoint {
+  x: number;
+  y: number;
+  radius: number;
+  angle: number;
+}
+
 interface FidgetSpinnerProps extends GroupProps {
   scale?: number | [number, number, number];
   position?: [number, number, number];
@@ -63,6 +70,88 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, onLoad, ...props }) => 
   const lastRotation = useRef(0);
   const accumulatedRotation = useRef(0);
   const { scene } = useGLTF('/fidget-spinner.gltf');
+
+  const startPoint = useRef<RotationPoint | null>(null);
+  const previousPoint = useRef<RotationPoint | null>(null);
+
+  const getMouseAngle = (event: ThreeEvent<PointerEvent>): number => {
+    if (!groupRef.current) return 0;
+    if (!event.target) return 0;
+
+    // Get the center of the spinner in screen coordinates
+    const center = new THREE.Vector3();
+    groupRef.current.getWorldPosition(center);
+    center.project(event.camera);
+
+    // Cast the target to HTMLElement to access getBoundingClientRect
+    const rect = (event.nativeEvent.target as HTMLElement).getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // Calculate angle in normalized space
+    return Math.atan2(y - center.y, x - center.x);
+  };
+
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    if (e.buttons > 0) {
+      isDragging.current = true;
+      hasInitializedDrag.current = true;
+      previousMousePosition.current = { x: e.clientX, y: e.clientY };
+      lastDragTime.current = performance.now();
+      document.body.style.cursor = 'grabbing';
+      angularVelocity.current = 0;
+    }
+  };
+
+  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+    if (!isDragging.current || !hasInitializedDrag.current || !groupRef.current) return;
+
+    const currentAngle = getMouseAngle(e);
+    const previousAngle = getMouseAngle({ ...e, clientX: previousMousePosition.current.x, clientY: previousMousePosition.current.y } as ThreeEvent<PointerEvent>);
+    const deltaAngle = currentAngle - previousAngle;
+
+    // Direct 1:1 movement
+    groupRef.current.rotation.y -= deltaAngle;
+
+    // Calculate velocity for momentum with exponential curve
+    const currentTime = performance.now();
+    const timeDelta = (currentTime - lastDragTime.current) / 1000;
+    if (timeDelta > 0) {
+      const baseVelocity = deltaAngle / timeDelta;
+
+      const DEAD_ZONE = 0.1;
+      const BOOST_SCALE = 0.3;
+      const EXPONENT = 1.2;
+
+      const speedFactor = Math.max(0, Math.abs(baseVelocity) - DEAD_ZONE);
+      const boost = speedFactor ** EXPONENT * BOOST_SCALE;
+
+      const boostedVelocity = speedFactor > 0
+        ? baseVelocity * (1 + boost)
+        : baseVelocity;
+
+      angularVelocity.current = THREE.MathUtils.clamp(
+        boostedVelocity,
+        -MAX_ANGULAR_VELOCITY,
+        MAX_ANGULAR_VELOCITY,
+      );
+    }
+
+    previousMousePosition.current = { x: e.clientX, y: e.clientY };
+    lastDragTime.current = currentTime;
+  };
+
+  // Replace your handlePointerUp with this
+  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
+    if (hasInitializedDrag.current) {
+      document.body.style.cursor = 'grab';
+      isDragging.current = false;
+      hasInitializedDrag.current = false;
+      startPoint.current = null;
+      previousPoint.current = null;
+    }
+  };
 
   const resetCursor = () => {
     document.body.style.cursor = '';
@@ -178,73 +267,13 @@ const Spinner: FC<FidgetSpinnerProps> = ({ setSpinCount, onLoad, ...props }) => 
     }
   });
 
-  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-    e.stopPropagation();
-    if (e.buttons > 0) {
-      isDragging.current = true;
-      hasInitializedDrag.current = true;
-      dragStartPosition.current = { x: e.clientX, y: e.clientY };
-      previousMousePosition.current = { x: e.clientX, y: e.clientY };
-      lastDragTime.current = performance.now();
-      document.body.style.cursor = 'grabbing';
-
-      // Stop the spinner's movement
-      angularVelocity.current = 0;
-    }
-  };
-
-  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
-    if (hasInitializedDrag.current) {
-      document.body.style.cursor = 'grab'; // Reset to grab cursor after dragging
-      isDragging.current = false;
-      hasInitializedDrag.current = false;
-    }
-  };
-
-  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!isDragging.current || !hasInitializedDrag.current || !groupRef.current) return;
-    const currentTime = performance.now();
-    const deltaX = e.clientX - previousMousePosition.current.x;
-    const totalDragX = Math.abs(e.clientX - dragStartPosition.current.x);
-
-    if (totalDragX > MIN_DRAG_THRESHOLD) {
-      const timeDelta = (currentTime - lastDragTime.current) / 1000;
-      groupRef.current.rotation.y -= deltaX * DRAG_MULTIPLIER;
-
-      if (timeDelta > 0) {
-        const instantVelocity = deltaX / timeDelta;
-        angularVelocity.current = THREE.MathUtils.lerp(
-          angularVelocity.current,
-          instantVelocity * DRAG_MULTIPLIER,
-          0.5,
-        );
-      }
-    }
-
-    previousMousePosition.current = { x: e.clientX, y: e.clientY };
-    lastDragTime.current = currentTime;
-  };
-
-  const handlePointerEnter = () => {
-    document.body.style.cursor = 'grab';
-  };
-
-  const handlePointerLeave = () => {
-    if (!isDragging.current) {
-      document.body.style.cursor = '';
-    }
-    handlePointerUp({} as ThreeEvent<PointerEvent>);
-  };
-
   return (
     <group
       ref={groupRef}
       {...props}
       onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
+      onPointerUp={handlePointerUp}
     >
       <primitive object={scene} />
     </group>
