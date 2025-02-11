@@ -13,9 +13,9 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({ ...props }) =>
       {...props}
     >
       <div className="flex w-full justify-center align-middle">
-        <div>
+        {/* <div>
           <div className="circle-2 ml-4" />
-        </div>
+        </div> */}
         <div className="m-auto">
           Spins:
           {' '}
