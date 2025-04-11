@@ -2,7 +2,7 @@ import { XyzTransition } from '@animxyz/react';
 import { AiFillLinkedin } from 'react-icons/ai';
 import { MdEmail } from 'react-icons/md';
 import { SiGmail } from 'react-icons/si';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ReactGA from 'react-ga4';
 import Text from '@/misc/Text';
 import Carousel from './Carousel';
@@ -32,12 +32,16 @@ const Home = () => {
   useEffect(() => {
     ReactGA.initialize('G-WW6JYGLDCW');
     ReactGA.send({ hitType: 'pageview', page: window.location.pathname, title: document.title });
+
+    if (window.innerWidth <= 768) {
+      setEmail(getEmail());
+    }
   });
 
-  const requestEmail = () => {
+  const requestEmail = useCallback(() => {
     setEmail(getEmail());
     return email;
-  };
+  }, []);
 
   const getGmailLink = () => {
     requestEmail();
