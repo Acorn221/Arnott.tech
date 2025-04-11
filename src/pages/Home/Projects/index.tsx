@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import { XyzTransition } from '@animxyz/react';
 import { AiFillGithub, AiFillChrome } from 'react-icons/ai';
 import { ImFirefox } from 'react-icons/im';
@@ -16,8 +17,8 @@ const openLink = (link: string) => {
 
 const Projects = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {txt.arr.map((project) => (
-      <div className="flex flex-col bg-zinc-800/75 rounded-2xl">
+    {txt.arr.map((project, i) => (
+      <div className="flex flex-col bg-zinc-800/75 rounded-2xl" key={i}>
         {
     project.photo && (
       <XyzTransition appear xyz="fade in-out delay-8">

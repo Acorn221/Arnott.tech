@@ -2,7 +2,7 @@ import { XyzTransition } from '@animxyz/react';
 import { AiFillLinkedin } from 'react-icons/ai';
 import { MdEmail } from 'react-icons/md';
 import { SiGmail } from 'react-icons/si';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ReactGA from 'react-ga4';
 import Text from '@/misc/Text';
 import Carousel from './Carousel';
@@ -29,41 +29,41 @@ const slides = [
 const Home = () => {
   const [email, setEmail] = useState('/');
 
+  const requestEmail = useCallback(() => {
+    const unencryptedEmail = getEmail();
+    setEmail(unencryptedEmail);
+    return unencryptedEmail;
+  }, []);
+
   useEffect(() => {
     ReactGA.initialize('G-WW6JYGLDCW');
     ReactGA.send({ hitType: 'pageview', page: window.location.pathname, title: document.title });
+
+    requestEmail();
   });
 
-  const requestEmail = () => {
-    setEmail(getEmail());
-    return email;
-  };
+  const getGmailLink = () => `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(requestEmail())}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
 
-  const getGmailLink = () => {
-    requestEmail();
-    return `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(email)}&su=I'm%20here%20from%20J4A.uk!&tf=cm`;
-  };
-
-  const handleGmailLinkClick = () => {
+  const handleGmailLinkClick = useCallback(() => {
     ReactGA.send({
       category: 'UrlClick', action: 'gmail-click', page: window.location.pathname, title: document.title,
     });
     window.open(getGmailLink());
-  };
+  }, [email]);
 
-  const handleLinkedInLinkClick = () => {
+  const handleLinkedInLinkClick = useCallback(() => {
     ReactGA.send({
       category: 'UrlClick', action: 'linkedin-click', page: window.location.pathname, title: document.title,
     });
     window.open('https://www.linkedin.com/in/james-arnott-341705143/');
-  };
+  }, [email]);
 
-  const handleEmailLinkClick = () => {
+  const handleEmailLinkClick = useCallback(() => {
     ReactGA.send({
       category: 'UrlClick', action: 'email-click', page: window.location.pathname, title: document.title,
     });
     window.open(`mailto:${requestEmail()}`);
-  };
+  }, [email]);
 
   return (
     <div className="h-full text-white">
