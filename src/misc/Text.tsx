@@ -67,7 +67,7 @@ const Text: textType = {
       title: 'About Me',
       text: "I'm a Computer Science Graduate and Software Developer "
         + "from Royal Holloway, University of London. I'm currently "
-        + 'working at Verdn (YC22). I like doing full stack '
+        + 'working at PearAI (YC F24). I like doing full stack '
         + 'web development and doing web-based projects mainly, along with a variety of machine learning based projects',
     },
     projects: {
@@ -77,10 +77,9 @@ const Text: textType = {
           title: 'LighterFuel, For Tinder',
           text: 'This chrome extension is an 𝑎𝑐𝑐𝑒𝑙𝑒𝑟𝑎𝑛𝑡 for Tinder users. '
           + 'It helps users quickly and efficiently identify fake profiles '
-          + 'and potential scams. It displays the \'Last Modified\' Header value, '
-          + 'which indicates when profile was created by showing when the profile '
-          + 'photos were uploaded. Then it also allows for 1 click reverse image '
-          + 'search to see if the photo has been uploaded online already.',
+          + 'and potential scams. It displays the MongoDB ID date of the profile '
+          + 'which shows my users when their matches profiles were created and also allows for 1 click reverse image '
+          + 'search to see if the profile photos have been uploaded online.',
           links: [
             {
               type: 'github',
