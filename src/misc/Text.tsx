@@ -24,6 +24,7 @@ export type textType = {
           url: string;
         }[];
         photo?: string;
+        hideFromSource?: string[];
       }[];
     };
     slides: {
@@ -91,6 +92,7 @@ const Text: textType = {
             },
           ],
           photo: LighterFuelLogo,
+          hideFromSource: ['instagram.com'],
         },
         {
           title: 'LinkedOut',
