@@ -92,7 +92,7 @@ const Text: textType = {
             },
           ],
           photo: LighterFuelLogo,
-          hideFromSource: ['instagram.com'],
+          hideFromSource: ['instagram.com', 'l.instagram.com'],
         },
         {
           title: 'LinkedOut',
