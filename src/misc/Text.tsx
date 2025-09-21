@@ -2,6 +2,7 @@ import LighterFuelLogo from '@/pages/Home/Projects/assets/LighterFuel512.png';
 import Snap2CalLogo from '@/pages/Home/Projects/assets/snap2cal.png';
 import JobStreamLogo from '@/pages/Home/Projects/assets/JobStreamLogo.svg';
 import LinkedOutLogo from '@/pages/Home/Projects/assets/LinkedOutLogo.png';
+import DeathMailLogo from '@/pages/Home/Projects/assets/DeathMail.svg';
 
 export type textType = {
   home: {
@@ -68,8 +69,8 @@ const Text: textType = {
       title: 'About Me',
       text: "I'm a Computer Science Graduate and Software Developer "
         + "from Royal Holloway, University of London. I'm currently "
-        + 'working on my own projects. I like doing full stack '
-        + 'web development and doing web-based projects mainly, along with a variety of machine learning based projects',
+        + 'working at Throxy X25. I like doing everything to push startups forward,'
+        + 'with a focus on full stack development, along with a variety of machine learning and cryptography based projects',
     },
     projects: {
       title: 'Here are some of my projects.',
@@ -93,6 +94,17 @@ const Text: textType = {
           ],
           photo: LighterFuelLogo,
           hideFromSource: ['instagram.com', 'l.instagram.com'],
+        },
+        {
+          title: 'DeathMail',
+          text: 'Send messages after you kick the bucket. End to 𝙩𝙝𝙚 end encryption. DeathMail is the first platform that properly implements end to end encryption with passkey based encryption for the users so they have control over their keys.',
+          photo: DeathMailLogo,
+          links: [
+            {
+              type: 'hosted',
+              url: 'https://deathmail.ai/',
+            },
+          ],
         },
         {
           title: 'LinkedOut',
