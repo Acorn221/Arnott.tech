@@ -2,7 +2,7 @@ const email = 'qhtlz@yuv.aa';
 
 const shift = -7;
 /**
- * Here I'm doing a ceasar cypher to avoid webscrapers finding my email
+ * Here I'm doing a caesar cipher to avoid webscrapers finding my email
  * and sending me spam and putting my compsci degree to real use 😎😎😎
  */
 const getEmail = () => String.fromCharCode(...email.split('').map((char) => {
