@@ -14,6 +14,7 @@ import Projects from './Projects';
 import { getEmail } from './util/misc';
 import StyledToolTip from '@/misc/StyledComponents/StyledToolTip';
 import FidgetSpinner from './Fidget-Spinner';
+import { useUnlock } from '../../contexts/UnlockContext';
 
 const txt = Text.home;
 
@@ -28,12 +29,16 @@ const slides = [
 
 const Home = () => {
   const [email, setEmail] = useState('/');
+  const { unlockState } = useUnlock();
 
   const requestEmail = useCallback(() => {
+    if (!unlockState.emailUnlocked) {
+      return '🔒 Spin the fidget spinner 200 times to unlock!';
+    }
     const unencryptedEmail = getEmail();
     setEmail(unencryptedEmail);
     return unencryptedEmail;
-  }, []);
+  }, [unlockState.emailUnlocked]);
 
   useEffect(() => {
     ReactGA.initialize('G-WW6JYGLDCW');
@@ -44,26 +49,48 @@ const Home = () => {
 
   const getGmailLink = () => `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(requestEmail())}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
 
+  const scrollToSpinner = useCallback(() => {
+    const spinnerElement = document.querySelector('canvas');
+    if (spinnerElement) {
+      spinnerElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, []);
+
   const handleGmailLinkClick = useCallback(() => {
+    if (!unlockState.emailUnlocked) {
+      scrollToSpinner();
+      return;
+    }
     ReactGA.send({
       category: 'UrlClick', action: 'gmail-click', page: window.location.pathname, title: document.title,
     });
     window.open(getGmailLink());
-  }, [email]);
+  }, [email, unlockState.emailUnlocked, scrollToSpinner]);
 
   const handleLinkedInLinkClick = useCallback(() => {
+    if (!unlockState.linkedinUnlocked) {
+      scrollToSpinner();
+      return;
+    }
     ReactGA.send({
       category: 'UrlClick', action: 'linkedin-click', page: window.location.pathname, title: document.title,
     });
     window.open('https://www.linkedin.com/in/james-arnott-341705143/');
-  }, [email]);
+  }, [email, unlockState.linkedinUnlocked, scrollToSpinner]);
 
   const handleEmailLinkClick = useCallback(() => {
+    if (!unlockState.emailUnlocked) {
+      scrollToSpinner();
+      return;
+    }
     ReactGA.send({
       category: 'UrlClick', action: 'email-click', page: window.location.pathname, title: document.title,
     });
     window.open(`mailto:${requestEmail()}`);
-  }, [email]);
+  }, [email, unlockState.emailUnlocked, scrollToSpinner]);
 
   return (
     <div className="h-full text-white">
@@ -113,34 +140,52 @@ const Home = () => {
                 {txt.contactMe.title}
               </div>
               <div className="flex w-full text-center justify-center m-2">
-                <div className="flex-1 justify-center" onClick={() => handleLinkedInLinkClick()}>
-                  <StyledToolTip placement="top" arrow title="James-Arnott-341705143">
-                    <div className="m-auto w-[15vmin] flex-col flex">
-                      <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
+                <div onClick={() => handleLinkedInLinkClick()} className={`flex-1 justify-center ${!unlockState.linkedinUnlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <StyledToolTip placement="top" arrow title={unlockState.linkedinUnlocked ? "James-Arnott-341705143" : "🔒 Spin the fidget spinner 100 times to unlock!"}>
+                    <div className="m-auto w-[15vmin] flex-col flex relative">
+                      <AiFillLinkedin className={`w-[15vmin] h-full m-auto ${unlockState.linkedinUnlocked ? 'text-blue-500' : 'text-gray-500'}`} />
+                      {!unlockState.linkedinUnlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-3xl">🔒</div>
+                        </div>
+                      )}
                       <div>
                         {txt.contactMe.linkedIn.text}
+                        {!unlockState.linkedinUnlocked && ' 🔒'}
                       </div>
                     </div>
                   </StyledToolTip>
                 </div>
 
-                <div onClick={() => handleEmailLinkClick()} className="flex-1 justify-center ">
-                  <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
-                    <div className="m-auto w-[15vmin] flex-col flex">
-                      <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
+                <div onClick={() => handleEmailLinkClick()} className={`flex-1 justify-center ${!unlockState.emailUnlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <StyledToolTip placement="top" arrow title={unlockState.emailUnlocked ? requestEmail() : "🔒 Spin the fidget spinner 200 times to unlock!"}>
+                    <div className="m-auto w-[15vmin] flex-col flex relative">
+                      <MdEmail className={`w-[15vmin] h-full m-auto ${unlockState.emailUnlocked ? 'text-red-500' : 'text-gray-500'}`} />
+                      {!unlockState.emailUnlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-3xl">🔒</div>
+                        </div>
+                      )}
                       <div>
                         {txt.contactMe.email.text}
+                        {!unlockState.emailUnlocked && ' 🔒'}
                       </div>
                     </div>
                   </StyledToolTip>
                 </div>
 
-                <div onClick={() => handleGmailLinkClick()} className="flex-1 justify-center ">
-                  <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
-                    <div className="m-auto w-[15vmin] flex-col flex">
-                      <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
+                <div onClick={() => handleGmailLinkClick()} className={`flex-1 justify-center ${!unlockState.emailUnlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <StyledToolTip placement="top" arrow title={unlockState.emailUnlocked ? requestEmail() : "🔒 Spin the fidget spinner 200 times to unlock!"}>
+                    <div className="m-auto w-[15vmin] flex-col flex relative">
+                      <SiGmail className={`w-[15vmin] h-full m-auto ${unlockState.emailUnlocked ? 'text-red-500' : 'text-gray-500'}`} />
+                      {!unlockState.emailUnlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-3xl">🔒</div>
+                        </div>
+                      )}
                       <div>
                         {txt.contactMe.gmail.text}
+                        {!unlockState.emailUnlocked && ' 🔒'}
                       </div>
                     </div>
                   </StyledToolTip>

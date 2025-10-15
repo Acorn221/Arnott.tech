@@ -17,6 +17,7 @@
     "@mui/material": "^5.17.1",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "canvas-confetti": "^1.9.3",
     "clsx": "^1.2.1",
     "daisyui": "^3.9.4",
     "devicon": "^2.16.0",
@@ -33,6 +34,7 @@
     "three": "^0.171.0"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^17.0.45",
     "@types/react": "^18.3.21",
     "@types/react-dom": "^18.3.7",
@@ -60,64 +62,6 @@
     "plugins": {
       "tailwindcss": {},
       "autoprefixer": {}
-    }
-  },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "es2021": true
-    },
-    "extends": [
-      "plugin:react/recommended",
-      "airbnb"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaFeatures": {
-        "jsx": true
-      },
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "plugins": [
-      "react",
-      "@typescript-eslint"
-    ],
-    "rules": {
-      "react/function-component-definition": [
-        2,
-        {
-          "namedComponents": "arrow-function",
-          "unnamedComponents": "arrow-function"
-        }
-      ],
-      "react/no-unknown-property": 0,
-      "linebreak-style": 0,
-      "no-plusplus": 0,
-      "no-tabs": [
-        "error",
-        {
-          "allowIndentationTabs": true
-        }
-      ],
-      "import/extensions": 0,
-      "import/no-unresolved": 0,
-      "jsx-a11y/click-events-have-key-events": 0,
-      "jsx-a11y/no-static-element-interactions": 0,
-      "react/forbid-prop-types": 0,
-      "react/react-in-jsx-scope": 0,
-      "react/require-default-props": 0,
-      "no-unused-vars": 0,
-      "max-len": 0,
-      "react/jsx-filename-extension": 0,
-      "react/button-has-type": 0,
-      "jsx-a11y/anchor-is-valid": 0,
-      "jsx-a11y/alt-text": 0,
-      "no-bitwise": 0,
-      "react/jsx-props-no-spreading": 0,
-      "react/prop-types": 0,
-      "no-console": 0,
-      "no-alert": 0
     }
   }
 }
