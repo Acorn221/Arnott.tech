@@ -131,6 +131,10 @@ const Text: textType = {
             + 'The goal for it is to allow users to apply to a variety of jobs quicker and more efficiently, whilst still making high quality applications.',
           links: [
             {
+              type: 'github',
+              url: 'https://github.com/acorn221/JobStream',
+            },
+            {
               type: 'hosted',
               url: 'https://jobstream.uk/',
             },
