@@ -3,6 +3,7 @@ import Snap2CalLogo from '@/pages/Home/Projects/assets/snap2cal.png';
 import JobStreamLogo from '@/pages/Home/Projects/assets/JobStreamLogo.svg';
 import LinkedOutLogo from '@/pages/Home/Projects/assets/LinkedOutLogo.png';
 import DeathMailLogo from '@/pages/Home/Projects/assets/DeathMail.svg';
+import CubeAuthn from '@/pages/Home/Projects/assets/CubeAuthn.png';
 
 export type textType = {
   home: {
@@ -103,6 +104,21 @@ const Text: textType = {
             {
               type: 'hosted',
               url: 'https://deathmail.ai/',
+            },
+          ],
+        },
+        {
+          title: 'CubeAuthn',
+          text: 'Use a Rubik\'s cube to secure your passkeys. CubeAuthn transforms a Bluetooth-enabled Rubik\'s cube into a WebAuthn-compatible authenticator by using the cube\'s physical state to deterministically generate cryptographic keypairs for passkeys',
+          photo: CubeAuthn,
+          links: [
+            {
+              type: 'github',
+              url: 'https://github.com/Acorn221/CubeAuthn',
+            },
+            {
+              type: 'chrome-web-store',
+              url: 'https://chromewebstore.google.com/detail/cubeauthn/koncigmbjmoapojihipbpfnmgkhmdlfl',
             },
           ],
         },
