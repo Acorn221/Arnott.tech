@@ -9,72 +9,79 @@ interface SlotMachineModelProps extends GroupProps {
 }
 
 const createMaterials = () => ({
-  // Yellowish - Lights/Accents -> Gold/Brass
+  // Yellowish - Lights/Accents -> Rich Gold with strong glow
   '0.980392_0.713725_0.003922_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#FFD700'),
       metalness: 1.0,
-      roughness: 0.15,
+      roughness: 0.1,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.1,
+      clearcoatRoughness: 0.05,
+      emissive: new THREE.Color('#FFD700'),
+      emissiveIntensity: 0.3,
     }),
-  // White/Grey - Casing? -> Sleek White/Silver
+  // White/Grey - Main Body -> Deep Cherry Red (classic slot machine)
   '0.917647_0.917647_0.917647_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#F5F5F5'),
-      metalness: 0.5,
-      roughness: 0.2,
-      clearcoat: 0.5,
+      color: new THREE.Color('#8B0000'),
+      metalness: 0.3,
+      roughness: 0.4,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.2,
     }),
-  // Grey - Metal parts? -> Darker Metal
+  // Grey - Metal Frame -> Polished Chrome
   '0.498039_0.498039_0.498039_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#4a4a4a'),
-      metalness: 0.8,
-      roughness: 0.4,
+      color: new THREE.Color('#C0C0C0'),
+      metalness: 1.0,
+      roughness: 0.15,
+      clearcoat: 0.5,
     }),
-  // Light Blue - Glass/Screen? -> Clear Glass
+  // Light Blue - Glass/Screen -> Tinted Glass Display
   '0.615686_0.811765_0.929412_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#ffffff'),
+      color: new THREE.Color('#1a1a2e'),
       metalness: 0.0,
       roughness: 0.0,
-      transmission: 0.95, // High transmission for glass
-      thickness: 0.5, // Refraction
+      transmission: 0.85,
+      thickness: 0.5,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.6,
+      emissive: new THREE.Color('#00ff88'),
+      emissiveIntensity: 0.15,
     }),
-  // Blue - Buttons/Accents -> Emissive Blue
+  // Blue - Buttons/Accents -> Neon Blue Buttons
   '0.231373_0.380392_0.705882_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#4169E1'),
-      metalness: 0.1,
-      roughness: 0.2,
-      emissive: new THREE.Color('#4169E1'),
-      emissiveIntensity: 0.5,
+      color: new THREE.Color('#00BFFF'),
+      metalness: 0.2,
+      roughness: 0.1,
+      emissive: new THREE.Color('#00BFFF'),
+      emissiveIntensity: 0.8,
+      clearcoat: 1.0,
     }),
-  // Very Light Blue -> Chrome/Silver details
+  // Very Light Blue -> Brushed Steel Trim
   '0.768627_0.886275_0.952941_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#E0F7FA'),
-      metalness: 0.9,
-      roughness: 0.1,
+      color: new THREE.Color('#B8C4CE'),
+      metalness: 0.95,
+      roughness: 0.25,
     }),
-  // Grey -> Matte Grey
+  // Grey -> Dark Base/Stand
   '0.647059_0.647059_0.647059_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#A9A9A9'),
-      metalness: 0.4,
-      roughness: 0.7,
+      color: new THREE.Color('#2a2a2a'),
+      metalness: 0.6,
+      roughness: 0.5,
     }),
-  // Orange - Lights/Accents -> Emissive Orange
+  // Orange - Lights/Accents -> Bright Casino Orange Glow
   '0.972549_0.529412_0.003922_0.000000_0.000000':
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#FFA500'),
+      color: new THREE.Color('#FF4500'),
       metalness: 0.1,
-      roughness: 0.2,
-      emissive: new THREE.Color('#FFA500'),
-      emissiveIntensity: 0.8,
+      roughness: 0.1,
+      emissive: new THREE.Color('#FF4500'),
+      emissiveIntensity: 1.2,
     }),
 });
 
