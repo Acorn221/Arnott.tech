@@ -10,7 +10,6 @@ import * as THREE from 'three';
 import { GroupProps } from '@react-three/fiber';
 
 interface SlotMachineModelProps extends GroupProps {
-  isXray: boolean;
   onHandleRef?: (pivot: THREE.Object3D | null) => void;
 }
 
@@ -114,7 +113,7 @@ const createPartOverrides = () => ({
   }),
 });
 
-const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, onHandleRef, ...props }) => {
+const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, ...props }) => {
   const materials = useRef(createMaterials());
   const partOverrides = useRef(createPartOverrides());
   const groupRef = useRef<THREE.Group>(null);
@@ -321,14 +320,7 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, onHandleRef, ...p
           }
         }
 
-        if (isXray) {
-          obj.material = new THREE.MeshPhysicalMaterial({
-            wireframe: true,
-            color: new THREE.Color('#bdc5c3'),
-            transparent: true,
-            opacity: 0.7,
-          });
-        } else if (highlightedPart >= 0) {
+        if (highlightedPart >= 0) {
           // Highlighting mode
           if (belongsToHighlightedPart) {
             obj.material = highlightMaterial;
@@ -351,7 +343,7 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, onHandleRef, ...p
         }
       }
     });
-  }, [isXray, highlightedPart, partsList, scene]);
+  }, [highlightedPart, partsList, scene]);
 
   return (
     <group ref={groupRef} rotation={[-Math.PI / 2, 0, 0]}>

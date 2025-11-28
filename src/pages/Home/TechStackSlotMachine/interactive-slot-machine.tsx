@@ -17,7 +17,7 @@ interface InteractiveSlotMachineProps extends GroupProps {
 
 // Handle rotation constants
 const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
-const SPRING_BACK_SPEED = 4; // How fast it springs back
+const SPRING_BACK_SPEED = 2; // How fast it springs back
 
 const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   scale,
@@ -25,8 +25,6 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   ...props
 }) => {
   const groupRef = useRef<Group>(null);
-  const [isXray, setIsXray] = useState(false);
-
   // Handle state
   const handleRef = useRef<THREE.Object3D | null>(null);
   const handleRotation = useRef(0); // Current rotation
@@ -92,21 +90,6 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     };
   }, [gl]);
 
-  // X-ray toggle
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'x') {
-        setIsXray((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, []);
-
   // Animation frame - apply rotation and spring back
   useFrame((_, delta) => {
     if (!handleRef.current) return;
@@ -115,7 +98,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     if (!isDragging.current && handleRotation.current > 0) {
       handleRotation.current = Math.max(
         0,
-        handleRotation.current - delta * SPRING_BACK_SPEED,
+        handleRotation.current - delta * SPRING_BACK_SPEED ** 2,
       );
     }
 
@@ -132,7 +115,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       onPointerDown={handlePointerDown}
       {...props}
     >
-      <SlotMachineModel isXray={isXray} onHandleRef={onHandleRef} />
+      <SlotMachineModel onHandleRef={onHandleRef} />
     </group>
   );
 };
