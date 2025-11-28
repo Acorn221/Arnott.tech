@@ -172,9 +172,10 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, ...props }) 
     pivot.name = 'handle-pivot';
     pivot.position.copy(handleBody.position);
 
-    // Offset pivot to the circular base attachment point
-    // Handle body extends from Z ~-0.018 to Z ~+0.001, so base is at Z = -0.018
-    pivot.position.z = -0.018;
+    // Offset pivot to the exact rotation axis (from ROTATION-AXIS marker in model)
+    pivot.position.x = 0.01969;
+    pivot.position.y = 0;
+    pivot.position.z = -0.01572;
 
     bodyParent.add(pivot);
 
