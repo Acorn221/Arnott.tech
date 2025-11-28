@@ -20,6 +20,13 @@ const RADIANS_PER_SYMBOL = (Math.PI * 2) / SYMBOLS_COUNT;
 const FRICTION = 0.92;
 const MIN_VELOCITY = 0.5;
 
+// Cryptographically secure random number generator
+const secureRandom = (): number => {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return array[0] / (0xFFFFFFFF + 1);
+};
+
 // Spinner names for consistent ordering
 const SPINNER_NAMES = ['slot-spinner-1', 'slot-spinner-2', 'slot-spinner-3'] as const;
 
@@ -57,12 +64,12 @@ export const useSlotMachineGame = () => {
 
     // Start all reels with slight velocity variation
     reelStates.current.forEach((state) => {
-      state.velocity = SPIN_SPEED + Math.random() * 3;
+      state.velocity = SPIN_SPEED + secureRandom() * 3;
       state.phase = 'spinning';
     });
 
     // Schedule staggered stopping sequence
-    const spinDuration = 2000 + Math.random() * 1500;
+    const spinDuration = 2000 + secureRandom() * 1500;
 
     [0, 1, 2].forEach((reelIndex) => {
       const delay = spinDuration + (reelIndex * STOP_DELAY * 1000);
