@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createTextureMaterial } from './materials';
+import { createDisplayPlateMaterial } from './display-plate';
 
 import amplifyIcon from '../Carousel/Slides/util/Icons/assets/ampliify.svg';
 import discordIcon from '../Carousel/Slides/util/Icons/assets/discord.svg';
@@ -10,12 +11,14 @@ import lambdaIcon from '../Carousel/Slides/util/Icons/assets/lambda.svg';
 import postmanIcon from '../Carousel/Slides/util/Icons/assets/postman.svg';
 import viteIcon from '../Carousel/Slides/util/Icons/assets/vite.svg';
 
-// Must have exactly 8 icons per reel to match octagonal geometry
+// Must have exactly 8 icons per reel to match 8-face cylinder geometry
 const reel1Icons = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon];
-const reel2Icons = [amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon, lambdaIcon];
-const reel3Icons = [dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon, gitkrakenIcon];
+const reel2Icons = [amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon, amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon];
+const reel3Icons = [dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon];
 
 export const createPartOverrides = () => ({
+  // Display plate for showing text - update the part name to match your GLTF model
+  'display-plate': createDisplayPlateMaterial({ text: 'SPIN TO WIN!' }),
   'spinner-housing': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#1a1a1a'),
     metalness: 0.8,

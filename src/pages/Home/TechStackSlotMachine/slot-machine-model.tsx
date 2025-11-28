@@ -42,6 +42,16 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
     const customMaterials = materials.current;
     const overrides = partOverrides.current;
 
+    // Debug: Log all part names to help identify display plate
+    const partNames = new Set<string>();
+    scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        const name = getPartName(object);
+        if (name) partNames.add(name);
+      }
+    });
+    console.log('Slot Machine Parts:', Array.from(partNames));
+
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
         const materialKey = object.material.name;
