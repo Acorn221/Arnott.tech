@@ -11,6 +11,7 @@ import { GroupProps } from '@react-three/fiber';
 
 interface SlotMachineModelProps extends GroupProps {
   isXray: boolean;
+  onHandleRef?: (pivot: THREE.Object3D | null) => void;
 }
 
 // Part name mapping - you'll fill this in!
@@ -113,10 +114,11 @@ const createPartOverrides = () => ({
   }),
 });
 
-const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, ...props }) => {
+const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, onHandleRef, ...props }) => {
   const materials = useRef(createMaterials());
   const partOverrides = useRef(createPartOverrides());
   const groupRef = useRef<THREE.Group>(null);
+  const handlePivotRef = useRef<THREE.Group | null>(null);
   const { scene } = useGLTF('/tech-stack-slot-machine.gltf');
   const [highlightedPart, setHighlightedPart] = useState<number>(-1);
   const [partsList, setPartsList] = useState<string[]>([]);
@@ -140,6 +142,62 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, ...props }) => {
     console.log('=== ALL PARTS ===');
     parts.forEach((p, i) => console.log(`${i}: ${p}`));
   }, [scene]);
+
+  // Create pivot group for handle and expose it
+  useEffect(() => {
+    if (handlePivotRef.current) {
+      // Already set up
+      if (onHandleRef) onHandleRef(handlePivotRef.current);
+      return;
+    }
+
+    let handleKnob: THREE.Object3D | undefined;
+    let handleBody: THREE.Object3D | undefined;
+
+    scene.traverse((object) => {
+      if (object.name === 'handle-knob') {
+        handleKnob = object;
+      } else if (object.name === 'handle-body') {
+        handleBody = object;
+      }
+    });
+
+    if (!handleKnob || !handleBody) return;
+
+    const bodyParent = handleBody.parent;
+    const knobParent = handleKnob.parent;
+    if (!bodyParent || !knobParent) return;
+
+    // Create pivot at body's current position
+    const pivot = new THREE.Group();
+    pivot.name = 'handle-pivot';
+    pivot.position.copy(handleBody.position);
+
+    // Offset pivot to the circular base attachment point
+    // Handle body extends from Z ~-0.018 to Z ~+0.001, so base is at Z = -0.018
+    pivot.position.z = -0.018;
+
+    bodyParent.add(pivot);
+
+    // Move handle parts into pivot, adjusting their positions
+    const bodyOffset = handleBody.position.clone().sub(pivot.position);
+    const knobOffset = handleKnob.position.clone().sub(pivot.position);
+
+    bodyParent.remove(handleBody);
+    knobParent.remove(handleKnob);
+
+    pivot.add(handleBody);
+    pivot.add(handleKnob);
+
+    handleBody.position.copy(bodyOffset);
+    handleKnob.position.copy(knobOffset);
+
+    handlePivotRef.current = pivot;
+
+    if (onHandleRef) {
+      onHandleRef(pivot);
+    }
+  }, [scene, onHandleRef]);
 
   // Keyboard navigation for debugging parts
   useEffect(() => {
