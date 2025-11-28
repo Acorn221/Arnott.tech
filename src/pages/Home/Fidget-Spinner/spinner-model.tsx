@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { FC, useRef, useEffect } from 'react';
+import { FC, useRef, useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GroupProps, useFrame } from '@react-three/fiber';
@@ -38,10 +38,100 @@ const createMaterials = () => ({
   }),
 });
 
+// Find the rotation center by looking at the spinner body (red part)
+// The spinner body's geometric center in the XZ plane should be the bearing location
+// We take X and Z from the spinner body center, but Y from the bearing parts
+const findRotationCenter = (scene: THREE.Object3D): THREE.Vector3 => {
+  // Force update all matrices to get accurate world positions
+  scene.updateMatrixWorld(true);
+
+  const spinnerBodyKey = '1.000000_0.000000_0.000000_0.000000_0.000000'; // Red spinner body
+  const bearingSealKey = '0.000000_0.000000_1.000000_0.000000_0.000000'; // Blue bearing seal
+  const bearingCasingKey = '0.647059_0.647059_0.647059_0.000000_0.000000'; // Gray bearing casing
+
+  let spinnerBodyBox: THREE.Box3 | null = null;
+  let bearingBox: THREE.Box3 | null = null;
+
+  scene.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      const materialKeys = materials.map((m) => m?.name).filter(Boolean);
+
+      object.updateMatrixWorld(true);
+      const meshBox = new THREE.Box3().setFromObject(object);
+
+      // Check for spinner body
+      if (materialKeys.some((key) => key === spinnerBodyKey)) {
+        if (!spinnerBodyBox) {
+          spinnerBodyBox = meshBox.clone();
+        } else {
+          spinnerBodyBox.union(meshBox);
+        }
+      }
+
+      // Check for bearing parts
+      if (materialKeys.some((key) => key === bearingSealKey || key === bearingCasingKey)) {
+        if (!bearingBox) {
+          bearingBox = meshBox.clone();
+        } else {
+          bearingBox.union(meshBox);
+        }
+      }
+    }
+  });
+
+  // Use spinner body center for XZ, bearing center for Y (along rotation axis)
+  const center = new THREE.Vector3();
+
+  if (spinnerBodyBox) {
+    const bodyCenter = new THREE.Vector3();
+    spinnerBodyBox.getCenter(bodyCenter);
+    console.log('Spinner body center:', bodyCenter);
+    center.x = bodyCenter.x;
+    center.z = bodyCenter.z;
+    center.y = bodyCenter.y; // Default to body center Y
+  }
+
+  if (bearingBox) {
+    const bearingCenter = new THREE.Vector3();
+    bearingBox.getCenter(bearingCenter);
+    console.log('Bearing center:', bearingCenter);
+    // Use bearing Y for the rotation axis position
+    center.y = bearingCenter.y;
+  }
+
+  // If we didn't find the spinner body, fall back to scene center
+  if (!spinnerBodyBox) {
+    console.log('Spinner body not found, using scene center');
+    const sceneBox = new THREE.Box3().setFromObject(scene);
+    sceneBox.getCenter(center);
+  }
+
+  console.log('Final rotation center:', center);
+  return center;
+};
+
 const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
   const materials = useRef(createMaterials());
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF('/fidget-spinner.gltf');
+
+  // Calculate the rotation center offset once
+  const rotationCenter = useMemo(() => {
+    // Also log the overall scene bounds for comparison
+    scene.updateMatrixWorld(true);
+    const sceneBox = new THREE.Box3().setFromObject(scene);
+    console.log('Full scene bounding box min:', sceneBox.min);
+    console.log('Full scene bounding box max:', sceneBox.max);
+    const sceneCenter = new THREE.Vector3();
+    sceneBox.getCenter(sceneCenter);
+    console.log('Full scene center:', sceneCenter);
+
+    const center = findRotationCenter(scene);
+    console.log('Rotation center to use:', center);
+    console.log('Offset to apply:', -center.x, -center.y, -center.z);
+    return center;
+  }, [scene]);
 
   // Initialize materials
   useEffect(() => {
@@ -101,7 +191,10 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
 
   return (
     <group ref={groupRef}>
-      <primitive object={scene} {...props} />
+      {/* Offset the scene by the bearing center so rotation happens around the bearing */}
+      <group position={[-bearingOffset.x, -bearingOffset.y, -bearingOffset.z]}>
+        <primitive object={scene} {...props} />
+      </group>
     </group>
   );
 };
