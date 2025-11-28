@@ -17,7 +17,12 @@ interface InteractiveSlotMachineProps extends GroupProps {
 
 // Handle rotation constants
 const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
-const SPRING_BACK_SPEED = 2; // How fast it springs back
+const SPRING_BACK_DURATION = 0.5; // Duration in seconds for spring back
+
+// Ease-in-out cubic for smooth slow → fast → slow curve
+const easeInOutCubic = (t: number): number => (t < 0.5
+  ? 4 * t * t * t
+  : 1 - (-2 * t + 2) ** 3 / 2);
 
 const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   scale,
@@ -32,6 +37,11 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   const isDragging = useRef(false);
   const dragStartY = useRef(0);
   const dragStartRotation = useRef(0);
+
+  // Spring-back animation state
+  const springBackStartRotation = useRef(0);
+  const springBackProgress = useRef(0);
+  const isSpringBackActive = useRef(false);
 
   const { gl } = useThree();
 
@@ -78,6 +88,13 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         isDragging.current = false;
         targetRotation.current = 0; // Spring back to 0
         gl.domElement.style.cursor = 'auto';
+
+        // Start spring-back animation
+        if (handleRotation.current > 0) {
+          springBackStartRotation.current = handleRotation.current;
+          springBackProgress.current = 0;
+          isSpringBackActive.current = true;
+        }
       }
     };
 
@@ -94,12 +111,20 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   useFrame((_, delta) => {
     if (!handleRef.current) return;
 
-    // Spring back when not dragging
-    if (!isDragging.current && handleRotation.current > 0) {
-      handleRotation.current = Math.max(
-        0,
-        handleRotation.current - delta * SPRING_BACK_SPEED ** 2,
-      );
+    // Spring back with ease-in-out curve when not dragging
+    if (isSpringBackActive.current && !isDragging.current) {
+      springBackProgress.current += delta / SPRING_BACK_DURATION;
+
+      if (springBackProgress.current >= 1) {
+        // Animation complete
+        springBackProgress.current = 1;
+        isSpringBackActive.current = false;
+        handleRotation.current = 0;
+      } else {
+        // Apply eased interpolation: start → 0
+        const easedProgress = easeInOutCubic(springBackProgress.current);
+        handleRotation.current = springBackStartRotation.current * (1 - easedProgress);
+      }
     }
 
     // Apply rotation around the pivot point (X axis in local space)
