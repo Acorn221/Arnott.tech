@@ -218,45 +218,80 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
 
     const newPivots: Record<string, THREE.Object3D> = {};
 
+    // Coordinates from Assembly 1 (3).gltf "SPINNER-PIVOT-POINT" node center
+    // We found Y = -0.0038093519397079945 and Z = 0.0 relative to the scene root.
+    const SPINNER_AXIS_Y = -0.0038093519397079945;
+    const SPINNER_AXIS_Z = 0.0;
+
     Object.entries(foundSpinners).forEach(([name, spinner]) => {
       const { parent } = spinner;
       if (!parent) return;
 
-      // Check if already pivoted (in case of HMR re-run)
+      // Check if already pivoted
       if (parent.name === `${name}-pivot`) {
         newPivots[name] = parent;
         return;
       }
 
-      // Calculate center
-      const box = new THREE.Box3().setFromObject(spinner);
-      const center = box.getCenter(new THREE.Vector3());
+      // We will assume the spinner node itself is at the correct X, but needs
+      // to be shifted to rotate around Y = -0.0038, Z = 0.
+      // Since the spinner node is likely at (0,0,0) relative to parent (or some X),
+      // we want the pivot to be at (spinner.position.x, SPINNER_AXIS_Y, SPINNER_AXIS_Z)
+      // in the coordinate space where these constants define the axle.
 
-      // Create pivot at center
+      // Let's try to work in the Spinner's Local Space (Parent Space).
+      // We assume the parent space aligns with the model space enough that Y and Z are correct.
+      // If not, we might need to transform.
+
+      // Let's assume the Parent is the Scene or a direct child with no rotation.
+      // The spinner.position gives us the "Current Node Origin".
+      // We want the pivot to be offset from this origin by (0, -0.0038, 0) effectively?
+      // No, the constants are absolute coordinates in the Model Space.
+
+      // 1. Get Spinner Position in World Space (to capture its X lane)
+      const spinnerWorldPos = new THREE.Vector3();
+      spinner.getWorldPosition(spinnerWorldPos);
+
+      // 2. Convert to Model Space (Scene Root)
+      const spinnerModelPos = spinnerWorldPos.clone();
+      scene.worldToLocal(spinnerModelPos);
+
+      // 3. Define Pivot in Model Space
+      // Keep the spinner's X, but use the Axle's Y and Z
+      const pivotModelPos = new THREE.Vector3(
+        spinnerModelPos.x,
+        SPINNER_AXIS_Y,
+        SPINNER_AXIS_Z,
+      );
+
+      // 4. Convert Pivot back to Parent Space
+      const pivotWorldPos = pivotModelPos.clone();
+      scene.localToWorld(pivotWorldPos);
+
+      const pivotParentPos = pivotWorldPos.clone();
+      parent.worldToLocal(pivotParentPos);
+
+      // 5. Create and Place Pivot
       const pivot = new THREE.Group();
       pivot.name = `${name}-pivot`;
-
-      // Convert world center to parent local space
-      const localCenter = center.clone();
-      parent.worldToLocal(localCenter);
-      pivot.position.copy(localCenter);
-
+      pivot.position.copy(pivotParentPos);
       parent.add(pivot);
 
-      // Move spinner to be child of pivot, maintaining world position
-      // Pivot is at C. Spinner at S.
-      // S_new_local = Pivot_inverse * S_world
-      // Easier: Spinner is at 0,0,0 local to Parent.
-      // Pivot is at C local to Parent.
-      // Offset = S_local - C_local = -C_local.
-      const offset = spinner.position.clone().sub(localCenter);
+      // Debug: Add a visual marker for the pivot
+      // const debugGeo = new THREE.SphereGeometry(0.002, 16, 16);
+      // const debugMat = new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false });
+      // const debugMesh = new THREE.Mesh(debugGeo, debugMat);
+      // debugMesh.renderOrder = 999;
+      // pivot.add(debugMesh);
 
+      // 6. Reparent Spinner
+      const offset = spinner.position.clone().sub(pivotParentPos);
       parent.remove(spinner);
       pivot.add(spinner);
       spinner.position.copy(offset);
 
       newPivots[name] = pivot;
-      console.log(`Created pivot for ${name} at`, localCenter);
+      console.log(`Created Axle Pivot for ${name}`, { pivotParentPos, offset });
     });
 
     spinnerPivotsRef.current = newPivots;
