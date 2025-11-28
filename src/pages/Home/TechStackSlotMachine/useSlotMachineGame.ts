@@ -13,8 +13,9 @@ interface ReelState {
 // Slot machine configuration
 const SPIN_SPEED = 12;
 const STOP_DELAY = 0.6;
-const SYMBOLS_COUNT = 8;
-const RADIANS_PER_SYMBOL = (Math.PI * 2) / SYMBOLS_COUNT;
+
+// Number of faces on the cylinder geometry (octagonal)
+const GEOMETRY_FACES = 8;
 
 // Physics constants
 const FRICTION = 0.92;
@@ -96,16 +97,19 @@ export const useSlotMachineGame = () => {
           state.phase = 'settling';
         }
       } else if (state.phase === 'settling') {
-        // Find nearest slot BEHIND current position (round down)
-        const targetSlot = Math.floor(state.angle / RADIANS_PER_SYMBOL) * RADIANS_PER_SYMBOL;
-        const diff = state.angle - targetSlot; // Always positive (we're past it)
+        // Lock to geometry faces (8 faces = octagonal cylinder)
+        const radiansPerFace = (Math.PI * 2) / GEOMETRY_FACES;
 
-        if (diff > 0.005) {
-          // Ease backward toward the slot
+        // Find nearest slot (round to nearest)
+        const nearestSlot = Math.round(state.angle / radiansPerFace) * radiansPerFace;
+        const diff = state.angle - nearestSlot;
+
+        if (Math.abs(diff) > 0.005) {
+          // Ease toward the nearest slot
           state.angle -= diff * 0.2;
         } else {
           // Snap to slot and stop
-          state.angle = targetSlot;
+          state.angle = nearestSlot;
           state.velocity = 0;
           state.phase = 'stopped';
         }
