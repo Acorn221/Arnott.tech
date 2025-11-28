@@ -91,7 +91,8 @@ const createMaterials = () => ({
 });
 
 const createTextureMaterial = (icons: string[]) => {
-  const size = 2048;
+  // High resolution for crisp icons
+  const size = 4096;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -100,12 +101,14 @@ const createTextureMaterial = (icons: string[]) => {
 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 16; // Improve texture quality at angles
 
   if (context) {
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, size, size);
 
-    const segmentWidth = size / 8;
+    const numSegments = 8;
+    const segmentWidth = size / numSegments;
     let imagesLoaded = 0;
 
     // Draw alternating background segments
@@ -115,7 +118,7 @@ const createTextureMaterial = (icons: string[]) => {
       context.fillRect(x, 0, segmentWidth, size);
 
       context.strokeStyle = '#dee2e6';
-      context.lineWidth = 2;
+      context.lineWidth = 4;
       context.beginPath();
       context.moveTo(x, 0);
       context.lineTo(x, size);
@@ -128,16 +131,21 @@ const createTextureMaterial = (icons: string[]) => {
       img.src = iconUrl;
       img.onload = () => {
         const x = i * segmentWidth;
-        const iconWidth = segmentWidth * 0.95;
-        const iconHeight = size * 0.5;
-        const xOffset = (segmentWidth - iconWidth) / 2;
-        const yOffset = (size - iconHeight) / 2;
+
+        // Icon takes up 80% of segment width, 30% of texture height
+        // This creates visual spacing between icons on the cylinder
+        const iconDrawWidth = segmentWidth * 1.1;
+        const iconDrawHeight = size * 0.9;
+
+        const xOffset = (segmentWidth - iconDrawWidth) / 2;
+        const yOffset = (size - iconDrawHeight) / 2;
 
         context.save();
-        context.translate(x + xOffset + iconWidth / 2, yOffset + iconHeight / 2);
+        context.translate(x + xOffset + iconDrawWidth / 2, yOffset + iconDrawHeight / 2);
         context.rotate(-Math.PI / 2);
         context.filter = 'grayscale(100%) brightness(0)';
-        context.drawImage(img, -iconHeight / 2, -iconWidth / 2, iconHeight, iconWidth);
+        // Draw icon large for high resolution
+        context.drawImage(img, -iconDrawHeight / 2, -iconDrawWidth / 2, iconDrawHeight, iconDrawWidth);
         context.restore();
 
         imagesLoaded++;
@@ -158,9 +166,9 @@ const createTextureMaterial = (icons: string[]) => {
 
 const createPartOverrides = () => {
   // Icon sets for each reel
-  const reel1Icons = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon];
-  const reel2Icons = [amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon, lambdaIcon];
-  const reel3Icons = [dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon, gitkrakenIcon];
+  const reel1Icons = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon];
+  const reel2Icons = [amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon];
+  const reel3Icons = [dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon];
 
   return {
     'spinner-housing': new THREE.MeshPhysicalMaterial({
