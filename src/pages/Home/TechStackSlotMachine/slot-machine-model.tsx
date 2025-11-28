@@ -92,27 +92,68 @@ const createMaterials = () => ({
     }),
 });
 
+const createTextureMaterial = () => {
+  // Create a simple striped texture for visualization
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const context = canvas.getContext('2d');
+  if (context) {
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, 512, 512);
+
+    // Add colored stripes/numbers
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+    const segmentHeight = 512 / 6;
+
+    colors.forEach((color, i) => {
+      context.fillStyle = color;
+      context.fillRect(0, i * segmentHeight, 512, segmentHeight);
+      context.fillStyle = '#000000';
+      context.font = 'bold 80px Arial';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(`${i + 1}`, 256, i * segmentHeight + segmentHeight / 2);
+    });
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return new THREE.MeshPhysicalMaterial({
+    map: texture,
+    metalness: 0.2,
+    roughness: 0.5,
+  });
+};
+
 // Special materials for specific parts (by node name)
-const createPartOverrides = () => ({
-  'spinner-housing': new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#1a1a1a'),
-    metalness: 0.8,
-    roughness: 0.2,
-    clearcoat: 0.6,
-  }),
-  'handle-knob': new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#ff3333'),
-    metalness: 0.0,
-    roughness: 0.0,
-    transmission: 0.95,
-    thickness: 0.3,
-    transparent: true,
-    opacity: 0.4,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.02,
-    ior: 1.5,
-  }),
-});
+const createPartOverrides = () => {
+  const spinnerTextureMaterial = createTextureMaterial();
+
+  return {
+    'spinner-housing': new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#1a1a1a'),
+      metalness: 0.8,
+      roughness: 0.2,
+      clearcoat: 0.6,
+    }),
+    'handle-knob': new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#ff3333'),
+      metalness: 0.0,
+      roughness: 0.0,
+      transmission: 0.95,
+      thickness: 0.3,
+      transparent: true,
+      opacity: 0.4,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.02,
+      ior: 1.5,
+    }),
+    // Apply texture to spinner cylinders
+    'slot-spinner-1': spinnerTextureMaterial,
+    'slot-spinner-2': spinnerTextureMaterial,
+    'slot-spinner-3': spinnerTextureMaterial,
+  };
+};
 
 const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRef, ...props }) => {
   const materials = useRef(createMaterials());
