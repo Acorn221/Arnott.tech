@@ -11,6 +11,7 @@ import { GroupProps } from '@react-three/fiber';
 
 interface SlotMachineModelProps extends GroupProps {
   onHandleRef?: (pivot: THREE.Object3D | null) => void;
+  onSpinnersRef?: (spinners: Record<string, THREE.Object3D>) => void;
 }
 
 // Part name mapping - you'll fill this in!
@@ -113,11 +114,12 @@ const createPartOverrides = () => ({
   }),
 });
 
-const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, ...props }) => {
+const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRef, ...props }) => {
   const materials = useRef(createMaterials());
   const partOverrides = useRef(createPartOverrides());
   const groupRef = useRef<THREE.Group>(null);
   const handlePivotRef = useRef<THREE.Group | null>(null);
+  const spinnerPivotsRef = useRef<Record<string, THREE.Object3D>>({});
   const { scene } = useGLTF('/tech-stack-slot-machine.gltf');
   const [highlightedPart, setHighlightedPart] = useState<number>(-1);
   const [partsList, setPartsList] = useState<string[]>([]);
@@ -198,6 +200,70 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, ...props }) 
       onHandleRef(pivot);
     }
   }, [scene, onHandleRef]);
+
+  // Create pivot groups for spinners
+  useEffect(() => {
+    if (Object.keys(spinnerPivotsRef.current).length > 0) {
+      if (onSpinnersRef) onSpinnersRef(spinnerPivotsRef.current);
+      return;
+    }
+
+    const foundSpinners: Record<string, THREE.Object3D> = {};
+    scene.traverse((object) => {
+      // Look for slot-spinner-1, slot-spinner-2, slot-spinner-3
+      if (object.name.match(/^slot-spinner-\d+$/)) {
+        foundSpinners[object.name] = object;
+      }
+    });
+
+    const newPivots: Record<string, THREE.Object3D> = {};
+
+    Object.entries(foundSpinners).forEach(([name, spinner]) => {
+      const { parent } = spinner;
+      if (!parent) return;
+
+      // Check if already pivoted (in case of HMR re-run)
+      if (parent.name === `${name}-pivot`) {
+        newPivots[name] = parent;
+        return;
+      }
+
+      // Calculate center
+      const box = new THREE.Box3().setFromObject(spinner);
+      const center = box.getCenter(new THREE.Vector3());
+
+      // Create pivot at center
+      const pivot = new THREE.Group();
+      pivot.name = `${name}-pivot`;
+
+      // Convert world center to parent local space
+      const localCenter = center.clone();
+      parent.worldToLocal(localCenter);
+      pivot.position.copy(localCenter);
+
+      parent.add(pivot);
+
+      // Move spinner to be child of pivot, maintaining world position
+      // Pivot is at C. Spinner at S.
+      // S_new_local = Pivot_inverse * S_world
+      // Easier: Spinner is at 0,0,0 local to Parent.
+      // Pivot is at C local to Parent.
+      // Offset = S_local - C_local = -C_local.
+      const offset = spinner.position.clone().sub(localCenter);
+
+      parent.remove(spinner);
+      pivot.add(spinner);
+      spinner.position.copy(offset);
+
+      newPivots[name] = pivot;
+      console.log(`Created pivot for ${name} at`, localCenter);
+    });
+
+    spinnerPivotsRef.current = newPivots;
+    if (onSpinnersRef) {
+      onSpinnersRef(newPivots);
+    }
+  }, [scene, onSpinnersRef]);
 
   // Keyboard navigation for debugging parts
   useEffect(() => {
