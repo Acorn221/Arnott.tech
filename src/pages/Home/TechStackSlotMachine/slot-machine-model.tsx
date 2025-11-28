@@ -99,6 +99,18 @@ const createPartOverrides = () => ({
     roughness: 0.2,
     clearcoat: 0.6,
   }),
+  'handle-knob': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#ff3333'),
+    metalness: 0.0,
+    roughness: 0.0,
+    transmission: 0.95,
+    thickness: 0.3,
+    transparent: true,
+    opacity: 0.4,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.02,
+    ior: 1.5,
+  }),
 });
 
 const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, ...props }) => {
@@ -165,7 +177,11 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ isXray, ...props }) => {
   const getPartName = (object: THREE.Object3D): string | null => {
     let current: THREE.Object3D | null = object;
     while (current) {
-      if (current.name && !current.name.includes('Part')) {
+      // Skip mesh names (like mesh159_mesh) and Part names, look for actual part names
+      if (current.name
+          && !current.name.includes('Part')
+          && !current.name.startsWith('mesh')
+          && !current.name.includes('occurrence')) {
         return current.name;
       }
       current = current.parent;
