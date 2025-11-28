@@ -167,18 +167,25 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, ...props }) 
     const knobParent = handleKnob.parent;
     if (!bodyParent || !knobParent) return;
 
-    // Create pivot at body's current position
+    // Create pivot at the handle's attachment point (the extruded circle base)
+    // Handle-body bounds (local coords):
+    //   X: 0.016510 to 0.022860 (center: 0.019685)
+    //   Y: -0.002536 to 0.002536 (center: 0.000000)
+    //   Z: -0.018265 to 0.000903
+    // The attachment point (base of extruded circle) is at max Z (0.000903)
     const pivot = new THREE.Group();
     pivot.name = 'handle-pivot';
-    pivot.position.copy(handleBody.position);
 
-    // Offset pivot to the circular base attachment point
-    // Handle body extends from Z ~-0.018 to Z ~+0.001, so base is at Z = -0.018
-    pivot.position.z = -0.018;
+    // Set pivot at the center of the circular base attachment point
+    pivot.position.set(
+      0.019685, // X center of handle body
+      0.0, // Y center of handle body
+      0.000903, // Z at the attachment point (max Z, closest to machine)
+    );
 
     bodyParent.add(pivot);
 
-    // Move handle parts into pivot, adjusting their positions
+    // Move handle parts into pivot, adjusting their positions relative to pivot
     const bodyOffset = handleBody.position.clone().sub(pivot.position);
     const knobOffset = handleKnob.position.clone().sub(pivot.position);
 
