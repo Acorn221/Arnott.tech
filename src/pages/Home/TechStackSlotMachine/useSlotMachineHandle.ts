@@ -9,13 +9,18 @@ import { useFrame, useThree } from '@react-three/fiber';
 // Handle rotation constants
 const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
 const SPRING_BACK_DURATION = 0.5; // Duration in seconds for spring back
+const TRIGGER_THRESHOLD = 0.8; // 80% of max rotation triggers the game
 
 // Ease-in-out cubic for smooth slow → fast → slow curve
 const easeInOutCubic = (t: number): number => (t < 0.5
   ? 4 * t * t * t
   : 1 - (-2 * t + 2) ** 3 / 2);
 
-export const useSlotMachineHandle = () => {
+interface UseSlotMachineHandleProps {
+  onTrigger?: () => void;
+}
+
+export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleProps = {}) => {
   const handleRef = useRef<THREE.Object3D | null>(null);
   const handleRotation = useRef(0); // Current rotation
   const targetRotation = useRef(0); // Target rotation (0 when released)
@@ -72,6 +77,12 @@ export const useSlotMachineHandle = () => {
     const onPointerUp = () => {
       if (isDragging.current) {
         isDragging.current = false;
+        
+        // Check trigger condition
+        if (onTrigger && handleRotation.current > MAX_HANDLE_ROTATION * TRIGGER_THRESHOLD) {
+          onTrigger();
+        }
+
         targetRotation.current = 0; // Spring back to 0
         gl.domElement.style.cursor = 'auto';
 
@@ -91,7 +102,7 @@ export const useSlotMachineHandle = () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
     };
-  }, [gl]);
+  }, [gl, onTrigger]);
 
   // Animation frame - apply rotation and spring back
   useFrame((_, delta) => {
@@ -124,4 +135,3 @@ export const useSlotMachineHandle = () => {
     isDragging: isDragging.current,
   };
 };
-

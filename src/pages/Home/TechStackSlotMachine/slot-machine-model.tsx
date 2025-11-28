@@ -3,131 +3,164 @@ import {
   FC,
   useRef,
   useEffect,
-  useState,
 } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GroupProps } from '@react-three/fiber';
+
+// Import SVG icons for reel textures
+import amplifyIcon from '../Carousel/Slides/util/Icons/assets/ampliify.svg';
+import discordIcon from '../Carousel/Slides/util/Icons/assets/discord.svg';
+import dynamoIcon from '../Carousel/Slides/util/Icons/assets/dynamoDB.svg';
+import eslintIcon from '../Carousel/Slides/util/Icons/assets/eslint.svg';
+import gitkrakenIcon from '../Carousel/Slides/util/Icons/assets/gitkraken.svg';
+import lambdaIcon from '../Carousel/Slides/util/Icons/assets/lambda.svg';
+import postmanIcon from '../Carousel/Slides/util/Icons/assets/postman.svg';
+import viteIcon from '../Carousel/Slides/util/Icons/assets/vite.svg';
 
 interface SlotMachineModelProps extends GroupProps {
   onHandleRef?: (pivot: THREE.Object3D | null) => void;
   onSpinnersRef?: (spinners: Record<string, THREE.Object3D>) => void;
 }
 
-// Part name mapping - you'll fill this in!
-// Format: 'Part X' -> 'descriptive name'
-const PART_NAMES: Record<string, string> = {
-  // Fill these in as you identify each part
-  // e.g., 'Part 1': 'glass_front',
-};
+// Spinner pivot axis coordinates (from model's SPINNER-PIVOT-POINT node)
+const SPINNER_AXIS_Y = -0.0038093519397079945;
+const SPINNER_AXIS_Z = 0.0;
 
 const createMaterials = () => ({
-  // Yellowish - Screws/Bolts -> Polished Brass
-  '0.980392_0.713725_0.003922_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#B8860B'),
-      metalness: 1.0,
-      roughness: 0.2,
-      clearcoat: 0.3,
-    }),
-  // White/Grey - Main Body -> Classic Cream/Off-White
-  '0.917647_0.917647_0.917647_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#F5F5DC'),
-      metalness: 0.0,
-      roughness: 0.3,
-      clearcoat: 0.6,
-      clearcoatRoughness: 0.3,
-    }),
-  // Grey - Metal Frame -> Polished Chrome
-  '0.498039_0.498039_0.498039_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#C0C0C0'),
-      metalness: 1.0,
-      roughness: 0.15,
-      clearcoat: 0.5,
-    }),
-  // Light Blue - Glass/Screen -> Clear Glass Display
-  '0.615686_0.811765_0.929412_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#E8F4F8'),
-      metalness: 0.0,
-      roughness: 0.0,
-      transmission: 0.9,
-      thickness: 0.3,
-      transparent: true,
-      opacity: 0.4,
-    }),
-  // Blue - Buttons/Accents -> Deep Navy Button
-  '0.231373_0.380392_0.705882_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#1a365d'),
-      metalness: 0.1,
-      roughness: 0.2,
-      clearcoat: 0.8,
-    }),
-  // Very Light Blue -> Brushed Steel Trim
-  '0.768627_0.886275_0.952941_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#D4D4D4'),
-      metalness: 0.9,
-      roughness: 0.3,
-    }),
-  // Grey -> Corner Screws - Dark metallic
-  '0.647059_0.647059_0.647059_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#1a1a1a'),
-      metalness: 0.9,
-      roughness: 0.3,
-      clearcoat: 0.4,
-    }),
-  // Orange - Trim/Accents -> Rich Mahogany Wood Trim
-  '0.972549_0.529412_0.003922_0.000000_0.000000':
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#8B4513'),
-      metalness: 0.0,
-      roughness: 0.4,
-      clearcoat: 0.7,
-      clearcoatRoughness: 0.2,
-    }),
+  // Screws/Bolts - Polished Brass
+  '0.980392_0.713725_0.003922_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#B8860B'),
+    metalness: 1.0,
+    roughness: 0.2,
+    clearcoat: 0.3,
+  }),
+  // Main Body - Classic Cream
+  '0.917647_0.917647_0.917647_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#F5F5DC'),
+    metalness: 0.0,
+    roughness: 0.3,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.3,
+  }),
+  // Metal Frame - Polished Chrome
+  '0.498039_0.498039_0.498039_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#C0C0C0'),
+    metalness: 1.0,
+    roughness: 0.15,
+    clearcoat: 0.5,
+  }),
+  // Glass/Screen - Clear Glass
+  '0.615686_0.811765_0.929412_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#E8F4F8'),
+    metalness: 0.0,
+    roughness: 0.0,
+    transmission: 0.9,
+    thickness: 0.3,
+    transparent: true,
+    opacity: 0.4,
+  }),
+  // Buttons/Accents - Deep Navy
+  '0.231373_0.380392_0.705882_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#1a365d'),
+    metalness: 0.1,
+    roughness: 0.2,
+    clearcoat: 0.8,
+  }),
+  // Brushed Steel Trim
+  '0.768627_0.886275_0.952941_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#D4D4D4'),
+    metalness: 0.9,
+    roughness: 0.3,
+  }),
+  // Corner Screws - Dark metallic
+  '0.647059_0.647059_0.647059_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#1a1a1a'),
+    metalness: 0.9,
+    roughness: 0.3,
+    clearcoat: 0.4,
+  }),
+  // Trim/Accents - Mahogany Wood
+  '0.972549_0.529412_0.003922_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#8B4513'),
+    metalness: 0.0,
+    roughness: 0.4,
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.2,
+  }),
 });
 
-const createTextureMaterial = () => {
-  // Create a simple striped texture for visualization
+const createTextureMaterial = (icons: string[]) => {
+  const size = 2048;
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = size;
+  canvas.height = size;
   const context = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+
   if (context) {
     context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, 512, 512);
+    context.fillRect(0, 0, size, size);
 
-    // Add colored stripes/numbers
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-    const segmentHeight = 512 / 6;
+    const segmentWidth = size / 8;
+    let imagesLoaded = 0;
 
-    colors.forEach((color, i) => {
-      context.fillStyle = color;
-      context.fillRect(0, i * segmentHeight, 512, segmentHeight);
-      context.fillStyle = '#000000';
-      context.font = 'bold 80px Arial';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillText(`${i + 1}`, 256, i * segmentHeight + segmentHeight / 2);
+    // Draw alternating background segments
+    icons.forEach((_, i) => {
+      const x = i * segmentWidth;
+      context.fillStyle = i % 2 === 0 ? '#f8f9fa' : '#e9ecef';
+      context.fillRect(x, 0, segmentWidth, size);
+
+      context.strokeStyle = '#dee2e6';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, size);
+      context.stroke();
+    });
+
+    // Load and draw icons
+    icons.forEach((iconUrl, i) => {
+      const img = new Image();
+      img.src = iconUrl;
+      img.onload = () => {
+        const x = i * segmentWidth;
+        const iconWidth = segmentWidth * 0.95;
+        const iconHeight = size * 0.5;
+        const xOffset = (segmentWidth - iconWidth) / 2;
+        const yOffset = (size - iconHeight) / 2;
+
+        context.save();
+        context.translate(x + xOffset + iconWidth / 2, yOffset + iconHeight / 2);
+        context.rotate(-Math.PI / 2);
+        context.filter = 'grayscale(100%) brightness(0)';
+        context.drawImage(img, -iconHeight / 2, -iconWidth / 2, iconHeight, iconWidth);
+        context.restore();
+
+        imagesLoaded++;
+        if (imagesLoaded === icons.length) {
+          texture.needsUpdate = true;
+        }
+      };
     });
   }
 
-  const texture = new THREE.CanvasTexture(canvas);
   return new THREE.MeshPhysicalMaterial({
     map: texture,
-    metalness: 0.2,
-    roughness: 0.5,
+    metalness: 0.1,
+    roughness: 0.4,
+    color: 0xffffff,
   });
 };
 
-// Special materials for specific parts (by node name)
 const createPartOverrides = () => {
-  const spinnerTextureMaterial = createTextureMaterial();
+  // Icon sets for each reel
+  const reel1Icons = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon];
+  const reel2Icons = [amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon, lambdaIcon, postmanIcon, amplifyIcon, lambdaIcon];
+  const reel3Icons = [dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon, gitkrakenIcon, discordIcon, dynamoIcon, gitkrakenIcon];
 
   return {
     'spinner-housing': new THREE.MeshPhysicalMaterial({
@@ -148,10 +181,9 @@ const createPartOverrides = () => {
       clearcoatRoughness: 0.02,
       ior: 1.5,
     }),
-    // Apply texture to spinner cylinders
-    'slot-spinner-1': spinnerTextureMaterial,
-    'slot-spinner-2': spinnerTextureMaterial,
-    'slot-spinner-3': spinnerTextureMaterial,
+    'slot-spinner-1': createTextureMaterial(reel1Icons),
+    'slot-spinner-2': createTextureMaterial(reel2Icons),
+    'slot-spinner-3': createTextureMaterial(reel3Icons),
   };
 };
 
@@ -162,33 +194,51 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
   const handlePivotRef = useRef<THREE.Group | null>(null);
   const spinnerPivotsRef = useRef<Record<string, THREE.Object3D>>({});
   const { scene } = useGLTF('/tech-stack-slot-machine.gltf');
-  const [highlightedPart, setHighlightedPart] = useState<number>(-1);
-  const [partsList, setPartsList] = useState<string[]>([]);
 
-  // Collect all parts on mount
+  // Helper to find the part name for a mesh
+  const getPartName = (object: THREE.Object3D): string | null => {
+    let current: THREE.Object3D | null = object;
+    while (current) {
+      if (current.name && !current.name.includes('Part') && !current.name.startsWith('mesh') && !current.name.includes('occurrence')) {
+        return current.name;
+      }
+      current = current.parent;
+    }
+    return null;
+  };
+
+  // Initialize materials
   useEffect(() => {
-    const parts: string[] = [];
+    const customMaterials = materials.current;
+    const overrides = partOverrides.current;
+
     scene.traverse((object) => {
-      // Look for nodes that have "Part" in the name (from the gltf hierarchy)
-      if (object.name.includes('Part') && object.name.match(/Part \d+$/)) {
-        parts.push(object.name);
+      if (object instanceof THREE.Mesh) {
+        const materialKey = object.material.name;
+        const partName = getPartName(object);
+
+        object.userData.materialKey = materialKey;
+        object.userData.partName = partName;
+
+        // @ts-ignore
+        if (partName && overrides[partName]) {
+          // @ts-ignore
+          object.material = overrides[partName];
+        // @ts-ignore
+        } else if (customMaterials[materialKey]) {
+          // @ts-ignore
+          object.material = customMaterials[materialKey];
+        }
+
+        object.castShadow = true;
+        object.receiveShadow = true;
       }
     });
-    // Sort by part number
-    parts.sort((a, b): number => {
-      const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
-      const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
-      return numA - numB;
-    });
-    setPartsList(parts);
-    console.log('=== ALL PARTS ===');
-    parts.forEach((p, i) => console.log(`${i}: ${p}`));
   }, [scene]);
 
-  // Create pivot group for handle and expose it
+  // Create pivot group for handle
   useEffect(() => {
     if (handlePivotRef.current) {
-      // Already set up
       if (onHandleRef) onHandleRef(handlePivotRef.current);
       return;
     }
@@ -197,11 +247,8 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
     let handleBody: THREE.Object3D | undefined;
 
     scene.traverse((object) => {
-      if (object.name === 'handle-knob') {
-        handleKnob = object;
-      } else if (object.name === 'handle-body') {
-        handleBody = object;
-      }
+      if (object.name === 'handle-knob') handleKnob = object;
+      else if (object.name === 'handle-body') handleBody = object;
     });
 
     if (!handleKnob || !handleBody) return;
@@ -210,19 +257,11 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
     const knobParent = handleKnob.parent;
     if (!bodyParent || !knobParent) return;
 
-    // Create pivot at body's current position
     const pivot = new THREE.Group();
     pivot.name = 'handle-pivot';
-    pivot.position.copy(handleBody.position);
-
-    // Offset pivot to the exact rotation axis (from ROTATION-AXIS marker in model)
-    pivot.position.x = 0.01969;
-    pivot.position.y = 0;
-    pivot.position.z = -0.01572;
-
+    pivot.position.set(0.01969, 0, -0.01572);
     bodyParent.add(pivot);
 
-    // Move handle parts into pivot, adjusting their positions
     const bodyOffset = handleBody.position.clone().sub(pivot.position);
     const knobOffset = handleKnob.position.clone().sub(pivot.position);
 
@@ -236,10 +275,7 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
     handleKnob.position.copy(knobOffset);
 
     handlePivotRef.current = pivot;
-
-    if (onHandleRef) {
-      onHandleRef(pivot);
-    }
+    if (onHandleRef) onHandleRef(pivot);
   }, [scene, onHandleRef]);
 
   // Create pivot groups for spinners
@@ -251,7 +287,6 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
 
     const foundSpinners: Record<string, THREE.Object3D> = {};
     scene.traverse((object) => {
-      // Look for slot-spinner-1, slot-spinner-2, slot-spinner-3
       if (object.name.match(/^slot-spinner-\d+$/)) {
         foundSpinners[object.name] = object;
       }
@@ -259,234 +294,45 @@ const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRe
 
     const newPivots: Record<string, THREE.Object3D> = {};
 
-    // Coordinates from Assembly 1 (3).gltf "SPINNER-PIVOT-POINT" node center
-    // We found Y = -0.0038093519397079945 and Z = 0.0 relative to the scene root.
-    const SPINNER_AXIS_Y = -0.0038093519397079945;
-    const SPINNER_AXIS_Z = 0.0;
-
     Object.entries(foundSpinners).forEach(([name, spinner]) => {
       const { parent } = spinner;
       if (!parent) return;
 
-      // Check if already pivoted
       if (parent.name === `${name}-pivot`) {
         newPivots[name] = parent;
         return;
       }
 
-      // We will assume the spinner node itself is at the correct X, but needs
-      // to be shifted to rotate around Y = -0.0038, Z = 0.
-      // Since the spinner node is likely at (0,0,0) relative to parent (or some X),
-      // we want the pivot to be at (spinner.position.x, SPINNER_AXIS_Y, SPINNER_AXIS_Z)
-      // in the coordinate space where these constants define the axle.
-
-      // Let's try to work in the Spinner's Local Space (Parent Space).
-      // We assume the parent space aligns with the model space enough that Y and Z are correct.
-      // If not, we might need to transform.
-
-      // Let's assume the Parent is the Scene or a direct child with no rotation.
-      // The spinner.position gives us the "Current Node Origin".
-      // We want the pivot to be offset from this origin by (0, -0.0038, 0) effectively?
-      // No, the constants are absolute coordinates in the Model Space.
-
-      // 1. Get Spinner Position in World Space (to capture its X lane)
+      // Get spinner position and create pivot at axle coordinates
       const spinnerWorldPos = new THREE.Vector3();
       spinner.getWorldPosition(spinnerWorldPos);
 
-      // 2. Convert to Model Space (Scene Root)
       const spinnerModelPos = spinnerWorldPos.clone();
       scene.worldToLocal(spinnerModelPos);
 
-      // 3. Define Pivot in Model Space
-      // Keep the spinner's X, but use the Axle's Y and Z
-      const pivotModelPos = new THREE.Vector3(
-        spinnerModelPos.x,
-        SPINNER_AXIS_Y,
-        SPINNER_AXIS_Z,
-      );
-
-      // 4. Convert Pivot back to Parent Space
+      const pivotModelPos = new THREE.Vector3(spinnerModelPos.x, SPINNER_AXIS_Y, SPINNER_AXIS_Z);
       const pivotWorldPos = pivotModelPos.clone();
       scene.localToWorld(pivotWorldPos);
 
       const pivotParentPos = pivotWorldPos.clone();
       parent.worldToLocal(pivotParentPos);
 
-      // 5. Create and Place Pivot
       const pivot = new THREE.Group();
       pivot.name = `${name}-pivot`;
       pivot.position.copy(pivotParentPos);
       parent.add(pivot);
 
-      // Debug: Add a visual marker for the pivot
-      // const debugGeo = new THREE.SphereGeometry(0.002, 16, 16);
-      // const debugMat = new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false });
-      // const debugMesh = new THREE.Mesh(debugGeo, debugMat);
-      // debugMesh.renderOrder = 999;
-      // pivot.add(debugMesh);
-
-      // 6. Reparent Spinner
       const offset = spinner.position.clone().sub(pivotParentPos);
       parent.remove(spinner);
       pivot.add(spinner);
       spinner.position.copy(offset);
 
       newPivots[name] = pivot;
-      console.log(`Created Axle Pivot for ${name}`, { pivotParentPos, offset });
     });
 
     spinnerPivotsRef.current = newPivots;
-    if (onSpinnersRef) {
-      onSpinnersRef(newPivots);
-    }
+    if (onSpinnersRef) onSpinnersRef(newPivots);
   }, [scene, onSpinnersRef]);
-
-  // Keyboard navigation for debugging parts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'n') {
-        setHighlightedPart((prev) => {
-          const next = prev + 1;
-          return next >= partsList.length ? -1 : next;
-        });
-      } else if (e.key === 'ArrowLeft' || e.key === 'p') {
-        setHighlightedPart((prev) => {
-          const next = prev - 1;
-          return next < -1 ? partsList.length - 1 : next;
-        });
-      } else if (e.key === 'Escape') {
-        setHighlightedPart(-1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [partsList.length]);
-
-  // Log current highlighted part
-  useEffect(() => {
-    if (highlightedPart >= 0 && partsList[highlightedPart]) {
-      console.log(`\n🎯 HIGHLIGHTED: ${partsList[highlightedPart]} (index ${highlightedPart})`);
-      console.log('Press \'n\' or → for next, \'p\' or ← for previous, Esc to show all');
-    } else {
-      console.log('\n📦 Showing all parts. Press n/→ to start highlighting individual parts.');
-    }
-  }, [highlightedPart, partsList]);
-
-  // Helper to find the part name for a mesh by traversing up the hierarchy
-  const getPartName = (object: THREE.Object3D): string | null => {
-    let current: THREE.Object3D | null = object;
-    while (current) {
-      // Skip mesh names (like mesh159_mesh) and Part names, look for actual part names
-      if (current.name
-          && !current.name.includes('Part')
-          && !current.name.startsWith('mesh')
-          && !current.name.includes('occurrence')) {
-        return current.name;
-      }
-      current = current.parent;
-    }
-    return null;
-  };
-
-  // Initialize materials
-  useEffect(() => {
-    const customMaterials = createMaterials();
-    const overrides = createPartOverrides();
-    materials.current = customMaterials;
-    partOverrides.current = overrides;
-    const unmappedMaterials = new Set<string>();
-    scene.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.userData.materialKey = object.material.name;
-        const materialKey = object.material.name;
-        const partName = getPartName(object);
-
-        // Store the part name for later use
-        object.userData.partName = partName;
-
-        // Check for part-specific override first
-        // @ts-ignore - partName is fine
-        if (partName && overrides[partName]) {
-          // @ts-ignore - partName is fine
-          object.material = overrides[partName];
-          object.castShadow = true;
-          object.receiveShadow = true;
-        // @ts-ignore - materialKey is fine
-        } else if (customMaterials[materialKey]) {
-          // @ts-ignore - materialKey is fine
-          object.material = customMaterials[materialKey];
-          object.castShadow = true;
-          object.receiveShadow = true;
-        } else {
-          unmappedMaterials.add(materialKey);
-          console.warn('Unmapped material:', materialKey, 'on object:', object.name);
-        }
-      }
-    });
-    if (unmappedMaterials.size > 0) {
-      console.log('=== ALL UNMAPPED MATERIALS ===');
-      unmappedMaterials.forEach((m) => console.log(`'${m}'`));
-    }
-  }, [scene]);
-
-  // Handle xray mode and part highlighting
-  useEffect(() => {
-    const highlightMaterial = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#f00'),
-      emissive: new THREE.Color('#f00'),
-      emissiveIntensity: 0.5,
-      metalness: 0.5,
-      roughness: 0.3,
-    });
-
-    const dimMaterial = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#333333'),
-      transparent: true,
-      opacity: 0.3,
-      metalness: 0.0,
-      roughness: 0.8,
-    });
-
-    scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
-        // Check if this mesh belongs to the highlighted part
-        let belongsToHighlightedPart = false;
-        if (highlightedPart >= 0 && partsList[highlightedPart]) {
-          let { parent } = obj;
-          while (parent) {
-            if (parent.name === partsList[highlightedPart]) {
-              belongsToHighlightedPart = true;
-              break;
-            }
-            ({ parent } = parent);
-          }
-        }
-
-        if (highlightedPart >= 0) {
-          // Highlighting mode
-          if (belongsToHighlightedPart) {
-            obj.material = highlightMaterial;
-          } else {
-            obj.material = dimMaterial;
-          }
-        } else {
-          // Normal mode - use original materials
-          const { materialKey, partName } = obj.userData;
-          // Check for part-specific override first
-          // @ts-ignore - partName is fine
-          const overrideMaterial = partName && partOverrides.current[partName];
-          // @ts-ignore - materialKey is fine
-          const originalMaterial = overrideMaterial || materials.current[materialKey];
-          if (originalMaterial) {
-            obj.material = originalMaterial;
-            obj.castShadow = true;
-            obj.receiveShadow = true;
-          }
-        }
-      }
-    });
-  }, [highlightedPart, partsList, scene]);
 
   return (
     <group ref={groupRef} rotation={[-Math.PI / 2, 0, 0]}>

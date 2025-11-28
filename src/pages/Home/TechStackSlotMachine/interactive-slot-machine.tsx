@@ -1,13 +1,12 @@
 import {
   FC,
   useRef,
-  useCallback,
 } from 'react';
 import { Group } from 'three';
-import { GroupProps, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { GroupProps } from '@react-three/fiber';
 import SlotMachineModel from './slot-machine-model';
 import { useSlotMachineHandle } from './useSlotMachineHandle';
+import { useSlotMachineGame } from './useSlotMachineGame';
 
 interface InteractiveSlotMachineProps extends GroupProps {
   scale: number;
@@ -20,19 +19,9 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   ...props
 }) => {
   const groupRef = useRef<Group>(null);
-  const { onHandleRef, handlePointerDown, isDragging } = useSlotMachineHandle();
-  const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
-
-  const onSpinnersRef = useCallback((spinners: Record<string, THREE.Object3D>) => {
-    spinnersRef.current = spinners;
-  }, []);
-
-  useFrame((state, delta) => {
-    Object.values(spinnersRef.current).forEach((spinner, i) => {
-      // Spin along X axis (since we set up pivots)
-      // eslint-disable-next-line no-param-reassign
-      spinner.rotation.x -= delta * (2 + i * 0.5);
-    });
+  const { startGame, onSpinnersRef } = useSlotMachineGame();
+  const { onHandleRef, handlePointerDown } = useSlotMachineHandle({
+    onTrigger: startGame,
   });
 
   return (
