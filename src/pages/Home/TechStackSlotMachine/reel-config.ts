@@ -51,16 +51,12 @@ const createScrewMaterial = (): THREE.MeshPhysicalMaterial =>
     clearcoatRoughness: 0.1,
   });
 
-/** Creates a glowing indicator material */
+/** Creates an invisible indicator material (indicators hidden) */
 const createIndicatorMaterial = (): THREE.MeshPhysicalMaterial =>
   new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#FF6B00"),
-    emissive: new THREE.Color("#FF6B00"),
-    emissiveIntensity: 0.8,
-    metalness: 0.3,
-    roughness: 0.4,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0,
+    visible: false,
   });
 
 /**

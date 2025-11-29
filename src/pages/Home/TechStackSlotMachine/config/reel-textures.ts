@@ -113,15 +113,18 @@ const drawFaceTexture = (
   }
 
   // Icon - draw with original colors
+  // Compensate for face aspect ratio (wider than tall on octagon)
   const img = loadedImages.get(tech.id);
   if (img) {
-    const iconSize = TEXTURE_SIZE * 0.6;
+    // Draw icon taller than wide to counteract horizontal stretch on face
+    const iconWidth = TEXTURE_SIZE * 0.5;
+    const iconHeight = TEXTURE_SIZE * 0.65; // Taller to compensate for stretch
 
     ctx.save();
     ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE / 2);
     // Rotate 90 degrees for correct orientation on cylinder face
     ctx.rotate(-Math.PI / 2);
-    ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+    ctx.drawImage(img, -iconWidth / 2, -iconHeight / 2, iconWidth, iconHeight);
     ctx.restore();
   }
 
@@ -174,6 +177,47 @@ const createFaceMaterial = (
   };
 };
 
+/**
+ * Pick technologies ensuring unique icons.
+ * When multiple techs share an icon, randomly pick one (preferring TS over JS).
+ */
+const pickUniqueIconTechs = (
+  techs: Technology[],
+  count: number,
+): Technology[] => {
+  // Group techs by their icon URL
+  const byIcon = new Map<string, Technology[]>();
+  for (const tech of techs) {
+    const existing = byIcon.get(tech.icon) || [];
+    existing.push(tech);
+    byIcon.set(tech.icon, existing);
+  }
+
+  // For each icon group, pick one randomly (slightly prefer TS variants)
+  const candidates: Technology[] = [];
+  for (const group of byIcon.values()) {
+    if (group.length === 1) {
+      candidates.push(group[0]);
+    } else {
+      // Prefer TS variants slightly (70% chance if both exist)
+      const tsVariant = group.find((t) => t.id.endsWith("-ts"));
+      const jsVariant = group.find((t) => t.id.endsWith("-js"));
+
+      if (tsVariant && jsVariant) {
+        // Has both TS and JS - randomly pick with TS preference
+        candidates.push(Math.random() < 0.7 ? tsVariant : jsVariant);
+      } else {
+        // Just pick randomly from the group
+        candidates.push(group[Math.floor(Math.random() * group.length)]);
+      }
+    }
+  }
+
+  // Shuffle and pick requested count
+  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
+
 /** Create a reel texture manager for a category */
 export const createReelTextureManager = async (
   category: ReelCategory,
@@ -194,9 +238,8 @@ export const createReelTextureManager = async (
       throw new Error(`Unknown category: ${category as string}`);
   }
 
-  // Shuffle and pick initial 8
-  const shuffled = [...allTechs].sort(() => Math.random() - 0.5);
-  const currentTechs = shuffled.slice(0, FACES_PER_REEL);
+  // Pick 8 techs with unique icons
+  const currentTechs = pickUniqueIconTechs(allTechs, FACES_PER_REEL);
 
   // Preload images
   const loadedImages = await preloadImages(allTechs);
@@ -229,15 +272,25 @@ export const updateReelFace = (
   manager.currentTechs[faceIndex] = tech;
 };
 
-/** Get a random tech that's not currently displayed */
+/** Get a random tech that's not currently displayed and has a unique icon */
 export const getRandomUnusedTech = (
   manager: ReelTextureManager,
 ): Technology => {
   const usedIds = new Set(manager.currentTechs.map((t) => t.id));
-  const unused = manager.allTechs.filter((t) => !usedIds.has(t.id));
+  const usedIcons = new Set(manager.currentTechs.map((t) => t.icon));
+
+  // Filter to techs not used AND with unique icons
+  const unused = manager.allTechs.filter(
+    (t) => !usedIds.has(t.id) && !usedIcons.has(t.icon),
+  );
 
   if (unused.length === 0) {
-    // All techs are displayed, just return a random one
+    // Fallback: just avoid same ID
+    const fallback = manager.allTechs.filter((t) => !usedIds.has(t.id));
+    if (fallback.length > 0) {
+      return fallback[Math.floor(Math.random() * fallback.length)];
+    }
+    // Last resort: return any random tech
     return manager.allTechs[
       Math.floor(Math.random() * manager.allTechs.length)
     ];
@@ -246,10 +299,9 @@ export const getRandomUnusedTech = (
   return unused[Math.floor(Math.random() * unused.length)];
 };
 
-/** Shuffle all faces with new random techs */
+/** Shuffle all faces with new random techs (unique icons) */
 export const shuffleReel = (manager: ReelTextureManager) => {
-  const shuffled = [...manager.allTechs].sort(() => Math.random() - 0.5);
-  const newTechs = shuffled.slice(0, FACES_PER_REEL);
+  const newTechs = pickUniqueIconTechs(manager.allTechs, FACES_PER_REEL);
 
   newTechs.forEach((tech, i) => {
     updateReelFace(manager, i, tech);

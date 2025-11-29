@@ -46,7 +46,7 @@ export interface SpinResult {
   message: string;
 }
 
-interface SlotMachineContextValue {
+export interface SlotMachineContextValue {
   // 3D object refs
   handlePivotRef: React.MutableRefObject<THREE.Object3D | null>;
   spinnersRef: React.MutableRefObject<Record<string, THREE.Object3D>>;
@@ -96,7 +96,7 @@ const secureRandom = (): number => {
 // Context
 // ============================================================================
 
-const SlotMachineContext = createContext<SlotMachineContextValue | null>(null);
+export const SlotMachineContext = createContext<SlotMachineContextValue | null>(null);
 
 export const useSlotMachine = (): SlotMachineContextValue => {
   const context = useContext(SlotMachineContext);

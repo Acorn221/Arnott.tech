@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { type FC, type HTMLAttributes, Suspense } from "react";
+import { type FC, type HTMLAttributes, Suspense, useContext } from "react";
 import {
   OrbitControls,
   Environment,
@@ -8,11 +8,11 @@ import {
 } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import InteractiveSlotMachine from "./interactive-slot-machine";
-import { SlotMachineProvider } from "./SlotMachineContext";
+import { SlotMachineProvider, SlotMachineContext } from "./SlotMachineContext";
 
-/** 3D Scene content - must be inside Canvas */
-const SlotMachineScene: FC = () => (
-  <SlotMachineProvider>
+/** Inner canvas content - provider is passed via context prop */
+const SlotMachineSceneContent: FC = () => (
+  <>
     {/* Dark background for better glow contrast */}
     <color attach="background" args={["#030306"]} />
 
@@ -98,15 +98,17 @@ const SlotMachineScene: FC = () => (
       {/* Vignette - darkens edges for cinematic focus */}
       <Vignette offset={0.3} darkness={0.5} />
     </EffectComposer>
-  </SlotMachineProvider>
+  </>
 );
 
-/** Main component with Canvas */
-const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
-  ...props
-}) => (
-  <div {...props}>
+/** Wrapper that reads context from outer tree and provides it to R3F tree */
+const CanvasWithContext: FC<{ className?: string }> = ({ className }) => {
+  // Read context value from outer React tree
+  const contextValue = useContext(SlotMachineContext);
+
+  return (
     <Canvas
+      className={className}
       camera={{
         position: [0, 0.15, 1.8],
         fov: 55,
@@ -117,9 +119,23 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
       dpr={[1, 1.5]}
       gl={{ antialias: true }}
     >
-      <SlotMachineScene />
+      {/* Re-provide context inside R3F tree */}
+      <SlotMachineContext.Provider value={contextValue}>
+        <SlotMachineSceneContent />
+      </SlotMachineContext.Provider>
     </Canvas>
-  </div>
+  );
+};
+
+/** Main component with Canvas */
+const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
+  ...props
+}) => (
+  <SlotMachineProvider>
+    <div {...props}>
+      <CanvasWithContext />
+    </div>
+  </SlotMachineProvider>
 );
 
 export default TechStackSlotMachine;
