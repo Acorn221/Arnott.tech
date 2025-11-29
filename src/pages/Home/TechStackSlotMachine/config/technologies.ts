@@ -29,8 +29,9 @@ import MatlabIcon from "devicon/icons/matlab/matlab-original.svg";
 import GroovyIcon from "devicon/icons/groovy/groovy-original.svg";
 import FortranIcon from "devicon/icons/fortran/fortran-original.svg";
 
-// Brainfuck icon from public folder
+// Custom icons from public folder
 const BrainfuckIcon = "/brainfuck-icon.svg";
+const NeonIcon = "/neon-icon.svg";
 
 // Frontend
 import ReactIcon from "devicon/icons/react/react-original.svg";
@@ -148,7 +149,7 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
   {
     id: "kotlin",
     name: "Kotlin",
-    shortName: "Kt",
+    shortName: "Kotlin",
     icon: KotlinIcon,
     category: "backend",
     baseScore: 80,
@@ -558,6 +559,15 @@ export const DATABASE_TECHNOLOGIES: Technology[] = [
     category: "database",
     baseScore: 85,
     tags: ["postgres", "baas", "realtime"],
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    shortName: "Neon",
+    icon: NeonIcon,
+    category: "database",
+    baseScore: 90,
+    tags: ["postgres", "serverless", "modern"],
   },
 ];
 
