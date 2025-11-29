@@ -1,12 +1,14 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
-export const createHandlePivot = (scene: THREE.Object3D): THREE.Group | null => {
+export const createHandlePivot = (
+  scene: THREE.Object3D,
+): THREE.Group | null => {
   let handleKnob: THREE.Object3D | undefined;
   let handleBody: THREE.Object3D | undefined;
 
   scene.traverse((object) => {
-    if (object.name === 'handle-knob') handleKnob = object;
-    else if (object.name === 'handle-body') handleBody = object;
+    if (object.name === "handle-knob") handleKnob = object;
+    else if (object.name === "handle-body") handleBody = object;
   });
 
   if (!handleKnob || !handleBody) return null;
@@ -16,7 +18,7 @@ export const createHandlePivot = (scene: THREE.Object3D): THREE.Group | null => 
   if (!bodyParent || !knobParent) return null;
 
   const pivot = new THREE.Group();
-  pivot.name = 'handle-pivot';
+  pivot.name = "handle-pivot";
   pivot.position.set(0.01969, 0, -0.01572);
   bodyParent.add(pivot);
 

@@ -1,20 +1,19 @@
- 
 if (!import.meta.env.VITE_PUBLIC_GTAG_ID) {
-  throw new Error('VITE_PUBLIC_GTAG_ID environment variable not set.');
+  throw new Error("VITE_PUBLIC_GTAG_ID environment variable not set.");
 }
 
 if (!import.meta.env.VITE_PUBLIC_SECRET_API_KEY) {
-  throw new Error('VITE_PUBLIC_SECRET_API_KEY environment variable not set.');
+  throw new Error("VITE_PUBLIC_SECRET_API_KEY environment variable not set.");
 }
 
-const GA_ENDPOINT = 'https://www.google-analytics.com/mp/collect';
+const GA_ENDPOINT = "https://www.google-analytics.com/mp/collect";
 const gtagId = import.meta.env.VITE_PUBLIC_GTAG_ID;
 const secretApiKey = import.meta.env.VITE_PUBLIC_SECRET_API_KEY;
 
 // https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events
 type CollectEventPayload = {
-	name: string,
-	params?: Record<string, unknown>,
+  name: string;
+  params?: Record<string, unknown>;
 };
 
 /**
@@ -29,7 +28,7 @@ export const AnalyticsEvent = async (events: CollectEventPayload[]) => {
   await fetch(
     `${GA_ENDPOINT}?measurement_id=${gtagId}&api_secret=${secretApiKey}`,
     {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         client_id: clientId,
         events,

@@ -1,16 +1,16 @@
-import { type FC, useRef, useCallback } from 'react';
-import { type Group } from 'three';
-import { useFrame, type ThreeElements, useThree } from '@react-three/fiber';
+import { type FC, useRef, useCallback } from "react";
+import { type Group } from "three";
+import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
-import { useSlotMachine } from './SlotMachineContext';
-import SlotMachineModel from './slot-machine-model';
-import { useSlotMachineHandle } from './useSlotMachineHandle';
-import TechLabels from './TechLabels';
+import { useSlotMachine } from "./SlotMachineContext";
+import SlotMachineModel from "./slot-machine-model";
+import { useSlotMachineHandle } from "./useSlotMachineHandle";
+import TechLabels from "./TechLabels";
 import {
   getHiddenFaces,
   getRandomUnusedTech,
   updateReelFace,
-} from './config/reel-textures';
+} from "./config/reel-textures";
 
 // Rumble configuration
 const RUMBLE_DURATION = 0.5;
@@ -23,9 +23,13 @@ const FRICTION = 0.92;
 const MIN_VELOCITY = 0.5;
 const SWAP_INTERVAL = 0.3;
 
-const SPINNER_NAMES = ['slot-spinner-1', 'slot-spinner-2', 'slot-spinner-3'] as const;
+const SPINNER_NAMES = [
+  "slot-spinner-1",
+  "slot-spinner-2",
+  "slot-spinner-3",
+] as const;
 
-type InteractiveSlotMachineProps = ThreeElements['group'] & {
+type InteractiveSlotMachineProps = ThreeElements["group"] & {
   scale: number;
   position: [number, number, number];
 };
@@ -69,11 +73,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     startGame();
   }, [triggerRumble, startGame]);
 
-  const {
-    handlePointerDown,
-    handlePointerOver,
-    handlePointerOut,
-  } = useSlotMachineHandle({ onTrigger: handleTrigger });
+  const { handlePointerDown, handlePointerOver, handlePointerOut } =
+    useSlotMachineHandle({ onTrigger: handleTrigger });
 
   // Main animation loop - handles reels, rumble, and cursor
   useFrame((_, delta) => {
@@ -81,8 +82,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     const reelStates = reelStatesRef.current;
 
     // Reset cursor if spinning
-    if (isSpinningRef.current && gl.domElement.style.cursor === 'grab') {
-      gl.domElement.style.cursor = 'auto';
+    if (isSpinningRef.current && gl.domElement.style.cursor === "grab") {
+      gl.domElement.style.cursor = "auto";
     }
 
     // Reel animation
@@ -91,7 +92,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (!spinner) return;
 
       // Dynamic face swapping during spin
-      if (managers && state.phase === 'spinning') {
+      if (managers && state.phase === "spinning") {
         swapTimersRef.current[i] += delta;
 
         if (swapTimersRef.current[i] >= SWAP_INTERVAL) {
@@ -99,7 +100,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
           const hiddenFaces = getHiddenFaces(state.angle);
           if (hiddenFaces.length > 0) {
-            const faceToSwap = hiddenFaces[Math.floor(Math.random() * hiddenFaces.length)];
+            const faceToSwap =
+              hiddenFaces[Math.floor(Math.random() * hiddenFaces.length)];
             if (faceToSwap !== state.lastSwappedFace) {
               const newTech = getRandomUnusedTech(managers[i]);
               updateReelFace(managers[i], faceToSwap, newTech);
@@ -110,17 +112,18 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       }
 
       // Physics
-      if (state.phase === 'spinning') {
+      if (state.phase === "spinning") {
         state.angle += state.velocity * delta;
-      } else if (state.phase === 'decelerating') {
+      } else if (state.phase === "decelerating") {
         state.velocity *= FRICTION;
         state.angle += state.velocity * delta;
         if (state.velocity < MIN_VELOCITY) {
-          state.phase = 'settling';
+          state.phase = "settling";
         }
-      } else if (state.phase === 'settling') {
+      } else if (state.phase === "settling") {
         const radiansPerFace = (Math.PI * 2) / GEOMETRY_FACES;
-        const nearestSlot = Math.round(state.angle / radiansPerFace) * radiansPerFace;
+        const nearestSlot =
+          Math.round(state.angle / radiansPerFace) * radiansPerFace;
         const diff = state.angle - nearestSlot;
 
         if (Math.abs(diff) > 0.005) {
@@ -128,7 +131,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         } else {
           state.angle = nearestSlot;
           state.velocity = 0;
-          state.phase = 'stopped';
+          state.phase = "stopped";
         }
       }
 
@@ -137,7 +140,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
     // Check if all reels stopped
     if (isSpinningRef.current) {
-      const allStopped = reelStates.every((state) => state.phase === 'stopped');
+      const allStopped = reelStates.every((state) => state.phase === "stopped");
       if (allStopped) {
         setIsSpinning(false);
         calculateFinalResult();

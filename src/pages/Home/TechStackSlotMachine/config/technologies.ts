@@ -1,52 +1,52 @@
 // Technology icons from devicon - using original/plain filled versions for visibility
 // Backend
-import TypeScriptIcon from 'devicon/icons/typescript/typescript-original.svg';
-import GoIcon from 'devicon/icons/go/go-original.svg';
-import RustIcon from 'devicon/icons/rust/rust-original.svg';
-import PythonIcon from 'devicon/icons/python/python-original.svg';
-import JavaIcon from 'devicon/icons/java/java-original.svg';
-import CSharpIcon from 'devicon/icons/csharp/csharp-original.svg';
-import RubyIcon from 'devicon/icons/ruby/ruby-original.svg';
-import PhpIcon from 'devicon/icons/php/php-original.svg';
-import KotlinIcon from 'devicon/icons/kotlin/kotlin-original.svg';
-import ScalaIcon from 'devicon/icons/scala/scala-original.svg';
-import ElixirIcon from 'devicon/icons/elixir/elixir-original.svg';
-import CppIcon from 'devicon/icons/cplusplus/cplusplus-original.svg';
-import CIcon from 'devicon/icons/c/c-original.svg';
-import SwiftIcon from 'devicon/icons/swift/swift-original.svg';
-import HaskellIcon from 'devicon/icons/haskell/haskell-original.svg';
+import TypeScriptIcon from "devicon/icons/typescript/typescript-original.svg";
+import GoIcon from "devicon/icons/go/go-original.svg";
+import RustIcon from "devicon/icons/rust/rust-original.svg";
+import PythonIcon from "devicon/icons/python/python-original.svg";
+import JavaIcon from "devicon/icons/java/java-original.svg";
+import CSharpIcon from "devicon/icons/csharp/csharp-original.svg";
+import RubyIcon from "devicon/icons/ruby/ruby-original.svg";
+import PhpIcon from "devicon/icons/php/php-original.svg";
+import KotlinIcon from "devicon/icons/kotlin/kotlin-original.svg";
+import ScalaIcon from "devicon/icons/scala/scala-original.svg";
+import ElixirIcon from "devicon/icons/elixir/elixir-original.svg";
+import CppIcon from "devicon/icons/cplusplus/cplusplus-original.svg";
+import CIcon from "devicon/icons/c/c-original.svg";
+import SwiftIcon from "devicon/icons/swift/swift-original.svg";
+import HaskellIcon from "devicon/icons/haskell/haskell-original.svg";
 
 // Frontend
-import ReactIcon from 'devicon/icons/react/react-original.svg';
-import VueIcon from 'devicon/icons/vuejs/vuejs-original.svg';
-import SvelteIcon from 'devicon/icons/svelte/svelte-original.svg';
-import NextJsIcon from 'devicon/icons/nextjs/nextjs-original.svg';
-import NuxtIcon from 'devicon/icons/nuxtjs/nuxtjs-original.svg';
-import AngularIcon from 'devicon/icons/angular/angular-original.svg';
-import SolidJsIcon from 'devicon/icons/solidjs/solidjs-original.svg';
-import JQueryIcon from 'devicon/icons/jquery/jquery-original.svg';
-import JavaScriptIcon from 'devicon/icons/javascript/javascript-original.svg';
+import ReactIcon from "devicon/icons/react/react-original.svg";
+import VueIcon from "devicon/icons/vuejs/vuejs-original.svg";
+import SvelteIcon from "devicon/icons/svelte/svelte-original.svg";
+import NextJsIcon from "devicon/icons/nextjs/nextjs-original.svg";
+import NuxtIcon from "devicon/icons/nuxtjs/nuxtjs-original.svg";
+import AngularIcon from "devicon/icons/angular/angular-original.svg";
+import SolidJsIcon from "devicon/icons/solidjs/solidjs-original.svg";
+import JQueryIcon from "devicon/icons/jquery/jquery-original.svg";
+import JavaScriptIcon from "devicon/icons/javascript/javascript-original.svg";
 
 // Databases
-import PostgresIcon from 'devicon/icons/postgresql/postgresql-original.svg';
-import MySqlIcon from 'devicon/icons/mysql/mysql-original.svg';
-import MariaDbIcon from 'devicon/icons/mariadb/mariadb-original.svg';
-import SqliteIcon from 'devicon/icons/sqlite/sqlite-original.svg';
-import MongoDbIcon from 'devicon/icons/mongodb/mongodb-original.svg';
-import RedisIcon from 'devicon/icons/redis/redis-original.svg';
-import CassandraIcon from 'devicon/icons/cassandra/cassandra-original.svg';
-import Neo4jIcon from 'devicon/icons/neo4j/neo4j-original.svg';
-import FirebaseIcon from 'devicon/icons/firebase/firebase-original.svg';
-import SupabaseIcon from 'devicon/icons/supabase/supabase-original.svg';
+import PostgresIcon from "devicon/icons/postgresql/postgresql-original.svg";
+import MySqlIcon from "devicon/icons/mysql/mysql-original.svg";
+import MariaDbIcon from "devicon/icons/mariadb/mariadb-original.svg";
+import SqliteIcon from "devicon/icons/sqlite/sqlite-original.svg";
+import MongoDbIcon from "devicon/icons/mongodb/mongodb-original.svg";
+import RedisIcon from "devicon/icons/redis/redis-original.svg";
+import CassandraIcon from "devicon/icons/cassandra/cassandra-original.svg";
+import Neo4jIcon from "devicon/icons/neo4j/neo4j-original.svg";
+import FirebaseIcon from "devicon/icons/firebase/firebase-original.svg";
+import SupabaseIcon from "devicon/icons/supabase/supabase-original.svg";
 
 // Custom icons
-import DynamoDbIcon from '../../Carousel/Slides/util/Icons/assets/dynamoDB.svg';
+import DynamoDbIcon from "../../Carousel/Slides/util/Icons/assets/dynamoDB.svg";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type ReelCategory = 'backend' | 'frontend' | 'database';
+export type ReelCategory = "backend" | "frontend" | "database";
 
 export interface Technology {
   id: string;
@@ -64,139 +64,139 @@ export interface Technology {
 
 export const BACKEND_TECHNOLOGIES: Technology[] = [
   {
-    id: 'typescript',
-    name: 'TypeScript',
-    shortName: 'TS',
+    id: "typescript",
+    name: "TypeScript",
+    shortName: "TS",
     icon: TypeScriptIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 90,
-    tags: ['typed', 'modern', 'node'],
+    tags: ["typed", "modern", "node"],
   },
   {
-    id: 'go',
-    name: 'Go',
-    shortName: 'Go',
+    id: "go",
+    name: "Go",
+    shortName: "Go",
     icon: GoIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 88,
-    tags: ['compiled', 'fast', 'simple'],
+    tags: ["compiled", "fast", "simple"],
   },
   {
-    id: 'rust',
-    name: 'Rust',
-    shortName: 'Rust',
+    id: "rust",
+    name: "Rust",
+    shortName: "Rust",
     icon: RustIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 92,
-    tags: ['compiled', 'memory-safe', 'fast'],
+    tags: ["compiled", "memory-safe", "fast"],
   },
   {
-    id: 'python',
-    name: 'Python',
-    shortName: 'Py',
+    id: "python",
+    name: "Python",
+    shortName: "Py",
     icon: PythonIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 75,
-    tags: ['scripting', 'ml', 'slow'],
+    tags: ["scripting", "ml", "slow"],
   },
   {
-    id: 'java',
-    name: 'Java',
-    shortName: 'Java',
+    id: "java",
+    name: "Java",
+    shortName: "Java",
     icon: JavaIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 70,
-    tags: ['enterprise', 'verbose', 'jvm'],
+    tags: ["enterprise", "verbose", "jvm"],
   },
   {
-    id: 'csharp',
-    name: 'C# / .NET',
-    shortName: 'C#',
+    id: "csharp",
+    name: "C# / .NET",
+    shortName: "C#",
     icon: CSharpIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 78,
-    tags: ['enterprise', 'microsoft', 'typed'],
+    tags: ["enterprise", "microsoft", "typed"],
   },
   {
-    id: 'ruby',
-    name: 'Ruby',
-    shortName: 'Ruby',
+    id: "ruby",
+    name: "Ruby",
+    shortName: "Ruby",
     icon: RubyIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 60,
-    tags: ['scripting', 'rails', 'slow'],
+    tags: ["scripting", "rails", "slow"],
   },
   {
-    id: 'php',
-    name: 'PHP',
-    shortName: 'PHP',
+    id: "php",
+    name: "PHP",
+    shortName: "PHP",
     icon: PhpIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 25,
-    tags: ['legacy', 'wordpress', 'cursed'],
+    tags: ["legacy", "wordpress", "cursed"],
   },
   {
-    id: 'kotlin',
-    name: 'Kotlin',
-    shortName: 'Kt',
+    id: "kotlin",
+    name: "Kotlin",
+    shortName: "Kt",
     icon: KotlinIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 82,
-    tags: ['jvm', 'modern', 'android'],
+    tags: ["jvm", "modern", "android"],
   },
   {
-    id: 'scala',
-    name: 'Scala',
-    shortName: 'Scala',
+    id: "scala",
+    name: "Scala",
+    shortName: "Scala",
     icon: ScalaIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 72,
-    tags: ['jvm', 'functional', 'complex'],
+    tags: ["jvm", "functional", "complex"],
   },
   {
-    id: 'elixir',
-    name: 'Elixir',
-    shortName: 'Elixir',
+    id: "elixir",
+    name: "Elixir",
+    shortName: "Elixir",
     icon: ElixirIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 80,
-    tags: ['functional', 'concurrent', 'erlang'],
+    tags: ["functional", "concurrent", "erlang"],
   },
   {
-    id: 'cpp',
-    name: 'C++',
-    shortName: 'C++',
+    id: "cpp",
+    name: "C++",
+    shortName: "C++",
     icon: CppIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 65,
-    tags: ['compiled', 'low-level', 'complex'],
+    tags: ["compiled", "low-level", "complex"],
   },
   {
-    id: 'c',
-    name: 'C',
-    shortName: 'C',
+    id: "c",
+    name: "C",
+    shortName: "C",
     icon: CIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 55,
-    tags: ['compiled', 'low-level', 'manual-memory'],
+    tags: ["compiled", "low-level", "manual-memory"],
   },
   {
-    id: 'swift',
-    name: 'Swift',
-    shortName: 'Swift',
+    id: "swift",
+    name: "Swift",
+    shortName: "Swift",
     icon: SwiftIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 76,
-    tags: ['apple', 'modern', 'safe'],
+    tags: ["apple", "modern", "safe"],
   },
   {
-    id: 'haskell',
-    name: 'Haskell',
-    shortName: 'Haskell',
+    id: "haskell",
+    name: "Haskell",
+    shortName: "Haskell",
     icon: HaskellIcon,
-    category: 'backend',
+    category: "backend",
     baseScore: 68,
-    tags: ['functional', 'pure', 'academic'],
+    tags: ["functional", "pure", "academic"],
   },
 ];
 
@@ -206,130 +206,130 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
 
 export const FRONTEND_TECHNOLOGIES: Technology[] = [
   {
-    id: 'react-ts',
-    name: 'React + TypeScript',
-    shortName: 'React+TS',
+    id: "react-ts",
+    name: "React + TypeScript",
+    shortName: "React+TS",
     icon: ReactIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 92,
-    tags: ['typed', 'react', 'modern'],
+    tags: ["typed", "react", "modern"],
   },
   {
-    id: 'react-js',
-    name: 'React + JavaScript',
-    shortName: 'React+JS',
+    id: "react-js",
+    name: "React + JavaScript",
+    shortName: "React+JS",
     icon: ReactIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 40,
-    tags: ['untyped', 'react', 'no-types'],
+    tags: ["untyped", "react", "no-types"],
   },
   {
-    id: 'vue-ts',
-    name: 'Vue + TypeScript',
-    shortName: 'Vue+TS',
+    id: "vue-ts",
+    name: "Vue + TypeScript",
+    shortName: "Vue+TS",
     icon: VueIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 85,
-    tags: ['typed', 'vue', 'modern'],
+    tags: ["typed", "vue", "modern"],
   },
   {
-    id: 'vue-js',
-    name: 'Vue + JavaScript',
-    shortName: 'Vue+JS',
+    id: "vue-js",
+    name: "Vue + JavaScript",
+    shortName: "Vue+JS",
     icon: VueIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 45,
-    tags: ['untyped', 'vue', 'no-types'],
+    tags: ["untyped", "vue", "no-types"],
   },
   {
-    id: 'svelte-ts',
-    name: 'Svelte + TypeScript',
-    shortName: 'Svelte+TS',
+    id: "svelte-ts",
+    name: "Svelte + TypeScript",
+    shortName: "Svelte+TS",
     icon: SvelteIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 88,
-    tags: ['typed', 'svelte', 'compiled'],
+    tags: ["typed", "svelte", "compiled"],
   },
   {
-    id: 'svelte-js',
-    name: 'Svelte + JavaScript',
-    shortName: 'Svelte+JS',
+    id: "svelte-js",
+    name: "Svelte + JavaScript",
+    shortName: "Svelte+JS",
     icon: SvelteIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 45,
-    tags: ['untyped', 'svelte', 'no-types'],
+    tags: ["untyped", "svelte", "no-types"],
   },
   {
-    id: 'nextjs',
-    name: 'Next.js',
-    shortName: 'Next',
+    id: "nextjs",
+    name: "Next.js",
+    shortName: "Next",
     icon: NextJsIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 90,
-    tags: ['react', 'fullstack', 'ssr'],
+    tags: ["react", "fullstack", "ssr"],
   },
   {
-    id: 'nuxt',
-    name: 'Nuxt',
-    shortName: 'Nuxt',
+    id: "nuxt",
+    name: "Nuxt",
+    shortName: "Nuxt",
     icon: NuxtIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 82,
-    tags: ['vue', 'fullstack', 'ssr'],
+    tags: ["vue", "fullstack", "ssr"],
   },
   {
-    id: 'sveltekit',
-    name: 'SvelteKit',
-    shortName: 'SvelteKit',
+    id: "sveltekit",
+    name: "SvelteKit",
+    shortName: "SvelteKit",
     icon: SvelteIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 86,
-    tags: ['svelte', 'fullstack', 'ssr'],
+    tags: ["svelte", "fullstack", "ssr"],
   },
   {
-    id: 'angular',
-    name: 'Angular',
-    shortName: 'Angular',
+    id: "angular",
+    name: "Angular",
+    shortName: "Angular",
     icon: AngularIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 65,
-    tags: ['enterprise', 'google', 'complex'],
+    tags: ["enterprise", "google", "complex"],
   },
   {
-    id: 'solidjs',
-    name: 'Solid.js',
-    shortName: 'Solid',
+    id: "solidjs",
+    name: "Solid.js",
+    shortName: "Solid",
     icon: SolidJsIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 84,
-    tags: ['reactive', 'fast', 'modern'],
+    tags: ["reactive", "fast", "modern"],
   },
   {
-    id: 'htmx',
-    name: 'HTMX',
-    shortName: 'HTMX',
+    id: "htmx",
+    name: "HTMX",
+    shortName: "HTMX",
     icon: JavaScriptIcon, // Use JS icon as placeholder
-    category: 'frontend',
+    category: "frontend",
     baseScore: 78,
-    tags: ['simple', 'hypermedia', 'minimal'],
+    tags: ["simple", "hypermedia", "minimal"],
   },
   {
-    id: 'jquery',
-    name: 'jQuery',
-    shortName: 'jQuery',
+    id: "jquery",
+    name: "jQuery",
+    shortName: "jQuery",
     icon: JQueryIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 20,
-    tags: ['legacy', 'old', 'dom'],
+    tags: ["legacy", "old", "dom"],
   },
   {
-    id: 'vanilla-js',
-    name: 'Vanilla JavaScript',
-    shortName: 'Vanilla',
+    id: "vanilla-js",
+    name: "Vanilla JavaScript",
+    shortName: "Vanilla",
     icon: JavaScriptIcon,
-    category: 'frontend',
+    category: "frontend",
     baseScore: 25,
-    tags: ['untyped', 'basic', 'no-types'],
+    tags: ["untyped", "basic", "no-types"],
   },
 ];
 
@@ -339,103 +339,103 @@ export const FRONTEND_TECHNOLOGIES: Technology[] = [
 
 export const DATABASE_TECHNOLOGIES: Technology[] = [
   {
-    id: 'postgresql',
-    name: 'PostgreSQL',
-    shortName: 'Postgres',
+    id: "postgresql",
+    name: "PostgreSQL",
+    shortName: "Postgres",
     icon: PostgresIcon,
-    category: 'database',
+    category: "database",
     baseScore: 95,
-    tags: ['sql', 'relational', 'acid'],
+    tags: ["sql", "relational", "acid"],
   },
   {
-    id: 'mysql',
-    name: 'MySQL',
-    shortName: 'MySQL',
+    id: "mysql",
+    name: "MySQL",
+    shortName: "MySQL",
     icon: MySqlIcon,
-    category: 'database',
+    category: "database",
     baseScore: 75,
-    tags: ['sql', 'relational', 'oracle'],
+    tags: ["sql", "relational", "oracle"],
   },
   {
-    id: 'mariadb',
-    name: 'MariaDB',
-    shortName: 'MariaDB',
+    id: "mariadb",
+    name: "MariaDB",
+    shortName: "MariaDB",
     icon: MariaDbIcon,
-    category: 'database',
+    category: "database",
     baseScore: 78,
-    tags: ['sql', 'relational', 'mysql-fork'],
+    tags: ["sql", "relational", "mysql-fork"],
   },
   {
-    id: 'sqlite',
-    name: 'SQLite',
-    shortName: 'SQLite',
+    id: "sqlite",
+    name: "SQLite",
+    shortName: "SQLite",
     icon: SqliteIcon,
-    category: 'database',
+    category: "database",
     baseScore: 70,
-    tags: ['sql', 'embedded', 'simple'],
+    tags: ["sql", "embedded", "simple"],
   },
   {
-    id: 'mongodb',
-    name: 'MongoDB',
-    shortName: 'Mongo',
+    id: "mongodb",
+    name: "MongoDB",
+    shortName: "Mongo",
     icon: MongoDbIcon,
-    category: 'database',
+    category: "database",
     baseScore: 35,
-    tags: ['nosql', 'document', 'schemaless'],
+    tags: ["nosql", "document", "schemaless"],
   },
   {
-    id: 'dynamodb',
-    name: 'DynamoDB',
-    shortName: 'DynamoDB',
+    id: "dynamodb",
+    name: "DynamoDB",
+    shortName: "DynamoDB",
     icon: DynamoDbIcon,
-    category: 'database',
+    category: "database",
     baseScore: 55,
-    tags: ['nosql', 'aws', 'key-value'],
+    tags: ["nosql", "aws", "key-value"],
   },
   {
-    id: 'firebase',
-    name: 'Firebase/Firestore',
-    shortName: 'Firebase',
+    id: "firebase",
+    name: "Firebase/Firestore",
+    shortName: "Firebase",
     icon: FirebaseIcon,
-    category: 'database',
+    category: "database",
     baseScore: 45,
-    tags: ['nosql', 'google', 'realtime'],
+    tags: ["nosql", "google", "realtime"],
   },
   {
-    id: 'redis',
-    name: 'Redis',
-    shortName: 'Redis',
+    id: "redis",
+    name: "Redis",
+    shortName: "Redis",
     icon: RedisIcon,
-    category: 'database',
+    category: "database",
     baseScore: 80,
-    tags: ['cache', 'key-value', 'fast'],
+    tags: ["cache", "key-value", "fast"],
   },
   {
-    id: 'cassandra',
-    name: 'Cassandra',
-    shortName: 'Cassandra',
+    id: "cassandra",
+    name: "Cassandra",
+    shortName: "Cassandra",
     icon: CassandraIcon,
-    category: 'database',
+    category: "database",
     baseScore: 65,
-    tags: ['nosql', 'distributed', 'wide-column'],
+    tags: ["nosql", "distributed", "wide-column"],
   },
   {
-    id: 'neo4j',
-    name: 'Neo4j',
-    shortName: 'Neo4j',
+    id: "neo4j",
+    name: "Neo4j",
+    shortName: "Neo4j",
     icon: Neo4jIcon,
-    category: 'database',
+    category: "database",
     baseScore: 72,
-    tags: ['graph', 'nosql', 'relationships'],
+    tags: ["graph", "nosql", "relationships"],
   },
   {
-    id: 'supabase',
-    name: 'Supabase',
-    shortName: 'Supabase',
+    id: "supabase",
+    name: "Supabase",
+    shortName: "Supabase",
     icon: SupabaseIcon,
-    category: 'database',
+    category: "database",
     baseScore: 85,
-    tags: ['postgres', 'baas', 'realtime'],
+    tags: ["postgres", "baas", "realtime"],
   },
 ];
 
@@ -449,7 +449,9 @@ export const ALL_TECHNOLOGIES: Technology[] = [
   ...DATABASE_TECHNOLOGIES,
 ];
 
-export const getTechnologyById = (id: string): Technology | undefined => ALL_TECHNOLOGIES.find((t) => t.id === id);
+export const getTechnologyById = (id: string): Technology | undefined =>
+  ALL_TECHNOLOGIES.find((t) => t.id === id);
 
-export const getTechnologiesByCategory = (category: ReelCategory): Technology[] => ALL_TECHNOLOGIES.filter((t) => t.category === category);
-
+export const getTechnologiesByCategory = (
+  category: ReelCategory,
+): Technology[] => ALL_TECHNOLOGIES.filter((t) => t.category === category);

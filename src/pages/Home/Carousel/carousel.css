@@ -1,5 +1,3 @@
-
-
 [class^="number-slide"],
 [class*=" number-slide"] {
   background: grey;
@@ -98,7 +96,7 @@
 }
 
 .dot.active {
-  background: #FFF;
+  background: #fff;
 }
 
 .arrowContainer {

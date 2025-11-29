@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export interface GlowBorderConfig {
   color?: string;
@@ -10,7 +10,7 @@ export interface GlowBorderConfig {
 }
 
 const defaultConfig: Required<GlowBorderConfig> = {
-  color: '#00FF88',
+  color: "#00FF88",
   pulseSpeed: 2,
   minIntensity: 0.8,
   maxIntensity: 3.0,
@@ -28,11 +28,12 @@ export class AnimatedGlowBorderMaterial {
   constructor(config: Partial<GlowBorderConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
 
-    const needsTransparency = this.config.minOpacity < 1.0 || this.config.maxOpacity < 1.0;
+    const needsTransparency =
+      this.config.minOpacity < 1.0 || this.config.maxOpacity < 1.0;
 
     // Dark base color, strong emissive glow
     this.material = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#050505'), // Very dark base - glow comes from emissive
+      color: new THREE.Color("#050505"), // Very dark base - glow comes from emissive
       emissive: new THREE.Color(this.config.color),
       emissiveIntensity: this.config.maxIntensity,
       metalness: 0.1,
@@ -63,9 +64,8 @@ export class AnimatedGlowBorderMaterial {
   private animate = (): void => {
     if (!this.isPaused) {
       const elapsed = performance.now() / 1000 - this.startTime;
-      const {
-        pulseSpeed, minIntensity, maxIntensity, minOpacity, maxOpacity,
-      } = this.config;
+      const { pulseSpeed, minIntensity, maxIntensity, minOpacity, maxOpacity } =
+        this.config;
 
       // Smooth sine wave pulse
       const pulse = (Math.sin(elapsed * pulseSpeed * Math.PI) + 1) / 2;
@@ -99,4 +99,6 @@ export class AnimatedGlowBorderMaterial {
   }
 }
 
-export const createAnimatedGlowBorder = (config: Partial<GlowBorderConfig> = {}): AnimatedGlowBorderMaterial => new AnimatedGlowBorderMaterial(config);
+export const createAnimatedGlowBorder = (
+  config: Partial<GlowBorderConfig> = {},
+): AnimatedGlowBorderMaterial => new AnimatedGlowBorderMaterial(config);

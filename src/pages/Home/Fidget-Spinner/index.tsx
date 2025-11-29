@@ -1,29 +1,27 @@
-import { Canvas } from '@react-three/fiber';
-import {
-  type FC, type InputHTMLAttributes, Suspense, useState,
-} from 'react';
-import { OrbitControls, Environment } from '@react-three/drei';
-import InteractiveSpinner from './interactive-spinner';
+import { Canvas } from "@react-three/fiber";
+import { type FC, type InputHTMLAttributes, Suspense, useState } from "react";
+import { OrbitControls, Environment } from "@react-three/drei";
+import InteractiveSpinner from "./interactive-spinner";
 
-const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({ ...props }) => {
+const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
+  ...props
+}) => {
   const [spinCount, setSpinCount] = useState(0);
 
   return (
-    <div
-      {...props}
-    >
+    <div {...props}>
       <div className="flex w-full justify-center align-middle">
         {/* <div>
           <div className="circle-2 ml-4" />
         </div> */}
-        <div className="m-auto">
-          Spins:
-          {' '}
-          {spinCount}
-        </div>
+        <div className="m-auto">Spins: {spinCount}</div>
       </div>
       <Canvas
-        camera={{ position: [0, 4, 0], fov: 24, rotation: [-Math.PI / 2, 0, 0] }}
+        camera={{
+          position: [0, 4, 0],
+          fov: 24,
+          rotation: [-Math.PI / 2, 0, 0],
+        }}
         shadows
         gl={{ antialias: true }}
       >

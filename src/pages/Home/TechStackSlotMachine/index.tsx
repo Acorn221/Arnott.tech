@@ -1,24 +1,20 @@
-import { Canvas } from '@react-three/fiber';
-import { type FC, type HTMLAttributes, Suspense } from 'react';
+import { Canvas } from "@react-three/fiber";
+import { type FC, type HTMLAttributes, Suspense } from "react";
 import {
   OrbitControls,
   Environment,
   ContactShadows,
   BakeShadows,
-} from '@react-three/drei';
-import {
-  EffectComposer,
-  Bloom,
-  Vignette,
-} from '@react-three/postprocessing';
-import InteractiveSlotMachine from './interactive-slot-machine';
-import { SlotMachineProvider } from './SlotMachineContext';
+} from "@react-three/drei";
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import InteractiveSlotMachine from "./interactive-slot-machine";
+import { SlotMachineProvider } from "./SlotMachineContext";
 
 /** 3D Scene content - must be inside Canvas */
 const SlotMachineScene: FC = () => (
   <>
     {/* Dark background for better glow contrast */}
-    <color attach="background" args={['#030306']} />
+    <color attach="background" args={["#030306"]} />
 
     <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 
@@ -84,10 +80,7 @@ const SlotMachineScene: FC = () => (
 
     {/* Scene content */}
     <Suspense fallback={null}>
-      <InteractiveSlotMachine
-        position={[0, 0, 0]}
-        scale={30}
-      />
+      <InteractiveSlotMachine position={[0, 0, 0]} scale={30} />
     </Suspense>
 
     {/* Bake shadows for performance */}
@@ -103,10 +96,7 @@ const SlotMachineScene: FC = () => (
         mipmapBlur
       />
       {/* Vignette - darkens edges for cinematic focus */}
-      <Vignette
-        offset={0.3}
-        darkness={0.5}
-      />
+      <Vignette offset={0.3} darkness={0.5} />
     </EffectComposer>
   </>
 );

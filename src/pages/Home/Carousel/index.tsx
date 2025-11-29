@@ -1,8 +1,8 @@
-import React, { useEffect, useState, createContext } from 'react';
-import { useKeenSlider } from 'keen-slider/react';
-import './carousel.css';
-import 'keen-slider/keen-slider.min.css';
-import Arrow from './Arrow';
+import React, { useEffect, useState, createContext } from "react";
+import { useKeenSlider } from "keen-slider/react";
+import "./carousel.css";
+import "keen-slider/keen-slider.min.css";
+import Arrow from "./Arrow";
 
 const CarouselContext = createContext(0);
 
@@ -12,7 +12,11 @@ export interface CarouselProps {
   slideContainerClass?: string;
 }
 
-const Carousel = ({ children, className, slideContainerClass }: CarouselProps) => {
+const Carousel = ({
+  children,
+  className,
+  slideContainerClass,
+}: CarouselProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [lastChanged, setLastChanged] = useState(Date.now());
@@ -31,9 +35,9 @@ const Carousel = ({ children, className, slideContainerClass }: CarouselProps) =
 
   // allow the user to use arrow keys to navigate the carousel
   const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'ArrowLeft') {
+    if (e.key === "ArrowLeft") {
       instanceRef.current?.prev();
-    } else if (e.key === 'ArrowRight') {
+    } else if (e.key === "ArrowRight") {
       instanceRef.current?.next();
     }
   };
@@ -41,19 +45,25 @@ const Carousel = ({ children, className, slideContainerClass }: CarouselProps) =
   // set a delay for changing the carousel slide
   useEffect(() => {
     if (nextSlideTimeout) window.clearTimeout(nextSlideTimeout);
-    setnextSlideTimeout(window.setTimeout(() => {
-      requestAnimationFrame(() => {
-        instanceRef.current?.next();
-      });
-    }, 10000));
+    setnextSlideTimeout(
+      window.setTimeout(() => {
+        requestAnimationFrame(() => {
+          instanceRef.current?.next();
+        });
+      }, 10000),
+    );
   }, [lastChanged]);
 
   return (
-
     <div className={className}>
       <div className="navigation-wrapper shadow-2xl">
         <CarouselContext.Provider value={currentSlide}>
-          <div ref={sliderRef} className={`keen-slider w-full h-[30vh] min-h-[10em] ${slideContainerClass}`} onKeyUp={handleKeyUp} tabIndex={0}>
+          <div
+            ref={sliderRef}
+            className={`keen-slider w-full h-[30vh] min-h-[10em] ${slideContainerClass}`}
+            onKeyUp={handleKeyUp}
+            tabIndex={0}
+          >
             {children}
           </div>
         </CarouselContext.Provider>
@@ -85,7 +95,7 @@ const Carousel = ({ children, className, slideContainerClass }: CarouselProps) =
               onClick={() => {
                 instanceRef.current?.moveToIdx(idx);
               }}
-              className={`dot${currentSlide === idx ? ' active' : ''}`}
+              className={`dot${currentSlide === idx ? " active" : ""}`}
             />
           ))}
         </div>

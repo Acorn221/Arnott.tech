@@ -1,29 +1,29 @@
-import { XyzTransition } from '@animxyz/react';
-import { AiFillLinkedin } from 'react-icons/ai';
-import { MdEmail } from 'react-icons/md';
-import { SiGmail } from 'react-icons/si';
-import { useCallback, useEffect, useState } from 'react';
-import ReactGA from 'react-ga4';
-import Text from '@/misc/Text';
-import Carousel from './Carousel';
-import Frontend from './Carousel/Slides/Frontend';
-import DevTools from './Carousel/Slides/DevTools';
-import Backend from './Carousel/Slides/Backend';
-import OtherPrograms from './Carousel/Slides/OtherPrograms';
-import Projects from './Projects';
-import { getEmail } from './util/misc';
-import StyledToolTip from '@/misc/StyledComponents/StyledToolTip';
-import FidgetSpinner from './Fidget-Spinner';
-import TechStackSlotMachine from './TechStackSlotMachine';
+import { XyzTransition } from "@animxyz/react";
+import { AiFillLinkedin } from "react-icons/ai";
+import { MdEmail } from "react-icons/md";
+import { SiGmail } from "react-icons/si";
+import { useCallback, useEffect, useState } from "react";
+import ReactGA from "react-ga4";
+import Text from "@/misc/Text";
+import Carousel from "./Carousel";
+import Frontend from "./Carousel/Slides/Frontend";
+import DevTools from "./Carousel/Slides/DevTools";
+import Backend from "./Carousel/Slides/Backend";
+import OtherPrograms from "./Carousel/Slides/OtherPrograms";
+import Projects from "./Projects";
+import { getEmail } from "./util/misc";
+import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
+import FidgetSpinner from "./Fidget-Spinner";
+import TechStackSlotMachine from "./TechStackSlotMachine";
 
 const txt = Text.home;
 
-const fadeAnimation = 'fade in-out delay-4 duration-24';
+const fadeAnimation = "fade in-out delay-4 duration-24";
 
 const slides = [Frontend, Backend, DevTools, OtherPrograms];
 
 const Home = () => {
-  const [email, setEmail] = useState('/');
+  const [email, setEmail] = useState("/");
 
   const requestEmail = useCallback(() => {
     const unencryptedEmail = getEmail();
@@ -32,9 +32,9 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    ReactGA.initialize('G-WW6JYGLDCW');
+    ReactGA.initialize("G-WW6JYGLDCW");
     ReactGA.send({
-      hitType: 'pageview',
+      hitType: "pageview",
       page: window.location.pathname,
       title: document.title,
     });
@@ -42,14 +42,15 @@ const Home = () => {
     requestEmail();
   });
 
-  const getGmailLink = () => `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
-    requestEmail(),
-  )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
+  const getGmailLink = () =>
+    `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
+      requestEmail(),
+    )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
 
   const handleGmailLinkClick = useCallback(() => {
     ReactGA.send({
-      category: 'UrlClick',
-      action: 'gmail-click',
+      category: "UrlClick",
+      action: "gmail-click",
       page: window.location.pathname,
       title: document.title,
     });
@@ -58,18 +59,18 @@ const Home = () => {
 
   const handleLinkedInLinkClick = useCallback(() => {
     ReactGA.send({
-      category: 'UrlClick',
-      action: 'linkedin-click',
+      category: "UrlClick",
+      action: "linkedin-click",
       page: window.location.pathname,
       title: document.title,
     });
-    window.open('https://www.linkedin.com/in/james-arnott-341705143/');
+    window.open("https://www.linkedin.com/in/james-arnott-341705143/");
   }, [email]);
 
   const handleEmailLinkClick = useCallback(() => {
     ReactGA.send({
-      category: 'UrlClick',
-      action: 'email-click',
+      category: "UrlClick",
+      action: "email-click",
       page: window.location.pathname,
       title: document.title,
     });

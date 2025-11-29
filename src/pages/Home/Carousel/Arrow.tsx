@@ -1,11 +1,14 @@
 const Arrow = (props: {
-  left?: boolean
-  onClick: (e: React.MouseEvent<HTMLDivElement>) => void | Promise<void>
+  left?: boolean;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void | Promise<void>;
 }) => {
   const { left, onClick } = props;
 
   return (
-    <div onClick={onClick} className={`arrowContainer h-full w-10 cursor-pointer ${left ? 'arrow--left' : 'arrow--right'}`}>
+    <div
+      onClick={onClick}
+      className={`arrowContainer h-full w-10 cursor-pointer ${left ? "arrow--left" : "arrow--right"}`}
+    >
       <div className="arrow">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -20,7 +23,6 @@ const Arrow = (props: {
         </svg>
       </div>
     </div>
-
   );
 };
 

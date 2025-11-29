@@ -8,24 +8,28 @@ import {
   useMemo,
   useState,
   useEffect,
-} from 'react';
-import type * as THREE from 'three';
-import { type AnimatedGlowBorderMaterial } from './display-border-material';
-import { type DynamicDisplayPlate } from './display-plate';
+} from "react";
+import type * as THREE from "three";
+import { type AnimatedGlowBorderMaterial } from "./display-border-material";
+import { type DynamicDisplayPlate } from "./display-plate";
 import {
   type ReelTextureManager,
   createReelTextureManager,
   getFrontFaceIndex,
   shuffleReel,
-} from './config/reel-textures';
-import { type Technology } from './config/technologies';
-import { calculateScore, type ScoreResult, getScoreMessage } from './config/scoring';
+} from "./config/reel-textures";
+import { type Technology } from "./config/technologies";
+import {
+  calculateScore,
+  type ScoreResult,
+  getScoreMessage,
+} from "./config/scoring";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type ReelPhase = 'stopped' | 'spinning' | 'decelerating' | 'settling';
+export type ReelPhase = "stopped" | "spinning" | "decelerating" | "settling";
 
 export interface ReelState {
   angle: number;
@@ -82,7 +86,7 @@ const STOP_DELAY = 0.6;
 const secureRandom = (): number => {
   const array = new Uint32Array(1);
   crypto.getRandomValues(array);
-  return array[0] / (0xFFFFFFFF + 1);
+  return array[0] / (0xffffffff + 1);
 };
 
 // ============================================================================
@@ -94,7 +98,7 @@ const SlotMachineContext = createContext<SlotMachineContextValue | null>(null);
 export const useSlotMachine = (): SlotMachineContextValue => {
   const context = useContext(SlotMachineContext);
   if (!context) {
-    throw new Error('useSlotMachine must be used within SlotMachineProvider');
+    throw new Error("useSlotMachine must be used within SlotMachineProvider");
   }
   return context;
 };
@@ -107,7 +111,9 @@ interface SlotMachineProviderProps {
   children: ReactNode;
 }
 
-export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) => {
+export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
+  children,
+}) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
   const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
@@ -118,9 +124,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
 
   // Reel state refs
   const reelStatesRef = useRef<ReelState[]>([
-    { angle: 0, velocity: 0, phase: 'stopped', lastSwappedFace: -1 },
-    { angle: 0, velocity: 0, phase: 'stopped', lastSwappedFace: -1 },
-    { angle: 0, velocity: 0, phase: 'stopped', lastSwappedFace: -1 },
+    { angle: 0, velocity: 0, phase: "stopped", lastSwappedFace: -1 },
+    { angle: 0, velocity: 0, phase: "stopped", lastSwappedFace: -1 },
+    { angle: 0, velocity: 0, phase: "stopped", lastSwappedFace: -1 },
   ]);
   const swapTimersRef = useRef<number[]>([0, 0, 0]);
 
@@ -135,9 +141,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     if (reelManagersRef.current) return;
 
     const [backend, frontend, database] = await Promise.all([
-      createReelTextureManager('backend'),
-      createReelTextureManager('frontend'),
-      createReelTextureManager('database'),
+      createReelTextureManager("backend"),
+      createReelTextureManager("frontend"),
+      createReelTextureManager("database"),
     ]);
 
     reelManagersRef.current = [backend, frontend, database];
@@ -149,21 +155,30 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     handlePivotRef.current = pivot;
   }, []);
 
-  const setSpinners = useCallback((spinners: Record<string, THREE.Object3D>) => {
-    spinnersRef.current = spinners;
-  }, []);
+  const setSpinners = useCallback(
+    (spinners: Record<string, THREE.Object3D>) => {
+      spinnersRef.current = spinners;
+    },
+    [],
+  );
 
-  const setKnobMaterial = useCallback((material: AnimatedGlowBorderMaterial) => {
-    knobMaterialRef.current = material;
-  }, []);
+  const setKnobMaterial = useCallback(
+    (material: AnimatedGlowBorderMaterial) => {
+      knobMaterialRef.current = material;
+    },
+    [],
+  );
 
   const setDisplayPlate = useCallback((plate: DynamicDisplayPlate) => {
     displayPlateRef.current = plate;
   }, []);
 
-  const setIndicatorMaterials = useCallback((materials: THREE.MeshPhysicalMaterial[]) => {
-    indicatorMaterialsRef.current = materials;
-  }, []);
+  const setIndicatorMaterials = useCallback(
+    (materials: THREE.MeshPhysicalMaterial[]) => {
+      indicatorMaterialsRef.current = materials;
+    },
+    [],
+  );
 
   const setIsSpinning = useCallback((spinning: boolean) => {
     isSpinningRef.current = spinning;
@@ -174,7 +189,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
 
   // Stop a single reel
   const stopReel = useCallback((index: number) => {
-    reelStatesRef.current[index].phase = 'decelerating';
+    reelStatesRef.current[index].phase = "decelerating";
   }, []);
 
   // Calculate final result when all reels stop
@@ -214,7 +229,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
 
   // Start the game
   const startGame = useCallback(() => {
-    const anyReelActive = reelStatesRef.current.some((state) => state.phase !== 'stopped');
+    const anyReelActive = reelStatesRef.current.some(
+      (state) => state.phase !== "stopped",
+    );
     if (anyReelActive || !reelManagersRef.current) return;
 
     // Clear existing timers and result
@@ -238,7 +255,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     // Start all reels
     reelStatesRef.current.forEach((state) => {
       state.velocity = SPIN_SPEED + secureRandom() * 3;
-      state.phase = 'spinning';
+      state.phase = "spinning";
       state.lastSwappedFace = -1;
     });
 
@@ -256,40 +273,43 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     void initializeReels();
   }, [initializeReels]);
 
-  const value = useMemo<SlotMachineContextValue>(() => ({
-    handlePivotRef,
-    spinnersRef,
-    knobMaterialRef,
-    displayPlateRef,
-    indicatorMaterialsRef,
-    reelManagersRef,
-    reelStatesRef,
-    swapTimersRef,
-    isSpinningRef,
-    isInitialized,
-    lastResult,
-    startGame,
-    setHandlePivot,
-    setSpinners,
-    setKnobMaterial,
-    setDisplayPlate,
-    setIndicatorMaterials,
-    initializeReels,
-    calculateFinalResult,
-    setIsSpinning,
-  }), [
-    isInitialized,
-    lastResult,
-    startGame,
-    setHandlePivot,
-    setSpinners,
-    setKnobMaterial,
-    setDisplayPlate,
-    setIndicatorMaterials,
-    initializeReels,
-    calculateFinalResult,
-    setIsSpinning,
-  ]);
+  const value = useMemo<SlotMachineContextValue>(
+    () => ({
+      handlePivotRef,
+      spinnersRef,
+      knobMaterialRef,
+      displayPlateRef,
+      indicatorMaterialsRef,
+      reelManagersRef,
+      reelStatesRef,
+      swapTimersRef,
+      isSpinningRef,
+      isInitialized,
+      lastResult,
+      startGame,
+      setHandlePivot,
+      setSpinners,
+      setKnobMaterial,
+      setDisplayPlate,
+      setIndicatorMaterials,
+      initializeReels,
+      calculateFinalResult,
+      setIsSpinning,
+    }),
+    [
+      isInitialized,
+      lastResult,
+      startGame,
+      setHandlePivot,
+      setSpinners,
+      setKnobMaterial,
+      setDisplayPlate,
+      setIndicatorMaterials,
+      initializeReels,
+      calculateFinalResult,
+      setIsSpinning,
+    ],
+  );
 
   return (
     <SlotMachineContext.Provider value={value}>

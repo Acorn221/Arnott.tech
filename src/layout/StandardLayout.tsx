@@ -1,7 +1,7 @@
-import { Outlet } from 'react-router';
-import { AiFillHeart } from 'react-icons/ai';
-import CookieConsent from 'react-cookie-consent';
-import Text from '@/misc/Text';
+import { Outlet } from "react-router";
+import { AiFillHeart } from "react-icons/ai";
+import CookieConsent from "react-cookie-consent";
+import Text from "@/misc/Text";
 
 const txt = Text.layout.footer;
 

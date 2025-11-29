@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 const SPINNER_AXIS_Y = -0.0038093519397079945;
 const SPINNER_AXIS_Z = 0.0;
@@ -30,7 +30,11 @@ export const createSpinnerPivots = (
     const spinnerModelPos = spinnerWorldPos.clone();
     scene.worldToLocal(spinnerModelPos);
 
-    const pivotModelPos = new THREE.Vector3(spinnerModelPos.x, SPINNER_AXIS_Y, SPINNER_AXIS_Z);
+    const pivotModelPos = new THREE.Vector3(
+      spinnerModelPos.x,
+      SPINNER_AXIS_Y,
+      SPINNER_AXIS_Z,
+    );
     const pivotWorldPos = pivotModelPos.clone();
     scene.localToWorld(pivotWorldPos);
 

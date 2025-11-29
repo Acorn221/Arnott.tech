@@ -1,11 +1,12 @@
-import { type FC, useRef, useEffect, Suspense } from 'react';
-import { Text3D, Center, useFont } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import type * as THREE from 'three';
-import { useSlotMachine } from './SlotMachineContext';
+import { type FC, useRef, useEffect, Suspense } from "react";
+import { Text3D, Center, useFont } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import type * as THREE from "three";
+import { useSlotMachine } from "./SlotMachineContext";
 
 // Using a CDN-hosted font for 3D text
-const FONT_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/helvetiker_bold.typeface.json';
+const FONT_URL =
+  "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/helvetiker_bold.typeface.json";
 
 // Preload the font to avoid flash on first render
 useFont.preload(FONT_URL);
@@ -63,7 +64,8 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
     if (t < 0.4) {
       const progress = t / 0.4;
       // Elastic ease out
-      const elastic = 1 - (2 ** (-10 * progress)) * Math.cos(progress * Math.PI * 1.5);
+      const elastic =
+        1 - 2 ** (-10 * progress) * Math.cos(progress * Math.PI * 1.5);
       groupRef.current.scale.setScalar(Math.max(0, elastic));
     } else {
       groupRef.current.scale.setScalar(1);
@@ -147,10 +149,10 @@ const TechLabels: FC = () => {
 
   // Color based on individual tech scores
   const getColor = (techScore: number) => {
-    if (techScore >= 80) return '#4ADE80'; // Green
-    if (techScore >= 60) return '#FBBF24'; // Yellow
-    if (techScore >= 40) return '#F97316'; // Orange
-    return '#EF4444'; // Red
+    if (techScore >= 80) return "#4ADE80"; // Green
+    if (techScore >= 60) return "#FBBF24"; // Yellow
+    if (techScore >= 40) return "#F97316"; // Orange
+    return "#EF4444"; // Red
   };
 
   return (

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
-import type * as THREE from 'three';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useSlotMachine } from './SlotMachineContext';
+import { useCallback, useEffect, useRef } from "react";
+import type * as THREE from "three";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useSlotMachine } from "./SlotMachineContext";
 
 // Handle rotation constants
 const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
@@ -9,15 +9,16 @@ const SPRING_BACK_DURATION = 0.5;
 const TRIGGER_THRESHOLD = 0.8; // 80% of max rotation triggers
 
 // Ease-in-out cubic
-const easeInOutCubic = (t: number): number => (
-  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
-);
+const easeInOutCubic = (t: number): number =>
+  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
 interface UseSlotMachineHandleOptions {
   onTrigger?: () => void;
 }
 
-export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions = {}) => {
+export const useSlotMachineHandle = ({
+  onTrigger,
+}: UseSlotMachineHandleOptions = {}) => {
   const { handlePivotRef, isSpinningRef } = useSlotMachine();
   const { gl } = useThree();
 
@@ -33,22 +34,25 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions 
   const isSpringBackActive = useRef(false);
 
   // Pointer down handler
-  const handlePointerDown = useCallback((event: { object: THREE.Object3D; stopPropagation: () => void }) => {
-    if (isSpinningRef.current) return;
+  const handlePointerDown = useCallback(
+    (event: { object: THREE.Object3D; stopPropagation: () => void }) => {
+      if (isSpinningRef.current) return;
 
-    let current: THREE.Object3D | null = event.object;
-    while (current) {
-      if (current.name === 'handle-knob' || current.name === 'handle-body') {
-        isDragging.current = true;
-        dragStartY.current = 0; // Will be set on first move
-        dragStartRotation.current = handleRotation.current;
-        gl.domElement.style.cursor = 'grabbing';
-        event.stopPropagation();
-        return;
+      let current: THREE.Object3D | null = event.object;
+      while (current) {
+        if (current.name === "handle-knob" || current.name === "handle-body") {
+          isDragging.current = true;
+          dragStartY.current = 0; // Will be set on first move
+          dragStartRotation.current = handleRotation.current;
+          gl.domElement.style.cursor = "grabbing";
+          event.stopPropagation();
+          return;
+        }
+        current = current.parent;
       }
-      current = current.parent;
-    }
-  }, [gl, isSpinningRef]);
+    },
+    [gl, isSpinningRef],
+  );
 
   // Global pointer events
   useEffect(() => {
@@ -68,7 +72,10 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions 
       lastY = event.clientY;
 
       const newRotation = handleRotation.current + deltaY * 0.008;
-      handleRotation.current = Math.max(0, Math.min(MAX_HANDLE_ROTATION, newRotation));
+      handleRotation.current = Math.max(
+        0,
+        Math.min(MAX_HANDLE_ROTATION, newRotation),
+      );
     };
 
     const onPointerUp = () => {
@@ -76,10 +83,13 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions 
 
       isDragging.current = false;
       hasFirstMove = false;
-      gl.domElement.style.cursor = 'auto';
+      gl.domElement.style.cursor = "auto";
 
       // Check trigger
-      if (onTrigger && handleRotation.current > MAX_HANDLE_ROTATION * TRIGGER_THRESHOLD) {
+      if (
+        onTrigger &&
+        handleRotation.current > MAX_HANDLE_ROTATION * TRIGGER_THRESHOLD
+      ) {
         onTrigger();
       }
 
@@ -91,12 +101,12 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions 
       }
     };
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
 
     return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     };
   }, [gl, onTrigger]);
 
@@ -123,22 +133,25 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions 
   });
 
   // Pointer over/out for cursor
-  const handlePointerOver = useCallback((event: { object: THREE.Object3D }) => {
-    if (isSpinningRef.current) return;
+  const handlePointerOver = useCallback(
+    (event: { object: THREE.Object3D }) => {
+      if (isSpinningRef.current) return;
 
-    let current: THREE.Object3D | null = event.object;
-    while (current) {
-      if (current.name === 'handle-knob' || current.name === 'handle-body') {
-        gl.domElement.style.cursor = 'grab';
-        return;
+      let current: THREE.Object3D | null = event.object;
+      while (current) {
+        if (current.name === "handle-knob" || current.name === "handle-body") {
+          gl.domElement.style.cursor = "grab";
+          return;
+        }
+        current = current.parent;
       }
-      current = current.parent;
-    }
-  }, [gl, isSpinningRef]);
+    },
+    [gl, isSpinningRef],
+  );
 
   const handlePointerOut = useCallback(() => {
     if (!isDragging.current) {
-      gl.domElement.style.cursor = 'auto';
+      gl.domElement.style.cursor = "auto";
     }
   }, [gl]);
 

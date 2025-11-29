@@ -1,4 +1,4 @@
-import { getTechnologyById } from './technologies';
+import { getTechnologyById } from "./technologies";
 
 // ============================================================================
 // Types
@@ -47,33 +47,33 @@ export const COMBO_RULES: ComboRule[] = [
   // PERFECT COMBOS (+15 to +25)
   // =========================================================================
   {
-    pattern: ['typescript', 'nextjs', 'postgresql'],
+    pattern: ["typescript", "nextjs", "postgresql"],
     modifier: 25,
-    reason: 'The holy trinity of modern web dev',
+    reason: "The holy trinity of modern web dev",
     priority: 100,
   },
   {
-    pattern: ['typescript', 'react-ts', 'postgresql'],
+    pattern: ["typescript", "react-ts", "postgresql"],
     modifier: 20,
-    reason: 'Full TypeScript stack perfection',
+    reason: "Full TypeScript stack perfection",
     priority: 95,
   },
   {
-    pattern: ['go', 'htmx', 'postgresql'],
+    pattern: ["go", "htmx", "postgresql"],
     modifier: 20,
-    reason: 'Simplicity enjoyer detected',
+    reason: "Simplicity enjoyer detected",
     priority: 90,
   },
   {
-    pattern: ['rust', '*', 'postgresql'],
+    pattern: ["rust", "*", "postgresql"],
     modifier: 15,
-    reason: 'Memory safety meets ACID compliance',
+    reason: "Memory safety meets ACID compliance",
     priority: 85,
   },
   {
-    pattern: ['elixir', '*', 'postgresql'],
+    pattern: ["elixir", "*", "postgresql"],
     modifier: 15,
-    reason: 'Phoenix rising from the database',
+    reason: "Phoenix rising from the database",
     priority: 80,
   },
 
@@ -81,45 +81,45 @@ export const COMBO_RULES: ComboRule[] = [
   // GOOD SYNERGIES (+5 to +15)
   // =========================================================================
   {
-    pattern: ['typescript', '*', 'supabase'],
+    pattern: ["typescript", "*", "supabase"],
     modifier: 10,
-    reason: 'TypeScript + Supabase type generation',
+    reason: "TypeScript + Supabase type generation",
     priority: 70,
   },
   {
-    pattern: ['*', 'nextjs', 'supabase'],
+    pattern: ["*", "nextjs", "supabase"],
     modifier: 10,
-    reason: 'Vercel ecosystem synergy',
+    reason: "Vercel ecosystem synergy",
     priority: 70,
   },
   {
-    pattern: ['*', 'nuxt', 'supabase'],
+    pattern: ["*", "nuxt", "supabase"],
     modifier: 8,
-    reason: 'Vue + Supabase is a vibe',
+    reason: "Vue + Supabase is a vibe",
     priority: 65,
   },
   {
-    pattern: ['typescript', 'svelte-ts', '*'],
+    pattern: ["typescript", "svelte-ts", "*"],
     modifier: 10,
-    reason: 'TypeScript all the way down',
+    reason: "TypeScript all the way down",
     priority: 60,
   },
   {
-    pattern: ['typescript', 'vue-ts', '*'],
+    pattern: ["typescript", "vue-ts", "*"],
     modifier: 10,
-    reason: 'TypeScript + Vue composition API',
+    reason: "TypeScript + Vue composition API",
     priority: 60,
   },
   {
-    pattern: ['go', '*', 'postgresql'],
+    pattern: ["go", "*", "postgresql"],
     modifier: 12,
-    reason: 'Go + Postgres is chef\'s kiss',
+    reason: "Go + Postgres is chef's kiss",
     priority: 75,
   },
   {
-    pattern: ['kotlin', 'react-ts', 'postgresql'],
+    pattern: ["kotlin", "react-ts", "postgresql"],
     modifier: 10,
-    reason: 'Modern JVM + Modern Frontend',
+    reason: "Modern JVM + Modern Frontend",
     priority: 55,
   },
 
@@ -127,21 +127,21 @@ export const COMBO_RULES: ComboRule[] = [
   // DOCUMENT DB PENALTIES (-10 to -20)
   // =========================================================================
   {
-    pattern: ['*', '*', 'mongodb'],
+    pattern: ["*", "*", "mongodb"],
     modifier: -15,
-    reason: '🚨 Document database detected',
+    reason: "🚨 Document database detected",
     priority: 50,
   },
   {
-    pattern: ['*', '*', 'firebase'],
+    pattern: ["*", "*", "firebase"],
     modifier: -12,
-    reason: 'Vendor lock-in speedrun any%',
+    reason: "Vendor lock-in speedrun any%",
     priority: 50,
   },
   {
-    pattern: ['*', '*', 'dynamodb'],
+    pattern: ["*", "*", "dynamodb"],
     modifier: -10,
-    reason: 'AWS bill go brrrrr',
+    reason: "AWS bill go brrrrr",
     priority: 50,
   },
 
@@ -149,27 +149,27 @@ export const COMBO_RULES: ComboRule[] = [
   // TYPE MISMATCH PENALTIES (-5 to -15)
   // =========================================================================
   {
-    pattern: ['typescript', 'react-js', '*'],
+    pattern: ["typescript", "react-js", "*"],
     modifier: -10,
-    reason: 'TS backend with JS frontend? Pick a lane',
+    reason: "TS backend with JS frontend? Pick a lane",
     priority: 45,
   },
   {
-    pattern: ['typescript', 'vue-js', '*'],
+    pattern: ["typescript", "vue-js", "*"],
     modifier: -10,
-    reason: 'Type safety is all or nothing',
+    reason: "Type safety is all or nothing",
     priority: 45,
   },
   {
-    pattern: ['typescript', 'vanilla-js', '*'],
+    pattern: ["typescript", "vanilla-js", "*"],
     modifier: -12,
-    reason: 'You were so close to greatness',
+    reason: "You were so close to greatness",
     priority: 45,
   },
   {
-    pattern: ['python', 'react-ts', '*'],
+    pattern: ["python", "react-ts", "*"],
     modifier: -8,
-    reason: 'Dynamic meets static, chaos ensues',
+    reason: "Dynamic meets static, chaos ensues",
     priority: 40,
   },
 
@@ -177,69 +177,69 @@ export const COMBO_RULES: ComboRule[] = [
   // LEGACY/CURSED PENALTIES (-15 to -30)
   // =========================================================================
   {
-    pattern: ['*', 'jquery', '*'],
+    pattern: ["*", "jquery", "*"],
     modifier: -25,
-    reason: 'Sir, this is 2024',
+    reason: "Sir, this is 2024",
     priority: 100,
   },
   {
-    pattern: ['*', 'vanilla-js', '*'],
+    pattern: ["*", "vanilla-js", "*"],
     modifier: -20,
-    reason: 'No framework? No types? Brave.',
+    reason: "No framework? No types? Brave.",
     priority: 90,
   },
   {
-    pattern: ['*', 'react-js', '*'],
+    pattern: ["*", "react-js", "*"],
     modifier: -15,
-    reason: 'React without TypeScript 😬',
+    reason: "React without TypeScript 😬",
     priority: 90,
   },
   {
-    pattern: ['*', 'vue-js', '*'],
+    pattern: ["*", "vue-js", "*"],
     modifier: -15,
-    reason: 'Vue without TypeScript 😬',
+    reason: "Vue without TypeScript 😬",
     priority: 90,
   },
   {
-    pattern: ['*', 'svelte-js', '*'],
+    pattern: ["*", "svelte-js", "*"],
     modifier: -15,
-    reason: 'Svelte without TypeScript 😬',
+    reason: "Svelte without TypeScript 😬",
     priority: 90,
   },
   {
-    pattern: ['php', 'jquery', '*'],
+    pattern: ["php", "jquery", "*"],
     modifier: -50,
-    reason: 'Time traveler from 2008 detected',
+    reason: "Time traveler from 2008 detected",
     priority: 100,
   },
   {
-    pattern: ['php', '*', '*'],
+    pattern: ["php", "*", "*"],
     modifier: -25,
-    reason: 'PHP detected 🤮',
+    reason: "PHP detected 🤮",
     priority: 90,
   },
   {
-    pattern: ['php', '*', 'mysql'],
+    pattern: ["php", "*", "mysql"],
     modifier: -15,
-    reason: 'LAMP stack nostalgia hitting hard',
+    reason: "LAMP stack nostalgia hitting hard",
     priority: 85,
   },
   {
-    pattern: ['php', '*', 'mongodb'],
+    pattern: ["php", "*", "mongodb"],
     modifier: -30,
-    reason: 'Two wrongs definitely don\'t make a right',
+    reason: "Two wrongs definitely don't make a right",
     priority: 85,
   },
   {
-    pattern: ['php', '*', 'postgresql'],
+    pattern: ["php", "*", "postgresql"],
     modifier: 5,
-    reason: 'At least you picked a good database',
+    reason: "At least you picked a good database",
     priority: 80,
   },
   {
-    pattern: ['java', 'angular', '*'],
+    pattern: ["java", "angular", "*"],
     modifier: -8,
-    reason: 'Enterprise energy is strong',
+    reason: "Enterprise energy is strong",
     priority: 30,
   },
 
@@ -247,27 +247,27 @@ export const COMBO_RULES: ComboRule[] = [
   // SPECIAL/MEME COMBOS
   // =========================================================================
   {
-    pattern: ['c', '*', 'sqlite'],
+    pattern: ["c", "*", "sqlite"],
     modifier: 5,
-    reason: 'Embedded systems chad',
+    reason: "Embedded systems chad",
     priority: 25,
   },
   {
-    pattern: ['rust', 'htmx', 'sqlite'],
+    pattern: ["rust", "htmx", "sqlite"],
     modifier: 15,
-    reason: 'Local-first minimalist king',
+    reason: "Local-first minimalist king",
     priority: 80,
   },
   {
-    pattern: ['haskell', '*', '*'],
+    pattern: ["haskell", "*", "*"],
     modifier: -5,
-    reason: 'Monads everywhere',
+    reason: "Monads everywhere",
     priority: 20,
   },
   {
-    pattern: ['*', '*', 'redis'],
+    pattern: ["*", "*", "redis"],
     modifier: 5,
-    reason: 'Speed demon (but where\'s your real DB?)',
+    reason: "Speed demon (but where's your real DB?)",
     priority: 15,
   },
 ];
@@ -286,28 +286,60 @@ interface ScoreCategory {
 
 const SCORE_CATEGORIES: ScoreCategory[] = [
   {
-    min: 90, max: 100, label: 'Perfect Stack', emoji: '🏆', color: '#FFD700',
+    min: 90,
+    max: 100,
+    label: "Perfect Stack",
+    emoji: "🏆",
+    color: "#FFD700",
   },
   {
-    min: 80, max: 89, label: 'Excellent Choice', emoji: '✨', color: '#4ADE80',
+    min: 80,
+    max: 89,
+    label: "Excellent Choice",
+    emoji: "✨",
+    color: "#4ADE80",
   },
   {
-    min: 70, max: 79, label: 'Solid Stack', emoji: '✅', color: '#22C55E',
+    min: 70,
+    max: 79,
+    label: "Solid Stack",
+    emoji: "✅",
+    color: "#22C55E",
   },
   {
-    min: 60, max: 69, label: 'Decent Setup', emoji: '👍', color: '#84CC16',
+    min: 60,
+    max: 69,
+    label: "Decent Setup",
+    emoji: "👍",
+    color: "#84CC16",
   },
   {
-    min: 50, max: 59, label: 'It Works...', emoji: '🤷', color: '#EAB308',
+    min: 50,
+    max: 59,
+    label: "It Works...",
+    emoji: "🤷",
+    color: "#EAB308",
   },
   {
-    min: 40, max: 49, label: 'Questionable', emoji: '⚠️', color: '#F97316',
+    min: 40,
+    max: 49,
+    label: "Questionable",
+    emoji: "⚠️",
+    color: "#F97316",
   },
   {
-    min: 25, max: 39, label: 'Concerning', emoji: '😬', color: '#EF4444',
+    min: 25,
+    max: 39,
+    label: "Concerning",
+    emoji: "😬",
+    color: "#EF4444",
   },
   {
-    min: 0, max: 24, label: 'Chaotic Evil', emoji: '💀', color: '#7F1D1D',
+    min: 0,
+    max: 24,
+    label: "Chaotic Evil",
+    emoji: "💀",
+    color: "#7F1D1D",
   },
 ];
 
@@ -319,7 +351,7 @@ const SCORE_CATEGORIES: ScoreCategory[] = [
 const matchesPattern = (
   pattern: [string, string, string],
   techIds: [string, string, string],
-): boolean => pattern.every((p, i) => p === '*' || p === techIds[i]);
+): boolean => pattern.every((p, i) => p === "*" || p === techIds[i]);
 
 /** Calculate the final score for a tech combination */
 export const calculateScore = (
@@ -332,7 +364,9 @@ export const calculateScore = (
   const database = getTechnologyById(databaseId);
 
   if (!backend || !frontend || !database) {
-    throw new Error(`Unknown technology ID: ${backendId}, ${frontendId}, or ${databaseId}`);
+    throw new Error(
+      `Unknown technology ID: ${backendId}, ${frontendId}, or ${databaseId}`,
+    );
   }
 
   // Calculate base score (average of the three)
@@ -342,7 +376,8 @@ export const calculateScore = (
     database: database.baseScore,
   };
 
-  const avgBaseScore = (baseScores.backend + baseScores.frontend + baseScores.database) / 3;
+  const avgBaseScore =
+    (baseScores.backend + baseScores.frontend + baseScores.database) / 3;
 
   // Apply combo modifiers
   const techIds: [string, string, string] = [backendId, frontendId, databaseId];
@@ -362,8 +397,9 @@ export const calculateScore = (
   const score = Math.max(0, Math.min(100, Math.round(rawScore)));
 
   // Get category
-  const category = SCORE_CATEGORIES.find((c) => score >= c.min && score <= c.max)
-    || SCORE_CATEGORIES[SCORE_CATEGORIES.length - 1];
+  const category =
+    SCORE_CATEGORIES.find((c) => score >= c.min && score <= c.max) ||
+    SCORE_CATEGORIES[SCORE_CATEGORIES.length - 1];
 
   // Sort applied combos by priority (highest first), only include applied ones
   const sortedAppliedCombos = appliedCombos
@@ -374,11 +410,11 @@ export const calculateScore = (
   let { label } = category;
   let { emoji } = category;
   if (score === 69) {
-    label = 'nice';
-    emoji = '😏';
+    label = "nice";
+    emoji = "😏";
   } else if (score === 67) {
-    label = '6,7';
-    emoji = '🎵';
+    label = "6,7";
+    emoji = "🎵";
   }
 
   return {
@@ -398,13 +434,13 @@ export const getScoreMessage = (result: ScoreResult): string => {
   }
 
   if (result.score >= 80) {
-    return 'A respectable technology choice!';
+    return "A respectable technology choice!";
   }
   if (result.score >= 60) {
-    return 'Could be worse, could be better.';
+    return "Could be worse, could be better.";
   }
   if (result.score >= 40) {
-    return 'Are you sure about this?';
+    return "Are you sure about this?";
   }
-  return 'Seek professional help.';
+  return "Seek professional help.";
 };

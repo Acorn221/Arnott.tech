@@ -1,23 +1,32 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { type FC, useRef, useEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
+import { type FC, useRef, useEffect } from "react";
+import { useGLTF } from "@react-three/drei";
+import * as THREE from "three";
 
-import { useSlotMachine } from './SlotMachineContext';
-import { createMaterials, type MaterialMap, type GltfMaterialKey } from './materials';
-import { createStaticPartOverrides, type StaticPartOverrideMap, type StaticPartName, type StaticPartOverridesResult } from './reel-config';
-import { createHandlePivot } from './utils/create-handle-pivot';
-import { createSpinnerPivots } from './utils/create-spinner-pivots';
+import { useSlotMachine } from "./SlotMachineContext";
+import {
+  createMaterials,
+  type MaterialMap,
+  type GltfMaterialKey,
+} from "./materials";
+import {
+  createStaticPartOverrides,
+  type StaticPartOverrideMap,
+  type StaticPartName,
+  type StaticPartOverridesResult,
+} from "./reel-config";
+import { createHandlePivot } from "./utils/create-handle-pivot";
+import { createSpinnerPivots } from "./utils/create-spinner-pivots";
 
 /** Walks up the scene graph to find the named part this mesh belongs to */
 const getPartName = (object: THREE.Object3D): string | null => {
   let current: THREE.Object3D | null = object;
   while (current) {
     if (
-      current.name
-      && !current.name.includes('Part')
-      && !current.name.startsWith('mesh')
-      && !current.name.includes('occurrence')
+      current.name &&
+      !current.name.includes("Part") &&
+      !current.name.startsWith("mesh") &&
+      !current.name.includes("occurrence")
     ) {
       return current.name;
     }
@@ -27,13 +36,23 @@ const getPartName = (object: THREE.Object3D): string | null => {
 };
 
 /** Checks if a string is a valid GLTF material key */
-const isGltfMaterialKey = (key: string, materials: MaterialMap): key is GltfMaterialKey => key in materials;
+const isGltfMaterialKey = (
+  key: string,
+  materials: MaterialMap,
+): key is GltfMaterialKey => key in materials;
 
 /** Checks if a string is a valid static part name */
-const isStaticPartName = (name: string, overrides: StaticPartOverrideMap): name is StaticPartName => name in overrides;
+const isStaticPartName = (
+  name: string,
+  overrides: StaticPartOverrideMap,
+): name is StaticPartName => name in overrides;
 
 /** Spinner part names */
-const SPINNER_PART_NAMES = ['slot-spinner-1', 'slot-spinner-2', 'slot-spinner-3'];
+const SPINNER_PART_NAMES = [
+  "slot-spinner-1",
+  "slot-spinner-2",
+  "slot-spinner-3",
+];
 
 const SlotMachineModel: FC = () => {
   const {
@@ -53,7 +72,7 @@ const SlotMachineModel: FC = () => {
   const spinnerPivotsRef = useRef<Record<string, THREE.Object3D> | null>(null);
   const hasInitializedMaterials = useRef(false);
 
-  const { scene } = useGLTF('/tech-stack-slot-machine.gltf');
+  const { scene } = useGLTF("/tech-stack-slot-machine.gltf");
 
   // Initialize static materials (non-spinner parts)
   useEffect(() => {
@@ -114,11 +133,11 @@ const SlotMachineModel: FC = () => {
       const partName = getPartName(object);
 
       // Apply dynamic textures to spinners
-      if (partName === 'slot-spinner-1' && managers[0]) {
+      if (partName === "slot-spinner-1" && managers[0]) {
         object.material = managers[0].material;
-      } else if (partName === 'slot-spinner-2' && managers[1]) {
+      } else if (partName === "slot-spinner-2" && managers[1]) {
         object.material = managers[1].material;
-      } else if (partName === 'slot-spinner-3' && managers[2]) {
+      } else if (partName === "slot-spinner-3" && managers[2]) {
         object.material = managers[2].material;
       }
     });
@@ -133,7 +152,7 @@ const SlotMachineModel: FC = () => {
 
     let existingPivot: THREE.Object3D | null = null;
     scene.traverse((obj) => {
-      if (obj.name === 'handle-pivot') {
+      if (obj.name === "handle-pivot") {
         existingPivot = obj;
       }
     });
@@ -161,7 +180,7 @@ const SlotMachineModel: FC = () => {
     const existingPivots: Record<string, THREE.Object3D> = {};
     scene.traverse((obj) => {
       if (/^slot-spinner-\d+-pivot$/.exec(obj.name)) {
-        const spinnerName = obj.name.replace('-pivot', '');
+        const spinnerName = obj.name.replace("-pivot", "");
         existingPivots[spinnerName] = obj;
       }
     });
@@ -186,4 +205,4 @@ const SlotMachineModel: FC = () => {
 
 export default SlotMachineModel;
 
-useGLTF.preload('/tech-stack-slot-machine.gltf');
+useGLTF.preload("/tech-stack-slot-machine.gltf");

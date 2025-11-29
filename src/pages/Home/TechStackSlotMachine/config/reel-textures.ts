@@ -1,11 +1,11 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
   type Technology,
   BACKEND_TECHNOLOGIES,
   FRONTEND_TECHNOLOGIES,
   DATABASE_TECHNOLOGIES,
   type ReelCategory,
-} from './technologies';
+} from "./technologies";
 
 // ============================================================================
 // Types
@@ -44,23 +44,26 @@ const CANVAS_WIDTH = FACES_PER_REEL * SEGMENT_SIZE;
 // ============================================================================
 
 /** Preload all images for a set of technologies */
-const preloadImages = async (techs: Technology[]): Promise<Map<string, HTMLImageElement>> => {
+const preloadImages = async (
+  techs: Technology[],
+): Promise<Map<string, HTMLImageElement>> => {
   const loadedImages = new Map<string, HTMLImageElement>();
 
   await Promise.all(
     techs.map(
-      (tech) => new Promise<void>((resolve) => {
-        const img = new Image();
-        img.src = tech.icon;
-        img.onload = () => {
-          loadedImages.set(tech.id, img);
-          resolve();
-        };
-        img.onerror = () => {
-          console.warn(`Failed to load icon for ${tech.name}`);
-          resolve();
-        };
-      }),
+      (tech) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          img.src = tech.icon;
+          img.onload = () => {
+            loadedImages.set(tech.id, img);
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn(`Failed to load icon for ${tech.name}`);
+            resolve();
+          };
+        }),
     ),
   );
 
@@ -77,11 +80,11 @@ const drawFace = (
   const x = faceIndex * SEGMENT_SIZE;
 
   // Background (alternating for visibility)
-  ctx.fillStyle = faceIndex % 2 === 0 ? '#f8f9fa' : '#e9ecef';
+  ctx.fillStyle = faceIndex % 2 === 0 ? "#f8f9fa" : "#e9ecef";
   ctx.fillRect(x, 0, SEGMENT_SIZE, CANVAS_HEIGHT);
 
   // Border
-  ctx.strokeStyle = '#dee2e6';
+  ctx.strokeStyle = "#dee2e6";
   ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(x, 0);
@@ -106,10 +109,10 @@ const drawFace = (
   ctx.save();
   ctx.translate(x + SEGMENT_SIZE / 2, CANVAS_HEIGHT - 80);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillStyle = '#333';
-  ctx.font = 'bold 48px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.fillStyle = "#333";
+  ctx.font = "bold 48px Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
   ctx.fillText(tech.shortName, 0, 0);
   ctx.restore();
 };
@@ -121,13 +124,13 @@ export const createReelTextureManager = async (
   // Get all techs for this category
   let allTechs: Technology[];
   switch (category) {
-    case 'backend':
+    case "backend":
       allTechs = [...BACKEND_TECHNOLOGIES];
       break;
-    case 'frontend':
+    case "frontend":
       allTechs = [...FRONTEND_TECHNOLOGIES];
       break;
-    case 'database':
+    case "database":
       allTechs = [...DATABASE_TECHNOLOGIES];
       break;
     default:
@@ -142,10 +145,10 @@ export const createReelTextureManager = async (
   const loadedImages = await preloadImages(allTechs);
 
   // Create canvas
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
-  const context = canvas.getContext('2d')!;
+  const context = canvas.getContext("2d")!;
 
   // Create texture
   const texture = new THREE.CanvasTexture(canvas);
@@ -190,13 +193,17 @@ export const updateReelFace = (
 };
 
 /** Get a random tech that's not currently displayed */
-export const getRandomUnusedTech = (manager: ReelTextureManager): Technology => {
+export const getRandomUnusedTech = (
+  manager: ReelTextureManager,
+): Technology => {
   const usedIds = new Set(manager.currentTechs.map((t) => t.id));
   const unused = manager.allTechs.filter((t) => !usedIds.has(t.id));
 
   if (unused.length === 0) {
     // All techs are displayed, just return a random one
-    return manager.allTechs[Math.floor(Math.random() * manager.allTechs.length)];
+    return manager.allTechs[
+      Math.floor(Math.random() * manager.allTechs.length)
+    ];
   }
 
   return unused[Math.floor(Math.random() * unused.length)];
@@ -216,13 +223,17 @@ export const shuffleReel = (manager: ReelTextureManager) => {
 };
 
 /** Get the technology at a specific face index */
-export const getTechAtFace = (manager: ReelTextureManager, faceIndex: number): Technology => manager.currentTechs[faceIndex % FACES_PER_REEL];
+export const getTechAtFace = (
+  manager: ReelTextureManager,
+  faceIndex: number,
+): Technology => manager.currentTechs[faceIndex % FACES_PER_REEL];
 
 /** Calculate which face is currently at the front based on rotation angle */
 export const getFrontFaceIndex = (angle: number): number => {
   const radiansPerFace = (Math.PI * 2) / FACES_PER_REEL;
   // Normalize angle to 0-2π range
-  const normalizedAngle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const normalizedAngle =
+    ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
   // Calculate face index
   // Note: spinner uses -angle rotation, so we need to invert
   // Also add offset of 2 to account for cylinder geometry UV mapping
@@ -245,4 +256,3 @@ export const getHiddenFaces = (angle: number): number[] => {
 
   return hidden;
 };
-

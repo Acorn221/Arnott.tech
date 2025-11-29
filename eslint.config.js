@@ -43,7 +43,7 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "@typescript-eslint/prefer-nullish-coalescing": "off",
-      "react-hooks/exhaustive-deps": "off"
+      "react-hooks/exhaustive-deps": "off",
     },
   },
   {
@@ -55,5 +55,5 @@ export default tseslint.config(
         projectService: true,
       },
     },
-  }
+  },
 );

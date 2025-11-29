@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export interface DisplayPlateConfig {
   text: string;
@@ -12,14 +12,14 @@ export interface DisplayPlateConfig {
 }
 
 const defaultConfig: Required<DisplayPlateConfig> = {
-  text: 'SPIN TO WIN!',
-  subText: '',
+  text: "SPIN TO WIN!",
+  subText: "",
   fontSize: 58,
   fontFamily: '"Arial Black", "Impact", sans-serif',
-  textColor: '#FFFFFF',
-  subTextColor: '#888888',
-  backgroundColor: '#0a0a0a',
-  emoji: '',
+  textColor: "#FFFFFF",
+  subTextColor: "#888888",
+  backgroundColor: "#0a0a0a",
+  emoji: "",
 };
 
 // Dynamic display plate for runtime text updates
@@ -38,15 +38,15 @@ export class DynamicDisplayPlate {
 
   private scoreValue = 0;
 
-  private scoreLabel = '';
+  private scoreLabel = "";
 
   constructor(config: Partial<DisplayPlateConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
 
-    this.canvas = document.createElement('canvas');
+    this.canvas = document.createElement("canvas");
     this.canvas.width = 512;
     this.canvas.height = 128;
-    this.context = this.canvas.getContext('2d');
+    this.context = this.canvas.getContext("2d");
 
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.anisotropy = 16;
@@ -56,7 +56,7 @@ export class DynamicDisplayPlate {
       map: this.texture,
       metalness: 0,
       roughness: 0.8,
-      emissive: new THREE.Color('#000000'),
+      emissive: new THREE.Color("#000000"),
       emissiveIntensity: 0,
     });
 
@@ -101,12 +101,12 @@ export class DynamicDisplayPlate {
   /** Reset to default spin message */
   reset(): void {
     this.isScoreMode = false;
-    this.config.text = 'SPIN TO WIN!';
-    this.config.subText = '';
-    this.config.textColor = '#FFFFFF';
-    this.config.subTextColor = '#888888';
+    this.config.text = "SPIN TO WIN!";
+    this.config.subText = "";
+    this.config.textColor = "#FFFFFF";
+    this.config.subTextColor = "#888888";
     this.config.fontSize = 58;
-    this.config.emoji = '';
+    this.config.emoji = "";
     this.material.emissiveIntensity = 0;
     this.render();
   }
@@ -114,11 +114,11 @@ export class DynamicDisplayPlate {
   /** Show spinning state */
   showSpinning(): void {
     this.isScoreMode = false;
-    this.config.text = 'SPINNING...';
-    this.config.subText = '';
-    this.config.textColor = '#00FF88';
+    this.config.text = "SPINNING...";
+    this.config.subText = "";
+    this.config.textColor = "#00FF88";
     this.config.fontSize = 54;
-    this.material.emissive = new THREE.Color('#00FF88');
+    this.material.emissive = new THREE.Color("#00FF88");
     this.material.emissiveIntensity = 0.1;
     this.render();
   }
@@ -142,9 +142,9 @@ export class DynamicDisplayPlate {
       // Left side: emoji + score (smaller to fit)
       ctx.save();
       ctx.font = `bold 52px ${fontFamily}`;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,0.5)";
       ctx.shadowBlur = 4;
       ctx.shadowOffsetY = 2;
       ctx.fillStyle = textColor;
@@ -154,9 +154,9 @@ export class DynamicDisplayPlate {
       // Right side: label (smaller)
       ctx.save();
       ctx.font = `bold 28px ${fontFamily}`;
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,0.3)";
       ctx.shadowBlur = 2;
       ctx.fillStyle = textColor;
       ctx.fillText(this.scoreLabel, width - 16, height / 2);
@@ -167,9 +167,9 @@ export class DynamicDisplayPlate {
 
       ctx.save();
       ctx.font = `bold ${fontSize}px ${fontFamily}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,0.5)";
       ctx.shadowBlur = 4;
       ctx.shadowOffsetY = 2;
       ctx.fillStyle = textColor;

@@ -1,9 +1,14 @@
 import {
-  type FC, useRef, useEffect, useState, type SetStateAction, type Dispatch,
-} from 'react';
-import * as THREE from 'three';
-import { type GroupProps, type ThreeEvent, useFrame } from '@react-three/fiber';
-import SpinnerModel from './spinner-model';
+  type FC,
+  useRef,
+  useEffect,
+  useState,
+  type SetStateAction,
+  type Dispatch,
+} from "react";
+import * as THREE from "three";
+import { type GroupProps, type ThreeEvent, useFrame } from "@react-three/fiber";
+import SpinnerModel from "./spinner-model";
 
 interface InteractiveSpinnerProps extends GroupProps {
   setSpinCount: Dispatch<SetStateAction<number>>;
@@ -14,7 +19,11 @@ const FULL_ROTATION = Math.PI * 2;
 const MAX_ANGULAR_VELOCITY = 100;
 const FRICTION_BASE = 0.999;
 
-const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad: _onLoad, ...props }) => {
+const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
+  setSpinCount,
+  onLoad: _onLoad,
+  ...props
+}) => {
   const groupRef = useRef<THREE.Group>(null);
   const isDragging = useRef(false);
   const hasInitializedDrag = useRef(false);
@@ -32,7 +41,9 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
     groupRef.current.getWorldPosition(center);
     center.project(event.camera);
 
-    const rect = (event.nativeEvent.target as HTMLElement).getBoundingClientRect();
+    const rect = (
+      event.nativeEvent.target as HTMLElement
+    ).getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -46,16 +57,21 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
       hasInitializedDrag.current = true;
       previousMousePosition.current = { x: e.clientX, y: e.clientY };
       lastDragTime.current = performance.now();
-      document.body.style.cursor = 'grabbing';
+      document.body.style.cursor = "grabbing";
       angularVelocity.current = 0;
     }
   };
 
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!isDragging.current || !hasInitializedDrag.current || !groupRef.current) return;
+    if (!isDragging.current || !hasInitializedDrag.current || !groupRef.current)
+      return;
 
     const currentAngle = getMouseAngle(e);
-    const previousAngle = getMouseAngle({ ...e, clientX: previousMousePosition.current.x, clientY: previousMousePosition.current.y } as ThreeEvent<PointerEvent>);
+    const previousAngle = getMouseAngle({
+      ...e,
+      clientX: previousMousePosition.current.x,
+      clientY: previousMousePosition.current.y,
+    } as ThreeEvent<PointerEvent>);
     const deltaAngle = currentAngle - previousAngle;
 
     groupRef.current.rotation.y -= deltaAngle;
@@ -70,7 +86,8 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
 
       const speedFactor = Math.max(0, Math.abs(baseVelocity) - DEAD_ZONE);
       const boost = speedFactor ** EXPONENT * BOOST_SCALE;
-      const boostedVelocity = speedFactor > 0 ? baseVelocity * (1 + boost) : baseVelocity;
+      const boostedVelocity =
+        speedFactor > 0 ? baseVelocity * (1 + boost) : baseVelocity;
 
       angularVelocity.current = THREE.MathUtils.clamp(
         boostedVelocity,
@@ -84,14 +101,14 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
   };
 
   const resetCursor = () => {
-    document.body.style.cursor = '';
+    document.body.style.cursor = "";
     isDragging.current = false;
     hasInitializedDrag.current = false;
   };
 
   const handlePointerUp = () => {
     if (hasInitializedDrag.current) {
-      document.body.style.cursor = 'grab';
+      document.body.style.cursor = "grab";
       isDragging.current = false;
       hasInitializedDrag.current = false;
     }
@@ -104,7 +121,7 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
     }
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'x') {
+      if (event.key === "x") {
         setIsXray((prev) => !prev);
       }
     };
@@ -115,15 +132,15 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    window.addEventListener('mouseup', handleWindowMouseUp);
-    window.addEventListener('mouseleave', resetCursor);
+    window.addEventListener("keydown", handleKeyPress);
+    window.addEventListener("mouseup", handleWindowMouseUp);
+    window.addEventListener("mouseleave", resetCursor);
 
     return () => {
       resetCursor();
-      window.removeEventListener('keydown', handleKeyPress);
-      window.removeEventListener('mouseup', handleWindowMouseUp);
-      window.removeEventListener('mouseleave', resetCursor);
+      window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener("mouseup", handleWindowMouseUp);
+      window.removeEventListener("mouseleave", resetCursor);
     };
   }, []);
 
@@ -131,7 +148,7 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
     if (!groupRef.current) return;
     if (!isDragging.current && angularVelocity.current !== 0) {
       const speed = Math.abs(angularVelocity.current);
-      const frictionFactor = Math.max(FRICTION_BASE - (speed * 0.0001), 0.995);
+      const frictionFactor = Math.max(FRICTION_BASE - speed * 0.0001, 0.995);
       angularVelocity.current *= frictionFactor;
 
       if (Math.abs(angularVelocity.current) < 0.05) {
@@ -144,7 +161,9 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad:
       accumulatedRotation.current += deltaRotation;
 
       if (Math.abs(accumulatedRotation.current) >= FULL_ROTATION) {
-        const completeRotations = Math.floor(Math.abs(accumulatedRotation.current) / FULL_ROTATION);
+        const completeRotations = Math.floor(
+          Math.abs(accumulatedRotation.current) / FULL_ROTATION,
+        );
         setSpinCount((prev) => prev + completeRotations);
         accumulatedRotation.current %= FULL_ROTATION;
       }
