@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 import { useSlotMachine } from './SlotMachineContext';
 import { createMaterials, MaterialMap, GltfMaterialKey } from './materials';
-import { createPartOverrides, PartOverrideMap, PartName, PartOverridesResult } from './reel-config';
+import { createStaticPartOverrides, StaticPartOverrideMap, StaticPartName, StaticPartOverridesResult } from './reel-config';
 import { createHandlePivot } from './utils/create-handle-pivot';
 import { createSpinnerPivots } from './utils/create-spinner-pivots';
 
@@ -28,14 +28,24 @@ const getPartName = (object: THREE.Object3D): string | null => {
 /** Checks if a string is a valid GLTF material key */
 const isGltfMaterialKey = (key: string, materials: MaterialMap): key is GltfMaterialKey => key in materials;
 
-/** Checks if a string is a valid part name */
-const isPartName = (name: string, overrides: PartOverrideMap): name is PartName => name in overrides;
+/** Checks if a string is a valid static part name */
+const isStaticPartName = (name: string, overrides: StaticPartOverrideMap): name is StaticPartName => name in overrides;
+
+/** Spinner part names */
+const SPINNER_PART_NAMES = ['slot-spinner-1', 'slot-spinner-2', 'slot-spinner-3'];
 
 const SlotMachineModel: FC = () => {
-  const { setHandlePivot, setSpinners, setKnobMaterial } = useSlotMachine();
+  const {
+    setHandlePivot,
+    setSpinners,
+    setKnobMaterial,
+    setDisplayPlate,
+    reelManagersRef,
+    isInitialized,
+  } = useSlotMachine();
 
   const materialsRef = useRef<MaterialMap | null>(null);
-  const overridesRef = useRef<PartOverridesResult | null>(null);
+  const staticOverridesRef = useRef<StaticPartOverridesResult | null>(null);
   const groupRef = useRef<THREE.Group>(null);
   const handlePivotRef = useRef<THREE.Group | null>(null);
   const spinnerPivotsRef = useRef<Record<string, THREE.Object3D> | null>(null);
@@ -43,7 +53,7 @@ const SlotMachineModel: FC = () => {
 
   const { scene } = useGLTF('/tech-stack-slot-machine.gltf');
 
-  // Initialize materials and apply to meshes (runs once)
+  // Initialize static materials (non-spinner parts)
   useEffect(() => {
     if (hasInitializedMaterials.current) return;
 
@@ -51,15 +61,16 @@ const SlotMachineModel: FC = () => {
     if (!materialsRef.current) {
       materialsRef.current = createMaterials();
     }
-    if (!overridesRef.current) {
-      overridesRef.current = createPartOverrides();
-      setKnobMaterial(overridesRef.current.knobMaterial);
+    if (!staticOverridesRef.current) {
+      staticOverridesRef.current = createStaticPartOverrides();
+      setKnobMaterial(staticOverridesRef.current.knobMaterial);
+      setDisplayPlate(staticOverridesRef.current.displayPlate);
     }
 
     const materials = materialsRef.current;
-    const { materials: partOverrides } = overridesRef.current;
+    const { overrides: staticOverrides } = staticOverridesRef.current;
 
-    // Apply materials to meshes
+    // Apply materials to non-spinner meshes
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
 
@@ -69,8 +80,14 @@ const SlotMachineModel: FC = () => {
       object.userData.materialKey = materialKey;
       object.userData.partName = partName;
 
-      if (partName && isPartName(partName, partOverrides)) {
-        object.material = partOverrides[partName];
+      // Skip spinner parts - they get dynamic textures
+      if (partName && SPINNER_PART_NAMES.includes(partName)) {
+        return;
+      }
+
+      // Apply static override or base material
+      if (partName && isStaticPartName(partName, staticOverrides)) {
+        object.material = staticOverrides[partName];
       } else if (isGltfMaterialKey(materialKey, materials)) {
         object.material = materials[materialKey];
       }
@@ -80,17 +97,37 @@ const SlotMachineModel: FC = () => {
     });
 
     hasInitializedMaterials.current = true;
-  }, [scene, setKnobMaterial]);
+  }, [scene, setKnobMaterial, setDisplayPlate]);
 
-  // Create handle pivot (runs once, with guard)
+  // Apply dynamic reel textures when initialized
   useEffect(() => {
-    // Skip if already created
+    if (!isInitialized || !reelManagersRef.current) return;
+
+    const managers = reelManagersRef.current;
+
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+
+      const partName = getPartName(object);
+
+      // Apply dynamic textures to spinners
+      if (partName === 'slot-spinner-1' && managers[0]) {
+        object.material = managers[0].material;
+      } else if (partName === 'slot-spinner-2' && managers[1]) {
+        object.material = managers[1].material;
+      } else if (partName === 'slot-spinner-3' && managers[2]) {
+        object.material = managers[2].material;
+      }
+    });
+  }, [scene, isInitialized, reelManagersRef]);
+
+  // Create handle pivot
+  useEffect(() => {
     if (handlePivotRef.current) {
       setHandlePivot(handlePivotRef.current);
       return;
     }
 
-    // Check if pivot already exists in scene (from previous render)
     let existingPivot: THREE.Object3D | null = null;
     scene.traverse((obj) => {
       if (obj.name === 'handle-pivot') {
@@ -104,7 +141,6 @@ const SlotMachineModel: FC = () => {
       return;
     }
 
-    // Create new pivot
     const pivot = createHandlePivot(scene);
     if (pivot) {
       handlePivotRef.current = pivot;
@@ -112,15 +148,13 @@ const SlotMachineModel: FC = () => {
     }
   }, [scene, setHandlePivot]);
 
-  // Create spinner pivots (runs once, with guard)
+  // Create spinner pivots
   useEffect(() => {
-    // Skip if already created
     if (spinnerPivotsRef.current) {
       setSpinners(spinnerPivotsRef.current);
       return;
     }
 
-    // Check if pivots already exist
     const existingPivots: Record<string, THREE.Object3D> = {};
     scene.traverse((obj) => {
       if (obj.name.match(/^slot-spinner-\d+-pivot$/)) {
@@ -135,7 +169,6 @@ const SlotMachineModel: FC = () => {
       return;
     }
 
-    // Create new pivots
     const pivots = createSpinnerPivots(scene);
     spinnerPivotsRef.current = pivots;
     setSpinners(pivots);

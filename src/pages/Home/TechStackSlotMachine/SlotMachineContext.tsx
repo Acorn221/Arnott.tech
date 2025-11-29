@@ -6,56 +6,89 @@ import {
   FC,
   ReactNode,
   useMemo,
+  useState,
+  useEffect,
 } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
 import { AnimatedGlowBorderMaterial } from './display-border-material';
+import { DynamicDisplayPlate } from './display-plate';
+import {
+  ReelTextureManager,
+  createReelTextureManager,
+  getFrontFaceIndex,
+  shuffleReel,
+} from './config/reel-textures';
+import { Technology } from './config/technologies';
+import { calculateScore, ScoreResult, getScoreMessage } from './config/scoring';
 
-// Reel state types
-type ReelPhase = 'stopped' | 'spinning' | 'decelerating' | 'settling';
+// ============================================================================
+// Types
+// ============================================================================
 
-interface ReelState {
+export type ReelPhase = 'stopped' | 'spinning' | 'decelerating' | 'settling';
+
+export interface ReelState {
   angle: number;
   velocity: number;
   phase: ReelPhase;
+  lastSwappedFace: number;
 }
 
-// Slot machine configuration
-const SPIN_SPEED = 12;
-const STOP_DELAY = 0.6;
-const GEOMETRY_FACES = 8;
-const FRICTION = 0.92;
-const MIN_VELOCITY = 0.5;
+export interface SpinResult {
+  backend: Technology;
+  frontend: Technology;
+  database: Technology;
+  score: ScoreResult;
+  message: string;
+}
 
-const SPINNER_NAMES = ['slot-spinner-1', 'slot-spinner-2', 'slot-spinner-3'] as const;
-
-// Cryptographically secure random
-const secureRandom = (): number => {
-  const array = new Uint32Array(1);
-  crypto.getRandomValues(array);
-  return array[0] / (0xFFFFFFFF + 1);
-};
-
-// Context shape
 interface SlotMachineContextValue {
-  // Refs for 3D objects
+  // 3D object refs
   handlePivotRef: React.MutableRefObject<THREE.Object3D | null>;
   spinnersRef: React.MutableRefObject<Record<string, THREE.Object3D>>;
   knobMaterialRef: React.MutableRefObject<AnimatedGlowBorderMaterial | null>;
+  displayPlateRef: React.MutableRefObject<DynamicDisplayPlate | null>;
+
+  // Reel state
+  reelManagersRef: React.MutableRefObject<ReelTextureManager[] | null>;
+  reelStatesRef: React.MutableRefObject<ReelState[]>;
+  swapTimersRef: React.MutableRefObject<number[]>;
 
   // State
   isSpinningRef: React.MutableRefObject<boolean>;
+  isInitialized: boolean;
+  lastResult: SpinResult | null;
 
   // Actions
   startGame: () => void;
   setHandlePivot: (pivot: THREE.Object3D | null) => void;
   setSpinners: (spinners: Record<string, THREE.Object3D>) => void;
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
+  setDisplayPlate: (plate: DynamicDisplayPlate) => void;
+  initializeReels: () => Promise<void>;
+  calculateFinalResult: () => void;
+  setIsSpinning: (spinning: boolean) => void;
 }
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const SPIN_SPEED = 12;
+const STOP_DELAY = 0.6;
+
+const secureRandom = (): number => {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return array[0] / (0xFFFFFFFF + 1);
+};
+
+// ============================================================================
+// Context
+// ============================================================================
 
 const SlotMachineContext = createContext<SlotMachineContextValue | null>(null);
 
-// Hook to use the context
 export const useSlotMachine = (): SlotMachineContextValue => {
   const context = useContext(SlotMachineContext);
   if (!context) {
@@ -64,7 +97,10 @@ export const useSlotMachine = (): SlotMachineContextValue => {
   return context;
 };
 
-// Provider component
+// ============================================================================
+// Provider
+// ============================================================================
+
 interface SlotMachineProviderProps {
   children: ReactNode;
 }
@@ -74,15 +110,36 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
   const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
   const knobMaterialRef = useRef<AnimatedGlowBorderMaterial | null>(null);
+  const displayPlateRef = useRef<DynamicDisplayPlate | null>(null);
+  const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
 
-  // Game state
+  // Reel state refs
+  const reelStatesRef = useRef<ReelState[]>([
+    { angle: 0, velocity: 0, phase: 'stopped', lastSwappedFace: -1 },
+    { angle: 0, velocity: 0, phase: 'stopped', lastSwappedFace: -1 },
+    { angle: 0, velocity: 0, phase: 'stopped', lastSwappedFace: -1 },
+  ]);
+  const swapTimersRef = useRef<number[]>([0, 0, 0]);
+
+  // State
   const isSpinningRef = useRef(false);
   const stopTimers = useRef<NodeJS.Timeout[]>([]);
-  const reelStates = useRef<ReelState[]>([
-    { angle: 0, velocity: 0, phase: 'stopped' },
-    { angle: 0, velocity: 0, phase: 'stopped' },
-    { angle: 0, velocity: 0, phase: 'stopped' },
-  ]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [lastResult, setLastResult] = useState<SpinResult | null>(null);
+
+  // Initialize reel texture managers
+  const initializeReels = useCallback(async () => {
+    if (reelManagersRef.current) return;
+
+    const [backend, frontend, database] = await Promise.all([
+      createReelTextureManager('backend'),
+      createReelTextureManager('frontend'),
+      createReelTextureManager('database'),
+    ]);
+
+    reelManagersRef.current = [backend, frontend, database];
+    setIsInitialized(true);
+  }, []);
 
   // Setters
   const setHandlePivot = useCallback((pivot: THREE.Object3D | null) => {
@@ -97,28 +154,85 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     knobMaterialRef.current = material;
   }, []);
 
+  const setDisplayPlate = useCallback((plate: DynamicDisplayPlate) => {
+    displayPlateRef.current = plate;
+  }, []);
+
+  const setIsSpinning = useCallback((spinning: boolean) => {
+    isSpinningRef.current = spinning;
+    if (!spinning) {
+      knobMaterialRef.current?.setPaused(false);
+    }
+  }, []);
+
   // Stop a single reel
   const stopReel = useCallback((index: number) => {
-    reelStates.current[index].phase = 'decelerating';
+    reelStatesRef.current[index].phase = 'decelerating';
+  }, []);
+
+  // Calculate final result when all reels stop
+  const calculateFinalResult = useCallback(() => {
+    if (!reelManagersRef.current) return;
+
+    const managers = reelManagersRef.current;
+    const results: Technology[] = [];
+
+    reelStatesRef.current.forEach((state, i) => {
+      const faceIndex = getFrontFaceIndex(state.angle);
+      results.push(managers[i].currentTechs[faceIndex]);
+    });
+
+    const [backend, frontend, database] = results;
+    const score = calculateScore(backend.id, frontend.id, database.id);
+    const message = getScoreMessage(score);
+
+    const result: SpinResult = {
+      backend,
+      frontend,
+      database,
+      score,
+      message,
+    };
+
+    setLastResult(result);
+
+    // Update display plate with score
+    displayPlateRef.current?.showScore(
+      score.score,
+      score.label,
+      score.color,
+      score.emoji,
+    );
   }, []);
 
   // Start the game
   const startGame = useCallback(() => {
-    const anyReelActive = reelStates.current.some((state) => state.phase !== 'stopped');
-    if (anyReelActive) return;
+    const anyReelActive = reelStatesRef.current.some((state) => state.phase !== 'stopped');
+    if (anyReelActive || !reelManagersRef.current) return;
 
-    // Clear existing timers
+    // Clear existing timers and result
     stopTimers.current.forEach(clearTimeout);
     stopTimers.current = [];
+    setLastResult(null);
+
+    // Shuffle reels before starting
+    reelManagersRef.current.forEach((manager) => shuffleReel(manager));
 
     // Mark as spinning and pause knob glow
     isSpinningRef.current = true;
     knobMaterialRef.current?.setPaused(true);
 
+    // Update display to show spinning
+    displayPlateRef.current?.showSpinning();
+
+    // Reset swap timers
+    swapTimersRef.current = [0, 0, 0];
+
     // Start all reels
-    reelStates.current.forEach((state) => {
+    reelStatesRef.current.forEach((state) => {
       state.velocity = SPIN_SPEED + secureRandom() * 3;
       state.phase = 'spinning';
+      state.lastSwappedFace = -1;
     });
 
     // Schedule staggered stops
@@ -130,57 +244,42 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     });
   }, [stopReel]);
 
-  // Animation loop for reels
-  useFrame((_, delta) => {
-    reelStates.current.forEach((state, i) => {
-      const spinner = spinnersRef.current[SPINNER_NAMES[i]];
-      if (!spinner) return;
-
-      if (state.phase === 'spinning') {
-        state.angle += state.velocity * delta;
-      } else if (state.phase === 'decelerating') {
-        state.velocity *= FRICTION;
-        state.angle += state.velocity * delta;
-        if (state.velocity < MIN_VELOCITY) {
-          state.phase = 'settling';
-        }
-      } else if (state.phase === 'settling') {
-        const radiansPerFace = (Math.PI * 2) / GEOMETRY_FACES;
-        const nearestSlot = Math.round(state.angle / radiansPerFace) * radiansPerFace;
-        const diff = state.angle - nearestSlot;
-
-        if (Math.abs(diff) > 0.005) {
-          state.angle -= diff * 0.2;
-        } else {
-          state.angle = nearestSlot;
-          state.velocity = 0;
-          state.phase = 'stopped';
-        }
-      }
-
-      spinner.rotation.x = -state.angle;
-    });
-
-    // Check if all reels stopped
-    if (isSpinningRef.current) {
-      const allStopped = reelStates.current.every((state) => state.phase === 'stopped');
-      if (allStopped) {
-        isSpinningRef.current = false;
-        knobMaterialRef.current?.setPaused(false);
-      }
-    }
-  });
+  // Initialize on mount
+  useEffect(() => {
+    initializeReels();
+  }, [initializeReels]);
 
   const value = useMemo<SlotMachineContextValue>(() => ({
     handlePivotRef,
     spinnersRef,
     knobMaterialRef,
+    displayPlateRef,
+    reelManagersRef,
+    reelStatesRef,
+    swapTimersRef,
     isSpinningRef,
+    isInitialized,
+    lastResult,
     startGame,
     setHandlePivot,
     setSpinners,
     setKnobMaterial,
-  }), [startGame, setHandlePivot, setSpinners, setKnobMaterial]);
+    setDisplayPlate,
+    initializeReels,
+    calculateFinalResult,
+    setIsSpinning,
+  }), [
+    isInitialized,
+    lastResult,
+    startGame,
+    setHandlePivot,
+    setSpinners,
+    setKnobMaterial,
+    setDisplayPlate,
+    initializeReels,
+    calculateFinalResult,
+    setIsSpinning,
+  ]);
 
   return (
     <SlotMachineContext.Provider value={value}>
@@ -188,4 +287,3 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     </SlotMachineContext.Provider>
   );
 };
-

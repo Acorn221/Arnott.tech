@@ -2,88 +2,24 @@ import * as THREE from 'three';
 
 export interface DisplayPlateConfig {
   text: string;
+  subText?: string;
   fontSize?: number;
   fontFamily?: string;
   textColor?: string;
+  subTextColor?: string;
   backgroundColor?: string;
+  emoji?: string;
 }
 
 const defaultConfig: Required<DisplayPlateConfig> = {
   text: 'SPIN TO WIN!',
-  fontSize: 42,
+  subText: '',
+  fontSize: 58,
   fontFamily: '"Arial Black", "Impact", sans-serif',
   textColor: '#FFFFFF',
+  subTextColor: '#888888',
   backgroundColor: '#0a0a0a',
-};
-
-// Draw simple, readable text
-const drawSimpleText = (
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  color: string,
-  fontSize: number,
-  fontFamily: string,
-) => {
-  ctx.font = `bold ${fontSize}px ${fontFamily}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  // Subtle shadow for depth
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-  ctx.shadowBlur = 6;
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 2;
-
-  // Main text
-  ctx.fillStyle = color;
-  ctx.fillText(text, x, y);
-
-  // Reset shadow
-  ctx.shadowColor = 'transparent';
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-};
-
-// Static display plate material - just text on dark background
-export const createDisplayPlateMaterial = (config: Partial<DisplayPlateConfig> = {}): THREE.MeshPhysicalMaterial => {
-  const mergedConfig = { ...defaultConfig, ...config };
-  const {
-    text,
-    fontSize,
-    fontFamily,
-    textColor,
-    backgroundColor,
-  } = mergedConfig;
-
-  const canvas = document.createElement('canvas');
-  const canvasWidth = 512;
-  const canvasHeight = 128;
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-
-  const ctx = canvas.getContext('2d');
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.anisotropy = 16;
-
-  if (ctx) {
-    // Background
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // Simple readable text
-    drawSimpleText(ctx, text, canvasWidth / 2, canvasHeight / 2, textColor, fontSize, fontFamily);
-
-    texture.needsUpdate = true;
-  }
-
-  return new THREE.MeshPhysicalMaterial({
-    map: texture,
-    metalness: 0.1,
-    roughness: 0.5,
-  });
+  emoji: '',
 };
 
 // Dynamic display plate for runtime text updates
@@ -93,6 +29,9 @@ export class DynamicDisplayPlate {
   private texture: THREE.CanvasTexture;
   public material: THREE.MeshPhysicalMaterial;
   private config: Required<DisplayPlateConfig>;
+  private isScoreMode: boolean = false;
+  private scoreValue: number = 0;
+  private scoreLabel: string = '';
 
   constructor(config: Partial<DisplayPlateConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
@@ -105,17 +44,24 @@ export class DynamicDisplayPlate {
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.anisotropy = 16;
 
+    // Less reflective material - reduces bloom pickup
     this.material = new THREE.MeshPhysicalMaterial({
       map: this.texture,
-      metalness: 0.1,
-      roughness: 0.5,
+      metalness: 0,
+      roughness: 0.8,
+      emissive: new THREE.Color('#000000'),
+      emissiveIntensity: 0,
     });
 
     this.render();
   }
 
-  setText(text: string): void {
+  setText(text: string, subText?: string): void {
+    this.isScoreMode = false;
     this.config.text = text;
+    if (subText !== undefined) {
+      this.config.subText = subText;
+    }
     this.render();
   }
 
@@ -124,26 +70,99 @@ export class DynamicDisplayPlate {
     this.render();
   }
 
+  /** Show a score result with styling - score+emoji on left, label on right */
+  showScore(score: number, label: string, color: string, emoji: string): void {
+    this.isScoreMode = true;
+    this.scoreValue = score;
+    this.scoreLabel = label;
+    this.config.textColor = color;
+    this.config.emoji = emoji;
+
+    // Subtle glow - reduced intensity to avoid bloom
+    this.material.emissive = new THREE.Color(color);
+    this.material.emissiveIntensity = score > 70 ? 0.15 : score > 40 ? 0.05 : 0;
+
+    this.render();
+  }
+
+  /** Reset to default spin message */
+  reset(): void {
+    this.isScoreMode = false;
+    this.config.text = 'SPIN TO WIN!';
+    this.config.subText = '';
+    this.config.textColor = '#FFFFFF';
+    this.config.subTextColor = '#888888';
+    this.config.fontSize = 58;
+    this.config.emoji = '';
+    this.material.emissiveIntensity = 0;
+    this.render();
+  }
+
+  /** Show spinning state */
+  showSpinning(): void {
+    this.isScoreMode = false;
+    this.config.text = 'SPINNING...';
+    this.config.subText = '';
+    this.config.textColor = '#00FF88';
+    this.config.fontSize = 54;
+    this.material.emissive = new THREE.Color('#00FF88');
+    this.material.emissiveIntensity = 0.1;
+    this.render();
+  }
+
   private render(): void {
     if (!this.context) return;
 
     const ctx = this.context;
-    const {
-      text,
-      fontSize,
-      fontFamily,
-      textColor,
-      backgroundColor,
-    } = this.config;
-
     const { width, height } = this.canvas;
+    const { backgroundColor, textColor, fontFamily } = this.config;
 
-    // Clear canvas
+    // Clear canvas with dark background
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, width, height);
 
-    // Simple readable text
-    drawSimpleText(ctx, text, width / 2, height / 2, textColor, fontSize, fontFamily);
+    if (this.isScoreMode) {
+      // Score mode: emoji + score on left, label on right
+      const emoji = this.config.emoji;
+      const scoreText = `${this.scoreValue}`;
+
+      // Left side: emoji + score
+      ctx.save();
+      ctx.font = `bold 72px ${fontFamily}`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.fillStyle = textColor;
+      ctx.fillText(`${emoji} ${scoreText}`, 24, height / 2);
+      ctx.restore();
+
+      // Right side: label
+      ctx.save();
+      ctx.font = `bold 36px ${fontFamily}`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 2;
+      ctx.fillStyle = textColor;
+      ctx.fillText(this.scoreLabel, width - 24, height / 2);
+      ctx.restore();
+    } else {
+      // Normal mode: centered text
+      const { text, fontSize } = this.config;
+
+      ctx.save();
+      ctx.font = `bold ${fontSize}px ${fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.fillStyle = textColor;
+      ctx.fillText(text, width / 2, height / 2);
+      ctx.restore();
+    }
 
     this.texture.needsUpdate = true;
   }
@@ -154,5 +173,7 @@ export class DynamicDisplayPlate {
   }
 }
 
-// Factory functions
-export const createAnimatedDisplayPlate = (config: Partial<DisplayPlateConfig> = {}): DynamicDisplayPlate => new DynamicDisplayPlate(config);
+// Factory function
+export const createAnimatedDisplayPlate = (
+  config: Partial<DisplayPlateConfig> = {},
+): DynamicDisplayPlate => new DynamicDisplayPlate(config);

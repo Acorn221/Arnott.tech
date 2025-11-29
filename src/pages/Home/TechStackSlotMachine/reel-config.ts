@@ -1,39 +1,34 @@
 import * as THREE from 'three';
-import { createReelTextureMaterial } from './materials';
-import { createAnimatedDisplayPlate } from './display-plate';
+import { createAnimatedDisplayPlate, DynamicDisplayPlate } from './display-plate';
 import { createAnimatedGlowBorder, AnimatedGlowBorderMaterial } from './display-border-material';
 
-// Icon imports
-import amplifyIcon from '../Carousel/Slides/util/Icons/assets/ampliify.svg';
-import discordIcon from '../Carousel/Slides/util/Icons/assets/discord.svg';
-import dynamoIcon from '../Carousel/Slides/util/Icons/assets/dynamoDB.svg';
-import eslintIcon from '../Carousel/Slides/util/Icons/assets/eslint.svg';
-import gitkrakenIcon from '../Carousel/Slides/util/Icons/assets/gitkraken.svg';
-import lambdaIcon from '../Carousel/Slides/util/Icons/assets/lambda.svg';
-import postmanIcon from '../Carousel/Slides/util/Icons/assets/postman.svg';
-import viteIcon from '../Carousel/Slides/util/Icons/assets/vite.svg';
+// ============================================================================
+// Types
+// ============================================================================
 
-// Part names in the GLTF model that get custom materials
-export type PartName =
+/** Part names for static (non-spinner) parts */
+export type StaticPartName =
   | 'display-plate'
   | 'display-border'
   | 'faceplate'
   | 'spinner-housing'
   | 'handle-knob'
-  | 'slot-spinner-1'
-  | 'slot-spinner-2'
-  | 'slot-spinner-3'
   | 'screw-1'
   | 'screw-2'
   | 'screw-3'
   | 'screw-4';
 
-export type PartOverrideMap = Record<PartName, THREE.Material>;
+export type StaticPartOverrideMap = Record<StaticPartName, THREE.Material>;
 
-// Reel icon configurations (8 icons per reel for octagonal geometry)
-const REEL_1_ICONS = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon];
-const REEL_2_ICONS = [amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon, amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon];
-const REEL_3_ICONS = [dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon];
+export interface StaticPartOverridesResult {
+  overrides: StaticPartOverrideMap;
+  knobMaterial: AnimatedGlowBorderMaterial;
+  displayPlate: DynamicDisplayPlate;
+}
+
+// ============================================================================
+// Materials
+// ============================================================================
 
 /** Creates a shiny metallic material for screws */
 const createScrewMaterial = (): THREE.MeshPhysicalMaterial => new THREE.MeshPhysicalMaterial({
@@ -44,15 +39,12 @@ const createScrewMaterial = (): THREE.MeshPhysicalMaterial => new THREE.MeshPhys
   clearcoatRoughness: 0.1,
 });
 
-/** Result of creating part overrides, includes both materials map and animated material refs */
-export interface PartOverridesResult {
-  materials: PartOverrideMap;
-  knobMaterial: AnimatedGlowBorderMaterial;
-}
-
-/** Creates all custom materials for slot machine parts */
-export const createPartOverrides = (): PartOverridesResult => {
-  // Animated materials (keep references for external control)
+/**
+ * Creates materials for all static parts (everything except spinners).
+ * Spinners get their materials from the dynamic reel texture system.
+ */
+export const createStaticPartOverrides = (): StaticPartOverridesResult => {
+  // Animated materials
   const knobMaterial = createAnimatedGlowBorder({
     color: '#FF3333',
     pulseSpeed: 1.2,
@@ -69,15 +61,15 @@ export const createPartOverrides = (): PartOverridesResult => {
     maxIntensity: 1.0,
   });
 
-  const displayPlateMaterial = createAnimatedDisplayPlate({
+  const displayPlate = createAnimatedDisplayPlate({
     text: 'SPIN TO WIN!',
     textColor: '#FFFFFF',
     backgroundColor: '#020202',
     fontSize: 42,
   });
 
-  const materials: PartOverrideMap = {
-    'display-plate': displayPlateMaterial.material,
+  const overrides: StaticPartOverrideMap = {
+    'display-plate': displayPlate.material,
     'display-border': displayBorderMaterial.material,
     faceplate: new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#0a0a0a'),
@@ -91,14 +83,11 @@ export const createPartOverrides = (): PartOverridesResult => {
       clearcoat: 0.6,
     }),
     'handle-knob': knobMaterial.material,
-    'slot-spinner-1': createReelTextureMaterial(REEL_1_ICONS),
-    'slot-spinner-2': createReelTextureMaterial(REEL_2_ICONS),
-    'slot-spinner-3': createReelTextureMaterial(REEL_3_ICONS),
     'screw-1': createScrewMaterial(),
     'screw-2': createScrewMaterial(),
     'screw-3': createScrewMaterial(),
     'screw-4': createScrewMaterial(),
   };
 
-  return { materials, knobMaterial };
+  return { overrides, knobMaterial, displayPlate };
 };
