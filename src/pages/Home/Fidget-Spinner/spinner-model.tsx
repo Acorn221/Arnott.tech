@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
  
 import { type FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { type GroupProps, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import { type GltfMaterialKey } from '../TechStackSlotMachine/materials';
 
-interface SpinnerModelProps extends GroupProps {
+interface SpinnerModelProps {
   isXray: boolean;
 }
 
@@ -49,11 +51,12 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
     materials.current = customMaterials;
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
-        object.userData.materialKey = object.material.name;
-        const materialKey = object.material.name;
+        object.userData.materialKey = object.material.name as GltfMaterialKey;
+        const materialKey = object.material.name as GltfMaterialKey;
         // @ts-expect-error - materialKey is fine
         if (customMaterials[materialKey]) {
           // @ts-expect-error - materialKey is fine
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           object.material = customMaterials[materialKey];
           object.castShadow = true;
           object.receiveShadow = true;
@@ -76,9 +79,10 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
         } else {
           const { materialKey } = object.userData;
           // @ts-expect-error - materialKey is fine
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const originalMaterial = materials.current[materialKey];
           if (originalMaterial) {
-            object.material = originalMaterial;
+            object.material = originalMaterial as THREE.MeshPhysicalMaterial;
             object.castShadow = true;
             object.receiveShadow = true;
           }
