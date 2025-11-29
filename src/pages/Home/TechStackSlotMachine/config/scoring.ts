@@ -15,6 +15,10 @@ export interface ComboRule {
   priority: number;
 }
 
+export interface AppliedCombo {
+  rule: ComboRule;
+  applied: boolean;
+}
 export interface ScoreResult {
   /** Final score 0-100 */
   score: number;
@@ -32,11 +36,6 @@ export interface ScoreResult {
     frontend: number;
     database: number;
   };
-}
-
-export interface AppliedCombo {
-  rule: ComboRule;
-  applied: boolean;
 }
 
 // ============================================================================
@@ -286,14 +285,30 @@ interface ScoreCategory {
 }
 
 const SCORE_CATEGORIES: ScoreCategory[] = [
-  { min: 90, max: 100, label: 'Perfect Stack', emoji: '🏆', color: '#FFD700' },
-  { min: 80, max: 89, label: 'Excellent Choice', emoji: '✨', color: '#4ADE80' },
-  { min: 70, max: 79, label: 'Solid Stack', emoji: '✅', color: '#22C55E' },
-  { min: 60, max: 69, label: 'Decent Setup', emoji: '👍', color: '#84CC16' },
-  { min: 50, max: 59, label: 'It Works...', emoji: '🤷', color: '#EAB308' },
-  { min: 40, max: 49, label: 'Questionable', emoji: '⚠️', color: '#F97316' },
-  { min: 25, max: 39, label: 'Concerning', emoji: '😬', color: '#EF4444' },
-  { min: 0, max: 24, label: 'Chaotic Evil', emoji: '💀', color: '#7F1D1D' },
+  {
+    min: 90, max: 100, label: 'Perfect Stack', emoji: '🏆', color: '#FFD700',
+  },
+  {
+    min: 80, max: 89, label: 'Excellent Choice', emoji: '✨', color: '#4ADE80',
+  },
+  {
+    min: 70, max: 79, label: 'Solid Stack', emoji: '✅', color: '#22C55E',
+  },
+  {
+    min: 60, max: 69, label: 'Decent Setup', emoji: '👍', color: '#84CC16',
+  },
+  {
+    min: 50, max: 59, label: 'It Works...', emoji: '🤷', color: '#EAB308',
+  },
+  {
+    min: 40, max: 49, label: 'Questionable', emoji: '⚠️', color: '#F97316',
+  },
+  {
+    min: 25, max: 39, label: 'Concerning', emoji: '😬', color: '#EF4444',
+  },
+  {
+    min: 0, max: 24, label: 'Chaotic Evil', emoji: '💀', color: '#7F1D1D',
+  },
 ];
 
 // ============================================================================
@@ -355,10 +370,21 @@ export const calculateScore = (
     .filter((c) => c.applied)
     .sort((a, b) => b.rule.priority - a.rule.priority);
 
+  // Special score labels
+  let { label } = category;
+  let { emoji } = category;
+  if (score === 69) {
+    label = 'nice';
+    emoji = '😏';
+  } else if (score === 67) {
+    label = '6,7';
+    emoji = '🎵';
+  }
+
   return {
     score,
-    label: category.label,
-    emoji: category.emoji,
+    label,
+    emoji,
     color: category.color,
     appliedCombos: sortedAppliedCombos,
     baseScores,
@@ -382,4 +408,3 @@ export const getScoreMessage = (result: ScoreResult): string => {
   }
   return 'Seek professional help.';
 };
-
