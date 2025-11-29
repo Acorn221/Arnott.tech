@@ -48,6 +48,7 @@ interface SlotMachineContextValue {
   spinnersRef: React.MutableRefObject<Record<string, THREE.Object3D>>;
   knobMaterialRef: React.MutableRefObject<AnimatedGlowBorderMaterial | null>;
   displayPlateRef: React.MutableRefObject<DynamicDisplayPlate | null>;
+  indicatorMaterialsRef: React.MutableRefObject<THREE.MeshPhysicalMaterial[]>;
 
   // Reel state
   reelManagersRef: React.MutableRefObject<ReelTextureManager[] | null>;
@@ -65,6 +66,7 @@ interface SlotMachineContextValue {
   setSpinners: (spinners: Record<string, THREE.Object3D>) => void;
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
   setDisplayPlate: (plate: DynamicDisplayPlate) => void;
+  setIndicatorMaterials: (materials: THREE.MeshPhysicalMaterial[]) => void;
   initializeReels: () => Promise<void>;
   calculateFinalResult: () => void;
   setIsSpinning: (spinning: boolean) => void;
@@ -111,6 +113,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
   const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
   const knobMaterialRef = useRef<AnimatedGlowBorderMaterial | null>(null);
   const displayPlateRef = useRef<DynamicDisplayPlate | null>(null);
+  const indicatorMaterialsRef = useRef<THREE.MeshPhysicalMaterial[]>([]);
   const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
 
   // Reel state refs
@@ -156,6 +159,10 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
 
   const setDisplayPlate = useCallback((plate: DynamicDisplayPlate) => {
     displayPlateRef.current = plate;
+  }, []);
+
+  const setIndicatorMaterials = useCallback((materials: THREE.MeshPhysicalMaterial[]) => {
+    indicatorMaterialsRef.current = materials;
   }, []);
 
   const setIsSpinning = useCallback((spinning: boolean) => {
@@ -254,6 +261,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     spinnersRef,
     knobMaterialRef,
     displayPlateRef,
+    indicatorMaterialsRef,
     reelManagersRef,
     reelStatesRef,
     swapTimersRef,
@@ -265,6 +273,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     setSpinners,
     setKnobMaterial,
     setDisplayPlate,
+    setIndicatorMaterials,
     initializeReels,
     calculateFinalResult,
     setIsSpinning,
@@ -276,6 +285,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
     setSpinners,
     setKnobMaterial,
     setDisplayPlate,
+    setIndicatorMaterials,
     initializeReels,
     calculateFinalResult,
     setIsSpinning,

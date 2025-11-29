@@ -16,7 +16,11 @@ export type StaticPartName =
   | 'screw-1'
   | 'screw-2'
   | 'screw-3'
-  | 'screw-4';
+  | 'screw-4'
+  | 'slot-indicator-1'
+  | 'slot-indicator-2'
+  | 'slot-indicator-3'
+  | 'slot-indicator-4';
 
 export type StaticPartOverrideMap = Record<StaticPartName, THREE.Material>;
 
@@ -24,6 +28,7 @@ export interface StaticPartOverridesResult {
   overrides: StaticPartOverrideMap;
   knobMaterial: AnimatedGlowBorderMaterial;
   displayPlate: DynamicDisplayPlate;
+  indicatorMaterials: THREE.MeshPhysicalMaterial[];
 }
 
 // ============================================================================
@@ -37,6 +42,17 @@ const createScrewMaterial = (): THREE.MeshPhysicalMaterial => new THREE.MeshPhys
   roughness: 0.15,
   clearcoat: 0.8,
   clearcoatRoughness: 0.1,
+});
+
+/** Creates a glowing indicator material */
+const createIndicatorMaterial = (): THREE.MeshPhysicalMaterial => new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color('#FF6B00'),
+  emissive: new THREE.Color('#FF6B00'),
+  emissiveIntensity: 0.8,
+  metalness: 0.3,
+  roughness: 0.4,
+  transparent: true,
+  opacity: 0.9,
 });
 
 /**
@@ -68,6 +84,14 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     fontSize: 42,
   });
 
+  // Create indicator materials (can be animated later)
+  const indicatorMaterials = [
+    createIndicatorMaterial(),
+    createIndicatorMaterial(),
+    createIndicatorMaterial(),
+    createIndicatorMaterial(),
+  ];
+
   const overrides: StaticPartOverrideMap = {
     'display-plate': displayPlate.material,
     'display-border': displayBorderMaterial.material,
@@ -87,7 +111,11 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     'screw-2': createScrewMaterial(),
     'screw-3': createScrewMaterial(),
     'screw-4': createScrewMaterial(),
+    'slot-indicator-1': indicatorMaterials[0],
+    'slot-indicator-2': indicatorMaterials[1],
+    'slot-indicator-3': indicatorMaterials[2],
+    'slot-indicator-4': indicatorMaterials[3],
   };
 
-  return { overrides, knobMaterial, displayPlate };
+  return { overrides, knobMaterial, displayPlate, indicatorMaterials };
 };

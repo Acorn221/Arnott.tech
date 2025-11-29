@@ -43,8 +43,10 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     reelManagersRef,
     reelStatesRef,
     swapTimersRef,
+    indicatorMaterialsRef,
     calculateFinalResult,
     setIsSpinning,
+    lastResult,
   } = useSlotMachine();
   const { gl } = useThree();
 
@@ -52,6 +54,9 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   const rumbleTimeRef = useRef(0);
   const isRumblingRef = useRef(false);
   const basePosition = useRef<[number, number, number]>(position);
+
+  // Indicator animation state
+  const indicatorTimeRef = useRef(0);
 
   const triggerRumble = useCallback(() => {
     isRumblingRef.current = true;
@@ -136,6 +141,50 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (allStopped) {
         setIsSpinning(false);
         calculateFinalResult();
+      }
+    }
+
+    // Indicator animation
+    const indicators = indicatorMaterialsRef.current;
+    if (indicators.length > 0) {
+      indicatorTimeRef.current += delta;
+      const t = indicatorTimeRef.current;
+
+      if (isSpinningRef.current) {
+        // Fast pulsing during spin - rainbow chase effect
+        indicators.forEach((mat, i) => {
+          const phase = t * 8 + i * 0.5;
+          const intensity = 0.5 + Math.sin(phase) * 0.5;
+          mat.emissiveIntensity = intensity * 2;
+          // Cycle through colors
+          const hue = (t * 0.5 + i * 0.25) % 1;
+          mat.emissive.setHSL(hue, 1, 0.5);
+          mat.color.setHSL(hue, 1, 0.5);
+        });
+      } else if (lastResult) {
+        // Settled state - glow based on score
+        const { score } = lastResult.score;
+        let hue = 0; // Red (low score)
+        if (score > 70) {
+          hue = 0.33; // Green
+        } else if (score > 40) {
+          hue = 0.12; // Orange
+        }
+        indicators.forEach((mat) => {
+          const pulse = 0.6 + Math.sin(t * 2) * 0.4;
+          mat.emissiveIntensity = pulse;
+          mat.emissive.setHSL(hue, 1, 0.5);
+          mat.color.setHSL(hue, 1, 0.6);
+        });
+      } else {
+        // Idle state - gentle orange pulse
+        indicators.forEach((mat, i) => {
+          const phase = t * 1.5 + i * 0.3;
+          const intensity = 0.3 + Math.sin(phase) * 0.2;
+          mat.emissiveIntensity = intensity;
+          mat.emissive.setHSL(0.08, 1, 0.5); // Orange
+          mat.color.setHSL(0.08, 1, 0.5);
+        });
       }
     }
 
