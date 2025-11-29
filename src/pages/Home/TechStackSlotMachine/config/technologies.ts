@@ -1,40 +1,43 @@
-// Technology icons from devicon
+// Technology icons from devicon - prefer line/plain versions for outline look
+// Backend
 import TypeScriptIcon from 'devicon/icons/typescript/typescript-plain.svg';
-import GoIcon from 'devicon/icons/go/go-original-wordmark.svg';
-import RustIcon from 'devicon/icons/rust/rust-original.svg';
-import PythonIcon from 'devicon/icons/python/python-original.svg';
-import JavaIcon from 'devicon/icons/java/java-original.svg';
-import CSharpIcon from 'devicon/icons/csharp/csharp-original.svg';
-import RubyIcon from 'devicon/icons/ruby/ruby-original.svg';
-import PhpIcon from 'devicon/icons/php/php-original.svg';
-import KotlinIcon from 'devicon/icons/kotlin/kotlin-original.svg';
-import ScalaIcon from 'devicon/icons/scala/scala-original.svg';
-import ElixirIcon from 'devicon/icons/elixir/elixir-original.svg';
-import CppIcon from 'devicon/icons/cplusplus/cplusplus-original.svg';
-import CIcon from 'devicon/icons/c/c-original.svg';
-import SwiftIcon from 'devicon/icons/swift/swift-original.svg';
-import HaskellIcon from 'devicon/icons/haskell/haskell-original.svg';
+import GoIcon from 'devicon/icons/go/go-line.svg';
+import RustIcon from 'devicon/icons/rust/rust-line.svg';
+import PythonIcon from 'devicon/icons/python/python-plain.svg';
+import JavaIcon from 'devicon/icons/java/java-plain.svg';
+import CSharpIcon from 'devicon/icons/csharp/csharp-line.svg';
+import RubyIcon from 'devicon/icons/ruby/ruby-plain.svg';
+import PhpIcon from 'devicon/icons/php/php-plain.svg';
+import KotlinIcon from 'devicon/icons/kotlin/kotlin-plain.svg';
+import ScalaIcon from 'devicon/icons/scala/scala-plain.svg';
+import ElixirIcon from 'devicon/icons/elixir/elixir-plain.svg';
+import CppIcon from 'devicon/icons/cplusplus/cplusplus-line.svg';
+import CIcon from 'devicon/icons/c/c-line.svg';
+import SwiftIcon from 'devicon/icons/swift/swift-plain.svg';
+import HaskellIcon from 'devicon/icons/haskell/haskell-plain.svg';
 
-import ReactIcon from 'devicon/icons/react/react-original.svg';
-import VueIcon from 'devicon/icons/vuejs/vuejs-original.svg';
-import SvelteIcon from 'devicon/icons/svelte/svelte-original.svg';
-import NextJsIcon from 'devicon/icons/nextjs/nextjs-original.svg';
-import NuxtIcon from 'devicon/icons/nuxtjs/nuxtjs-original.svg';
-import AngularIcon from 'devicon/icons/angular/angular-original.svg';
-import SolidJsIcon from 'devicon/icons/solidjs/solidjs-original.svg';
-import JQueryIcon from 'devicon/icons/jquery/jquery-original.svg';
+// Frontend
+import ReactIcon from 'devicon/icons/react/react-original.svg'; // No line/plain, original is already outline-like
+import VueIcon from 'devicon/icons/vuejs/vuejs-line.svg';
+import SvelteIcon from 'devicon/icons/svelte/svelte-plain.svg';
+import NextJsIcon from 'devicon/icons/nextjs/nextjs-line.svg';
+import NuxtIcon from 'devicon/icons/nuxtjs/nuxtjs-plain.svg';
+import AngularIcon from 'devicon/icons/angular/angular-plain.svg';
+import SolidJsIcon from 'devicon/icons/solidjs/solidjs-plain.svg';
+import JQueryIcon from 'devicon/icons/jquery/jquery-plain.svg';
 import JavaScriptIcon from 'devicon/icons/javascript/javascript-plain.svg';
 
-import PostgresIcon from 'devicon/icons/postgresql/postgresql-original.svg';
-import MySqlIcon from 'devicon/icons/mysql/mysql-original.svg';
-import MariaDbIcon from 'devicon/icons/mariadb/mariadb-original.svg';
-import SqliteIcon from 'devicon/icons/sqlite/sqlite-original.svg';
-import MongoDbIcon from 'devicon/icons/mongodb/mongodb-original.svg';
-import RedisIcon from 'devicon/icons/redis/redis-original.svg';
-import CassandraIcon from 'devicon/icons/cassandra/cassandra-original.svg';
-import Neo4jIcon from 'devicon/icons/neo4j/neo4j-original.svg';
-import FirebaseIcon from 'devicon/icons/firebase/firebase-plain.svg';
-import SupabaseIcon from 'devicon/icons/supabase/supabase-original.svg';
+// Databases
+import PostgresIcon from 'devicon/icons/postgresql/postgresql-plain.svg';
+import MySqlIcon from 'devicon/icons/mysql/mysql-original.svg'; // No plain/line
+import MariaDbIcon from 'devicon/icons/mariadb/mariadb-original.svg'; // No plain/line
+import SqliteIcon from 'devicon/icons/sqlite/sqlite-plain.svg';
+import MongoDbIcon from 'devicon/icons/mongodb/mongodb-plain.svg';
+import RedisIcon from 'devicon/icons/redis/redis-plain.svg';
+import CassandraIcon from 'devicon/icons/cassandra/cassandra-plain.svg';
+import Neo4jIcon from 'devicon/icons/neo4j/neo4j-plain.svg';
+import FirebaseIcon from 'devicon/icons/firebase/firebase-line.svg';
+import SupabaseIcon from 'devicon/icons/supabase/supabase-plain.svg';
 
 // Custom icons
 import DynamoDbIcon from '../../Carousel/Slides/util/Icons/assets/dynamoDB.svg';

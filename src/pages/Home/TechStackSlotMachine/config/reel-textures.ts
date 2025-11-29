@@ -98,7 +98,7 @@ const drawFace = (
     ctx.save();
     ctx.translate(x + xOffset + iconSize / 2, yOffset + iconSize / 2);
     ctx.rotate(-Math.PI / 2); // Rotate for cylinder orientation
-    ctx.filter = 'grayscale(100%) brightness(0)'; // Black silhouette
+    ctx.filter = 'grayscale(100%) brightness(0)'; // Black
     ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
     ctx.restore();
   }

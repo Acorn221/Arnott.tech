@@ -25,12 +25,19 @@ const defaultConfig: Required<DisplayPlateConfig> = {
 // Dynamic display plate for runtime text updates
 export class DynamicDisplayPlate {
   private canvas: HTMLCanvasElement;
+
   private context: CanvasRenderingContext2D | null;
+
   private texture: THREE.CanvasTexture;
+
   public material: THREE.MeshPhysicalMaterial;
+
   private config: Required<DisplayPlateConfig>;
+
   private isScoreMode: boolean = false;
+
   private scoreValue: number = 0;
+
   private scoreLabel: string = '';
 
   constructor(config: Partial<DisplayPlateConfig> = {}) {
@@ -80,7 +87,13 @@ export class DynamicDisplayPlate {
 
     // Subtle glow - reduced intensity to avoid bloom
     this.material.emissive = new THREE.Color(color);
-    this.material.emissiveIntensity = score > 70 ? 0.15 : score > 40 ? 0.05 : 0;
+    let glowIntensity = 0;
+    if (score > 70) {
+      glowIntensity = 0.15;
+    } else if (score > 40) {
+      glowIntensity = 0.05;
+    }
+    this.material.emissiveIntensity = glowIntensity;
 
     this.render();
   }
@@ -123,30 +136,30 @@ export class DynamicDisplayPlate {
 
     if (this.isScoreMode) {
       // Score mode: emoji + score on left, label on right
-      const emoji = this.config.emoji;
+      const { emoji } = this.config;
       const scoreText = `${this.scoreValue}`;
 
-      // Left side: emoji + score
+      // Left side: emoji + score (smaller to fit)
       ctx.save();
-      ctx.font = `bold 72px ${fontFamily}`;
+      ctx.font = `bold 52px ${fontFamily}`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetY = 2;
       ctx.fillStyle = textColor;
-      ctx.fillText(`${emoji} ${scoreText}`, 24, height / 2);
+      ctx.fillText(`${emoji} ${scoreText}`, 16, height / 2);
       ctx.restore();
 
-      // Right side: label
+      // Right side: label (smaller)
       ctx.save();
-      ctx.font = `bold 36px ${fontFamily}`;
+      ctx.font = `bold 28px ${fontFamily}`;
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(0,0,0,0.3)';
       ctx.shadowBlur = 2;
       ctx.fillStyle = textColor;
-      ctx.fillText(this.scoreLabel, width - 24, height / 2);
+      ctx.fillText(this.scoreLabel, width - 16, height / 2);
       ctx.restore();
     } else {
       // Normal mode: centered text
