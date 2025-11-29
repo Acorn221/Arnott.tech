@@ -208,32 +208,32 @@ export const COMBO_RULES: ComboRule[] = [
   },
   {
     pattern: ["php", "jquery", "*"],
-    modifier: -50,
-    reason: "Time traveler from 2008 detected",
+    modifier: -70,
+    reason: "💀 Time traveler from 2008 detected",
     priority: 100,
   },
   {
     pattern: ["php", "*", "*"],
-    modifier: -25,
-    reason: "PHP detected 🤮",
+    modifier: -45,
+    reason: "🤮 PHP detected - seek help immediately",
     priority: 90,
   },
   {
     pattern: ["php", "*", "mysql"],
-    modifier: -15,
+    modifier: -20,
     reason: "LAMP stack nostalgia hitting hard",
     priority: 85,
   },
   {
     pattern: ["php", "*", "mongodb"],
-    modifier: -30,
+    modifier: -40,
     reason: "Two wrongs definitely don't make a right",
     priority: 85,
   },
   {
     pattern: ["php", "*", "postgresql"],
-    modifier: 5,
-    reason: "At least you picked a good database",
+    modifier: -5,
+    reason: "Good DB can't save bad code",
     priority: 80,
   },
   {
@@ -246,6 +246,12 @@ export const COMBO_RULES: ComboRule[] = [
   // =========================================================================
   // SPECIAL/MEME COMBOS
   // =========================================================================
+  {
+    pattern: ["nextjs-backend", "nextjs", "*"],
+    modifier: 30,
+    reason: "🔥 Full Next.js stack! Vercel approves",
+    priority: 100,
+  },
   {
     pattern: ["c", "*", "sqlite"],
     modifier: 5,
@@ -269,6 +275,46 @@ export const COMBO_RULES: ComboRule[] = [
     modifier: 5,
     reason: "Speed demon (but where's your real DB?)",
     priority: 15,
+  },
+
+  // =========================================================================
+  // ESOTERIC/JOKE LANGUAGE PENALTIES
+  // =========================================================================
+  {
+    pattern: ["brainfuck", "*", "*"],
+    modifier: -80,
+    reason: "++++++[>++++++<-]>. 💀",
+    priority: 100,
+  },
+  {
+    pattern: ["fortran", "*", "*"],
+    modifier: -20,
+    reason: "Found the time traveler from 1957",
+    priority: 60,
+  },
+  {
+    pattern: ["perl", "*", "*"],
+    modifier: -20,
+    reason: "Write-only code detected",
+    priority: 60,
+  },
+  {
+    pattern: ["matlab", "*", "*"],
+    modifier: -15,
+    reason: "Your university license expired",
+    priority: 55,
+  },
+  {
+    pattern: ["erlang", "*", "*"],
+    modifier: -10,
+    reason: "Telecom archaeologist spotted",
+    priority: 50,
+  },
+  {
+    pattern: ["groovy", "*", "*"],
+    modifier: -15,
+    reason: "Jenkins pipeline nostalgia",
+    priority: 50,
   },
 ];
 

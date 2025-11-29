@@ -1,20 +1,32 @@
 // Technology icons from devicon - using original/plain filled versions for visibility
-// Backend
+// Backend - Good languages
 import TypeScriptIcon from "devicon/icons/typescript/typescript-original.svg";
 import GoIcon from "devicon/icons/go/go-original.svg";
 import RustIcon from "devicon/icons/rust/rust-original.svg";
 import PythonIcon from "devicon/icons/python/python-original.svg";
-import JavaIcon from "devicon/icons/java/java-original.svg";
 import CSharpIcon from "devicon/icons/csharp/csharp-original.svg";
-import RubyIcon from "devicon/icons/ruby/ruby-original.svg";
-import PhpIcon from "devicon/icons/php/php-original.svg";
 import KotlinIcon from "devicon/icons/kotlin/kotlin-original.svg";
-import ScalaIcon from "devicon/icons/scala/scala-original.svg";
 import ElixirIcon from "devicon/icons/elixir/elixir-original.svg";
 import CppIcon from "devicon/icons/cplusplus/cplusplus-original.svg";
 import CIcon from "devicon/icons/c/c-original.svg";
 import SwiftIcon from "devicon/icons/swift/swift-original.svg";
+
+// Backend - Bad/Legacy languages
+import JavaIcon from "devicon/icons/java/java-original.svg";
+import PhpIcon from "devicon/icons/php/php-original.svg";
+import RubyIcon from "devicon/icons/ruby/ruby-original.svg";
+import ScalaIcon from "devicon/icons/scala/scala-original.svg";
 import HaskellIcon from "devicon/icons/haskell/haskell-original.svg";
+import ErlangIcon from "devicon/icons/erlang/erlang-original.svg";
+import FSharpIcon from "devicon/icons/fsharp/fsharp-original.svg";
+import OCamlIcon from "devicon/icons/ocaml/ocaml-original.svg";
+import PerlIcon from "devicon/icons/perl/perl-original.svg";
+import MatlabIcon from "devicon/icons/matlab/matlab-original.svg";
+import GroovyIcon from "devicon/icons/groovy/groovy-original.svg";
+import FortranIcon from "devicon/icons/fortran/fortran-original.svg";
+
+// Brainfuck icon from public folder
+const BrainfuckIcon = "/brainfuck-icon.svg";
 
 // Frontend
 import ReactIcon from "devicon/icons/react/react-original.svg";
@@ -63,13 +75,14 @@ export interface Technology {
 // ============================================================================
 
 export const BACKEND_TECHNOLOGIES: Technology[] = [
+  // === GOOD LANGUAGES ===
   {
     id: "typescript",
     name: "TypeScript",
     shortName: "TS",
     icon: TypeScriptIcon,
     category: "backend",
-    baseScore: 90,
+    baseScore: 92,
     tags: ["typed", "modern", "node"],
   },
   {
@@ -78,8 +91,17 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
     shortName: "Go",
     icon: GoIcon,
     category: "backend",
-    baseScore: 88,
+    baseScore: 90,
     tags: ["compiled", "fast", "simple"],
+  },
+  {
+    id: "cpp",
+    name: "C++",
+    shortName: "C++",
+    icon: CppIcon,
+    category: "backend",
+    baseScore: 88,
+    tags: ["compiled", "fast", "systems"],
   },
   {
     id: "rust",
@@ -87,26 +109,26 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
     shortName: "Rust",
     icon: RustIcon,
     category: "backend",
-    baseScore: 92,
+    baseScore: 85,
     tags: ["compiled", "memory-safe", "fast"],
   },
   {
-    id: "python",
-    name: "Python",
-    shortName: "Py",
-    icon: PythonIcon,
+    id: "nextjs-backend",
+    name: "Next.js",
+    shortName: "Next",
+    icon: NextJsIcon,
     category: "backend",
-    baseScore: 75,
-    tags: ["scripting", "ml", "slow"],
+    baseScore: 82,
+    tags: ["fullstack", "react", "ssr"],
   },
   {
-    id: "java",
-    name: "Java",
-    shortName: "Java",
-    icon: JavaIcon,
+    id: "kotlin",
+    name: "Kotlin",
+    shortName: "Kt",
+    icon: KotlinIcon,
     category: "backend",
-    baseScore: 70,
-    tags: ["enterprise", "verbose", "jvm"],
+    baseScore: 80,
+    tags: ["jvm", "modern", "android"],
   },
   {
     id: "csharp",
@@ -118,69 +140,6 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
     tags: ["enterprise", "microsoft", "typed"],
   },
   {
-    id: "ruby",
-    name: "Ruby",
-    shortName: "Ruby",
-    icon: RubyIcon,
-    category: "backend",
-    baseScore: 60,
-    tags: ["scripting", "rails", "slow"],
-  },
-  {
-    id: "php",
-    name: "PHP",
-    shortName: "PHP",
-    icon: PhpIcon,
-    category: "backend",
-    baseScore: 25,
-    tags: ["legacy", "wordpress", "cursed"],
-  },
-  {
-    id: "kotlin",
-    name: "Kotlin",
-    shortName: "Kt",
-    icon: KotlinIcon,
-    category: "backend",
-    baseScore: 82,
-    tags: ["jvm", "modern", "android"],
-  },
-  {
-    id: "scala",
-    name: "Scala",
-    shortName: "Scala",
-    icon: ScalaIcon,
-    category: "backend",
-    baseScore: 72,
-    tags: ["jvm", "functional", "complex"],
-  },
-  {
-    id: "elixir",
-    name: "Elixir",
-    shortName: "Elixir",
-    icon: ElixirIcon,
-    category: "backend",
-    baseScore: 80,
-    tags: ["functional", "concurrent", "erlang"],
-  },
-  {
-    id: "cpp",
-    name: "C++",
-    shortName: "C++",
-    icon: CppIcon,
-    category: "backend",
-    baseScore: 65,
-    tags: ["compiled", "low-level", "complex"],
-  },
-  {
-    id: "c",
-    name: "C",
-    shortName: "C",
-    icon: CIcon,
-    category: "backend",
-    baseScore: 55,
-    tags: ["compiled", "low-level", "manual-memory"],
-  },
-  {
     id: "swift",
     name: "Swift",
     shortName: "Swift",
@@ -190,13 +149,152 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
     tags: ["apple", "modern", "safe"],
   },
   {
+    id: "elixir",
+    name: "Elixir",
+    shortName: "Elixir",
+    icon: ElixirIcon,
+    category: "backend",
+    baseScore: 75,
+    tags: ["functional", "concurrent", "beam"],
+  },
+  {
+    id: "python",
+    name: "Python",
+    shortName: "Py",
+    icon: PythonIcon,
+    category: "backend",
+    baseScore: 70,
+    tags: ["scripting", "ml", "versatile"],
+  },
+  {
+    id: "c",
+    name: "C",
+    shortName: "C",
+    icon: CIcon,
+    category: "backend",
+    baseScore: 65,
+    tags: ["compiled", "low-level", "systems"],
+  },
+
+  // === MEDIOCRE / NICHE LANGUAGES ===
+  {
+    id: "ruby",
+    name: "Ruby",
+    shortName: "Ruby",
+    icon: RubyIcon,
+    category: "backend",
+    baseScore: 50,
+    tags: ["scripting", "rails", "slow"],
+  },
+  {
     id: "haskell",
     name: "Haskell",
     shortName: "Haskell",
     icon: HaskellIcon,
     category: "backend",
-    baseScore: 68,
+    baseScore: 45,
     tags: ["functional", "pure", "academic"],
+  },
+  {
+    id: "ocaml",
+    name: "OCaml",
+    shortName: "OCaml",
+    icon: OCamlIcon,
+    category: "backend",
+    baseScore: 40,
+    tags: ["functional", "typed", "niche"],
+  },
+  {
+    id: "fsharp",
+    name: "F#",
+    shortName: "F#",
+    icon: FSharpIcon,
+    category: "backend",
+    baseScore: 40,
+    tags: ["functional", "dotnet", "niche"],
+  },
+
+  // === BAD / LEGACY LANGUAGES ===
+  {
+    id: "java",
+    name: "Java",
+    shortName: "Java",
+    icon: JavaIcon,
+    category: "backend",
+    baseScore: 30,
+    tags: ["enterprise", "verbose", "bloated"],
+  },
+  {
+    id: "scala",
+    name: "Scala",
+    shortName: "Scala",
+    icon: ScalaIcon,
+    category: "backend",
+    baseScore: 30,
+    tags: ["jvm", "complex", "overengineered"],
+  },
+  {
+    id: "erlang",
+    name: "Erlang",
+    shortName: "Erlang",
+    icon: ErlangIcon,
+    category: "backend",
+    baseScore: 28,
+    tags: ["telecom", "legacy", "niche"],
+  },
+  {
+    id: "groovy",
+    name: "Groovy",
+    shortName: "Groovy",
+    icon: GroovyIcon,
+    category: "backend",
+    baseScore: 25,
+    tags: ["jvm", "scripting", "legacy"],
+  },
+  {
+    id: "php",
+    name: "PHP",
+    shortName: "PHP",
+    icon: PhpIcon,
+    category: "backend",
+    baseScore: 5,
+    tags: ["legacy", "wordpress", "cursed"],
+  },
+  {
+    id: "perl",
+    name: "Perl",
+    shortName: "Perl",
+    icon: PerlIcon,
+    category: "backend",
+    baseScore: 15,
+    tags: ["legacy", "regex", "unreadable"],
+  },
+  {
+    id: "matlab",
+    name: "MATLAB",
+    shortName: "MATLAB",
+    icon: MatlabIcon,
+    category: "backend",
+    baseScore: 15,
+    tags: ["proprietary", "academic", "expensive"],
+  },
+  {
+    id: "fortran",
+    name: "Fortran",
+    shortName: "Fortran",
+    icon: FortranIcon,
+    category: "backend",
+    baseScore: 10,
+    tags: ["ancient", "scientific", "legacy"],
+  },
+  {
+    id: "brainfuck",
+    name: "Brainfuck",
+    shortName: "BF",
+    icon: BrainfuckIcon,
+    category: "backend",
+    baseScore: 1,
+    tags: ["esoteric", "joke", "cursed"],
   },
 ];
 
