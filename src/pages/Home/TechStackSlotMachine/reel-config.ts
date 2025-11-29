@@ -51,12 +51,16 @@ const createScrewMaterial = (): THREE.MeshPhysicalMaterial =>
     clearcoatRoughness: 0.1,
   });
 
-/** Creates an invisible indicator material (indicators hidden) */
+/** Creates an emissive indicator material for the slot machine lights */
 const createIndicatorMaterial = (): THREE.MeshPhysicalMaterial =>
   new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color().setHSL(0.08, 1, 0.5), // Orange initial color
+    emissive: new THREE.Color().setHSL(0.08, 1, 0.5),
+    emissiveIntensity: 0.3,
+    metalness: 0.2,
+    roughness: 0.3,
     transparent: true,
-    opacity: 0,
-    visible: false,
+    opacity: 0.9,
   });
 
 /**
