@@ -1,4 +1,4 @@
-import { type FC, useRef, useCallback } from "react";
+import { type FC, useRef, useCallback, Suspense } from "react";
 import { type Group } from "three";
 import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
@@ -150,6 +150,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     }
 
     // Indicator animation
+    // Note: Keep emissiveIntensity above bloom threshold (0.3) to prevent flash
     const indicators = indicatorMaterialsRef.current;
     if (indicators.length > 0) {
       indicatorTimeRef.current += delta;
@@ -158,11 +159,11 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (isSpinningRef.current) {
         // Fast pulsing during spin - rainbow chase effect
         indicators.forEach((mat, i) => {
-          const phase = t * 8 + i * 0.5;
-          const intensity = 0.5 + Math.sin(phase) * 0.5;
-          mat.emissiveIntensity = intensity * 2;
+          const phase = t * 6 + i * 0.5;
+          const intensity = 0.6 + Math.sin(phase) * 0.2; // Range: 0.4-0.8
+          mat.emissiveIntensity = intensity;
           // Cycle through colors
-          const hue = (t * 0.5 + i * 0.25) % 1;
+          const hue = (t * 0.3 + i * 0.25) % 1;
           mat.emissive.setHSL(hue, 1, 0.5);
           mat.color.setHSL(hue, 1, 0.5);
         });
@@ -176,7 +177,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           hue = 0.12; // Orange
         }
         indicators.forEach((mat) => {
-          const pulse = 0.6 + Math.sin(t * 2) * 0.4;
+          const pulse = 0.5 + Math.sin(t * 1.2) * 0.15; // Range: 0.35-0.65
           mat.emissiveIntensity = pulse;
           mat.emissive.setHSL(hue, 1, 0.5);
           mat.color.setHSL(hue, 1, 0.6);
@@ -184,8 +185,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       } else {
         // Idle state - gentle orange pulse
         indicators.forEach((mat, i) => {
-          const phase = t * 1.5 + i * 0.3;
-          const intensity = 0.3 + Math.sin(phase) * 0.2;
+          const phase = t * 0.8 + i * 0.4;
+          const intensity = 0.5 + Math.sin(phase) * 0.1; // Range: 0.4-0.6
           mat.emissiveIntensity = intensity;
           mat.emissive.setHSL(0.08, 1, 0.5); // Orange
           mat.color.setHSL(0.08, 1, 0.5);
@@ -237,7 +238,10 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       {...props}
     >
       <SlotMachineModel />
-      <TechLabels />
+      {/* Suspense boundary prevents Text3D font loading from flashing the whole scene */}
+      <Suspense fallback={null}>
+        <TechLabels />
+      </Suspense>
     </group>
   );
 };

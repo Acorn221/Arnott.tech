@@ -1,15 +1,8 @@
-import { type FC, useRef, useEffect, Suspense } from "react";
-import { Text3D, Center, useFont } from "@react-three/drei";
+import { type FC, useRef, useEffect } from "react";
+import { Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type * as THREE from "three";
 import { useSlotMachine } from "./SlotMachineContext";
-
-// Using a CDN-hosted font for 3D text - droid sans has better character distinction
-const FONT_URL =
-  "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/droid/droid_sans_bold.typeface.json";
-
-// Preload the font to avoid flash on first render
-useFont.preload(FONT_URL);
 
 interface FloatingLabelProps {
   text: string;
@@ -46,7 +39,13 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
   }, [visible]);
 
   useFrame((_, delta) => {
-    if (!groupRef.current || !visible) return;
+    if (!groupRef.current) return;
+
+    // When not visible, keep scale at 0
+    if (!visible) {
+      groupRef.current.scale.setScalar(0);
+      return;
+    }
 
     timeRef.current += delta;
 
@@ -81,51 +80,33 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
     groupRef.current.rotation.y = rotationY + Math.sin(t * 0.8) * 0.05;
   });
 
-  if (!visible) return null;
-
+  // Keep mounted but scaled to 0 when not visible (avoids remount flash)
   return (
     <group ref={groupRef} position={position} scale={0}>
-      <Suspense fallback={null}>
-        {/* Main tech name - 3D extruded text */}
-        <Center position={[0, 0, 0]}>
-          <Text3D
-            font={FONT_URL}
-            size={0.004}
-            height={0.001}
-            letterSpacing={0.0005}
-            bevelEnabled
-            bevelSize={0.0003}
-            bevelThickness={0.0002}
-          >
-            {text}
-            <meshStandardMaterial
-              color={color}
-              metalness={0.3}
-              roughness={0.4}
-              emissive={color}
-              emissiveIntensity={0.2}
-            />
-          </Text3D>
-        </Center>
+      {/* Main tech name */}
+      <Text
+        position={[0, 0, 0]}
+        fontSize={0.004}
+        color={color}
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.0002}
+        outlineColor="#000000"
+      >
+        {text}
+        <meshBasicMaterial color={color} toneMapped={false} />
+      </Text>
 
-        {/* Category label below - flat text for readability */}
-        <Center position={[0, -0.006, 0]}>
-          <Text3D
-            font={FONT_URL}
-            size={0.002}
-            height={0.0003}
-            letterSpacing={0.0001}
-            bevelEnabled={false}
-          >
-            {subText}
-            <meshStandardMaterial
-              color="#888888"
-              metalness={0.1}
-              roughness={0.6}
-            />
-          </Text3D>
-        </Center>
-      </Suspense>
+      {/* Category label below */}
+      <Text
+        position={[0, -0.005, 0]}
+        fontSize={0.002}
+        color="#888888"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {subText}
+      </Text>
     </group>
   );
 };
