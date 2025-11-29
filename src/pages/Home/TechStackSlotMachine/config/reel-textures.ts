@@ -11,11 +11,16 @@ import {
 // Types
 // ============================================================================
 
-export interface ReelTextureManager {
+export interface FaceMaterial {
   material: THREE.MeshStandardMaterial;
   texture: THREE.CanvasTexture;
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
+  currentTech: Technology;
+}
+
+export interface ReelTextureManager {
+  faces: FaceMaterial[];
   currentTechs: Technology[];
   allTechs: Technology[];
   loadedImages: Map<string, HTMLImageElement>;
@@ -34,10 +39,8 @@ export interface ReelState {
 // Constants
 // ============================================================================
 
-const SEGMENT_SIZE = 1024;
+const TEXTURE_SIZE = 512;
 const FACES_PER_REEL = 8;
-const CANVAS_HEIGHT = SEGMENT_SIZE;
-const CANVAS_WIDTH = FACES_PER_REEL * SEGMENT_SIZE;
 
 // ============================================================================
 // Texture Creation
@@ -70,53 +73,78 @@ const preloadImages = async (
   return loadedImages;
 };
 
-/** Draw a single technology face on the canvas */
-const drawFace = (
+/** Draw a single technology on a face canvas */
+const drawFaceTexture = (
   ctx: CanvasRenderingContext2D,
-  faceIndex: number,
   tech: Technology,
   loadedImages: Map<string, HTMLImageElement>,
+  faceIndex: number,
 ) => {
-  const x = faceIndex * SEGMENT_SIZE;
-
   // Dark background (alternating slightly for visibility)
-  ctx.fillStyle = faceIndex % 2 === 0 ? "#0a0a0a" : "#111111";
-  ctx.fillRect(x, 0, SEGMENT_SIZE, CANVAS_HEIGHT);
+  ctx.fillStyle = faceIndex % 2 === 0 ? "#1a1a1a" : "#222222";
+  ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
 
-  // Subtle border
-  ctx.strokeStyle = "#222";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(x, 0);
-  ctx.lineTo(x, CANVAS_HEIGHT);
-  ctx.stroke();
-
-  // Icon - draw inverted to white for dark background
+  // Icon - draw with original colors
   const img = loadedImages.get(tech.id);
   if (img) {
-    const iconSize = SEGMENT_SIZE * 0.55;
-    const xOffset = (SEGMENT_SIZE - iconSize) / 2;
-    const yOffset = (CANVAS_HEIGHT - iconSize) / 2;
+    const iconSize = TEXTURE_SIZE * 0.6;
+    const offset = (TEXTURE_SIZE - iconSize) / 2;
 
     ctx.save();
-    ctx.translate(x + xOffset + iconSize / 2, yOffset + iconSize / 2);
-    ctx.rotate(-Math.PI / 2); // Rotate for cylinder orientation
-    // Invert colors to make icons white on dark background
-    ctx.filter = "invert(1) brightness(1.2)";
+    ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE / 2);
+    // Rotate 90 degrees for correct orientation on cylinder face
+    ctx.rotate(-Math.PI / 2);
     ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
     ctx.restore();
   }
 
   // Tech name at bottom - white text
   ctx.save();
-  ctx.translate(x + SEGMENT_SIZE / 2, CANVAS_HEIGHT - 80);
+  ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE - 40);
   ctx.rotate(-Math.PI / 2);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 48px Arial, sans-serif";
+  ctx.font = "bold 32px Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(tech.shortName, 0, 0);
   ctx.restore();
+};
+
+/** Create a single face material */
+const createFaceMaterial = (
+  tech: Technology,
+  loadedImages: Map<string, HTMLImageElement>,
+  faceIndex: number,
+): FaceMaterial => {
+  const canvas = document.createElement("canvas");
+  canvas.width = TEXTURE_SIZE;
+  canvas.height = TEXTURE_SIZE;
+  const context = canvas.getContext("2d")!;
+
+  // Draw the tech icon
+  drawFaceTexture(context, tech, loadedImages, faceIndex);
+
+  // Create texture
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 16;
+  texture.needsUpdate = true;
+
+  // Create material - fully matte for readability
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    metalness: 0,
+    roughness: 1,
+    color: 0xffffff,
+    envMapIntensity: 0,
+  });
+
+  return {
+    material,
+    texture,
+    canvas,
+    context,
+    currentTech: tech,
+  };
 };
 
 /** Create a reel texture manager for a category */
@@ -146,38 +174,13 @@ export const createReelTextureManager = async (
   // Preload images
   const loadedImages = await preloadImages(allTechs);
 
-  // Create canvas
-  const canvas = document.createElement("canvas");
-  canvas.width = CANVAS_WIDTH;
-  canvas.height = CANVAS_HEIGHT;
-  const context = canvas.getContext("2d")!;
-
-  // Create texture
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.anisotropy = 16;
-
-  // Draw initial faces
-  currentTechs.forEach((tech, i) => {
-    drawFace(context, i, tech, loadedImages);
-  });
-  texture.needsUpdate = true;
-
-  // Create material - fully matte for readability, no reflections
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    metalness: 0,
-    roughness: 1,
-    color: 0xffffff,
-    envMapIntensity: 0, // Disable environment reflections
-  });
+  // Create face materials
+  const faces = currentTechs.map((tech, i) =>
+    createFaceMaterial(tech, loadedImages, i),
+  );
 
   return {
-    material,
-    texture,
-    canvas,
-    context,
+    faces,
     currentTechs,
     allTechs,
     loadedImages,
@@ -190,9 +193,13 @@ export const updateReelFace = (
   faceIndex: number,
   tech: Technology,
 ) => {
-  drawFace(manager.context, faceIndex, tech, manager.loadedImages);
+  const face = manager.faces[faceIndex];
+  if (!face) return;
+
+  drawFaceTexture(face.context, tech, manager.loadedImages, faceIndex);
+  face.currentTech = tech;
+  face.texture.needsUpdate = true;
   manager.currentTechs[faceIndex] = tech;
-  manager.texture.needsUpdate = true;
 };
 
 /** Get a random tech that's not currently displayed */
@@ -218,11 +225,8 @@ export const shuffleReel = (manager: ReelTextureManager) => {
   const newTechs = shuffled.slice(0, FACES_PER_REEL);
 
   newTechs.forEach((tech, i) => {
-    drawFace(manager.context, i, tech, manager.loadedImages);
-    manager.currentTechs[i] = tech;
+    updateReelFace(manager, i, tech);
   });
-
-  manager.texture.needsUpdate = true;
 };
 
 /** Get the technology at a specific face index */
@@ -238,11 +242,9 @@ export const getFrontFaceIndex = (angle: number): number => {
   const normalizedAngle =
     ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
   // Calculate face index
-  // Note: spinner uses -angle rotation, so we need to invert
-  // Also add offset of 2 to account for cylinder geometry UV mapping
   const rawIndex = Math.round(normalizedAngle / radiansPerFace);
   const invertedIndex = (FACES_PER_REEL - rawIndex) % FACES_PER_REEL;
-  // Offset to align with actual visual front (adjust this if still misaligned)
+  // Offset to align with actual visual front (adjust if misaligned)
   const FACE_OFFSET = 2;
   return (invertedIndex + FACE_OFFSET) % FACES_PER_REEL;
 };
@@ -258,4 +260,12 @@ export const getHiddenFaces = (angle: number): number[] => {
   }
 
   return hidden;
+};
+
+/** Get face material by index */
+export const getFaceMaterial = (
+  manager: ReelTextureManager,
+  faceIndex: number,
+): THREE.MeshStandardMaterial | null => {
+  return manager.faces[faceIndex]?.material ?? null;
 };

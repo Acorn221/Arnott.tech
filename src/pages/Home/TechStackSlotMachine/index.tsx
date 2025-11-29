@@ -80,7 +80,7 @@ const SlotMachineScene: FC = () => (
 
     {/* Scene content */}
     <Suspense fallback={null}>
-      <InteractiveSlotMachine position={[0, 0, 0]} scale={30} />
+      <InteractiveSlotMachine position={[0, 0, 0]} scale={25} />
     </Suspense>
 
     {/* Bake shadows for performance */}
@@ -109,9 +109,9 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
     <div {...props}>
       <Canvas
         camera={{
-          position: [0, 0.15, 2.5],
-          fov: 40,
-          near: 1,
+          position: [0, 0.15, 1.8],
+          fov: 55,
+          near: 0.1,
           far: 100,
         }}
         shadows

@@ -47,12 +47,15 @@ const isStaticPartName = (
   overrides: StaticPartOverrideMap,
 ): name is StaticPartName => name in overrides;
 
-/** Spinner part names */
+/** Spinner part names (old style) */
 const SPINNER_PART_NAMES = [
   "slot-spinner-1",
   "slot-spinner-2",
   "slot-spinner-3",
 ];
+
+/** Regex to match individual face groups: reel-[1-3]-face-[1-8] (exact match, no occurrence_ prefix) */
+const REEL_FACE_REGEX = /^reel-(\d+)-face-(\d+)$/;
 
 const SlotMachineModel: FC = () => {
   const {
@@ -107,6 +110,19 @@ const SlotMachineModel: FC = () => {
         return;
       }
 
+      // Skip individual reel faces - they get dynamic textures
+      // Check if this mesh is inside a reel face group
+      let isReelFace = false;
+      let parent = object.parent;
+      while (parent) {
+        if (REEL_FACE_REGEX.test(parent.name)) {
+          isReelFace = true;
+          break;
+        }
+        parent = parent.parent;
+      }
+      if (isReelFace) return;
+
       // Apply static override or base material
       if (partName && isStaticPartName(partName, staticOverrides)) {
         object.material = staticOverrides[partName];
@@ -126,21 +142,35 @@ const SlotMachineModel: FC = () => {
     if (!isInitialized || !reelManagersRef.current) return;
 
     const managers = reelManagersRef.current;
+    let facesFound = 0;
 
+    // Find reel face GROUPS (not meshes) and apply materials to their child meshes
     scene.traverse((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
+      // Match group names like "reel-1-face-1"
+      const match = REEL_FACE_REGEX.exec(object.name);
+      if (!match) return;
 
-      const partName = getPartName(object);
+      const reelIndex = parseInt(match[1], 10) - 1; // 0-indexed
+      const faceIndex = parseInt(match[2], 10) - 1; // 0-indexed
+      const manager = managers[reelIndex];
 
-      // Apply dynamic textures to spinners
-      if (partName === "slot-spinner-1" && managers[0]) {
-        object.material = managers[0].material;
-      } else if (partName === "slot-spinner-2" && managers[1]) {
-        object.material = managers[1].material;
-      } else if (partName === "slot-spinner-3" && managers[2]) {
-        object.material = managers[2].material;
+      if (!manager || !manager.faces[faceIndex]) {
+        console.warn(`No material for reel ${reelIndex}, face ${faceIndex}`);
+        return;
       }
+
+      // Find child mesh(es) and apply material
+      object.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = manager.faces[faceIndex].material;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          facesFound++;
+        }
+      });
     });
+
+    console.log(`Applied materials to ${facesFound} reel faces`);
   }, [scene, isInitialized, reelManagersRef]);
 
   // Create handle pivot
