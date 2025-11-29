@@ -109,9 +109,9 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
     <div {...props}>
       <Canvas
         camera={{
-          position: [0, 1.0, 3.5],
-          fov: 35,
-          near: 0.1,
+          position: [0, 0.15, 2.5],
+          fov: 40,
+          near: 1,
           far: 100,
         }}
         shadows

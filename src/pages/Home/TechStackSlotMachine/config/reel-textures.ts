@@ -12,7 +12,7 @@ import {
 // ============================================================================
 
 export interface ReelTextureManager {
-  material: THREE.MeshPhysicalMaterial;
+  material: THREE.MeshStandardMaterial;
   texture: THREE.CanvasTexture;
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
@@ -79,19 +79,19 @@ const drawFace = (
 ) => {
   const x = faceIndex * SEGMENT_SIZE;
 
-  // Background (alternating for visibility)
-  ctx.fillStyle = faceIndex % 2 === 0 ? "#f8f9fa" : "#e9ecef";
+  // Dark background (alternating slightly for visibility)
+  ctx.fillStyle = faceIndex % 2 === 0 ? "#0a0a0a" : "#111111";
   ctx.fillRect(x, 0, SEGMENT_SIZE, CANVAS_HEIGHT);
 
-  // Border
-  ctx.strokeStyle = "#dee2e6";
+  // Subtle border
+  ctx.strokeStyle = "#222";
   ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(x, 0);
   ctx.lineTo(x, CANVAS_HEIGHT);
   ctx.stroke();
 
-  // Icon - draw with original colors
+  // Icon - draw inverted to white for dark background
   const img = loadedImages.get(tech.id);
   if (img) {
     const iconSize = SEGMENT_SIZE * 0.55;
@@ -101,15 +101,17 @@ const drawFace = (
     ctx.save();
     ctx.translate(x + xOffset + iconSize / 2, yOffset + iconSize / 2);
     ctx.rotate(-Math.PI / 2); // Rotate for cylinder orientation
+    // Invert colors to make icons white on dark background
+    ctx.filter = "invert(1) brightness(1.2)";
     ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
     ctx.restore();
   }
 
-  // Tech name at bottom
+  // Tech name at bottom - white text
   ctx.save();
   ctx.translate(x + SEGMENT_SIZE / 2, CANVAS_HEIGHT - 80);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillStyle = "#333";
+  ctx.fillStyle = "#ffffff";
   ctx.font = "bold 48px Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -162,12 +164,13 @@ export const createReelTextureManager = async (
   });
   texture.needsUpdate = true;
 
-  // Create material
-  const material = new THREE.MeshPhysicalMaterial({
+  // Create material - fully matte for readability, no reflections
+  const material = new THREE.MeshStandardMaterial({
     map: texture,
-    metalness: 0.1,
-    roughness: 0.4,
+    metalness: 0,
+    roughness: 1,
     color: 0xffffff,
+    envMapIntensity: 0, // Disable environment reflections
   });
 
   return {

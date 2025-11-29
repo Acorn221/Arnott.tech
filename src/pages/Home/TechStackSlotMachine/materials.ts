@@ -88,7 +88,7 @@ export const createMaterials = (): MaterialMap => ({
 /** Creates a textured material for spinner reels with icons */
 export const createReelTextureMaterial = (
   icons: string[],
-): THREE.MeshPhysicalMaterial => {
+): THREE.MeshStandardMaterial => {
   const segmentSize = 1024;
   const canvasWidth = icons.length * segmentSize;
   const canvasHeight = segmentSize;
@@ -147,10 +147,10 @@ export const createReelTextureMaterial = (
     });
   }
 
-  return new THREE.MeshPhysicalMaterial({
+  return new THREE.MeshStandardMaterial({
     map: texture,
-    metalness: 0.1,
-    roughness: 0.4,
+    metalness: 0,
+    roughness: 1,
     color: 0xffffff,
   });
 };

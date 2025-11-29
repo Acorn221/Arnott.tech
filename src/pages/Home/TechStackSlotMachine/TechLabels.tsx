@@ -140,11 +140,11 @@ const TechLabels: FC = () => {
 
   const { backend, frontend, database } = lastResult;
 
-  // Positions: left, center, right - above the slot machine (more spread out)
+  // Positions: left, center, right - above each reel
   const positions: [number, number, number][] = [
-    [-0.032, 0.026, 0.008], // Backend - top left
-    [0, 0.028, 0.008], // Frontend - top center (slightly higher)
-    [0.032, 0.026, 0.008], // Database - top right
+    [-0.035, 0.012, 0.008], // Backend - left
+    [0, 0.02, 0.008], // Frontend - center (slightly higher)
+    [0.035, 0.012, 0.008], // Database - right
   ];
 
   // Color based on individual tech scores

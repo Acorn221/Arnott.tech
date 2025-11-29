@@ -46,10 +46,10 @@ export const createSpinnerPivots = (
     pivot.position.copy(pivotParentPos);
     parent.add(pivot);
 
-    const offset = spinner.position.clone().sub(pivotParentPos);
+    const spinnerOffset = spinner.position.clone().sub(pivotParentPos);
     parent.remove(spinner);
     pivot.add(spinner);
-    spinner.position.copy(offset);
+    spinner.position.copy(spinnerOffset);
 
     newPivots[name] = pivot;
   });
