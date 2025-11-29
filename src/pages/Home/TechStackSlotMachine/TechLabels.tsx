@@ -1,7 +1,7 @@
-import { type FC, useRef, useEffect } from "react";
+import { type FC, useRef, useEffect, useMemo } from "react";
 import { Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import type * as THREE from "three";
+import * as THREE from "three";
 import { useSlotMachine } from "./SlotMachineContext";
 
 interface FloatingLabelProps {
@@ -111,63 +111,115 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
   );
 };
 
+/** Static button label */
+interface ButtonLabelProps {
+  text: string;
+  position: [number, number, number];
+  color: string;
+  activeColor?: string;
+  isActive?: boolean;
+}
+
+const ButtonLabel: FC<ButtonLabelProps> = ({
+  text,
+  position,
+  color,
+  activeColor,
+  isActive = false,
+}) => {
+  const textRef = useRef<THREE.Mesh>(null);
+  const currentColor = isActive && activeColor ? activeColor : color;
+
+  return (
+    <Text
+      ref={textRef}
+      position={position}
+      fontSize={0.0018}
+      color={currentColor}
+      anchorX="center"
+      anchorY="middle"
+      outlineWidth={0.00015}
+      outlineColor="#000000"
+      rotation={[Math.PI / 2, 0, 0]} // Rotate to face up (model is rotated -90° on X)
+    >
+      {text}
+      <meshBasicMaterial color={currentColor} toneMapped={false} />
+    </Text>
+  );
+};
+
 const TechLabels: FC = () => {
   const { lastResult, isSpinningRef } = useSlotMachine();
 
   // Don't render if no result or still spinning
   const showLabels = lastResult && !isSpinningRef.current;
 
-  if (!lastResult) {
-    return null;
-  }
-
-  const { backend, frontend, database } = lastResult;
-
-  // Positions: left, center, right - above each reel
-  const positions: [number, number, number][] = [
-    [-0.035, 0.012, 0.008], // Backend - left
-    [0, 0.02, 0.008], // Frontend - center (slightly higher)
-    [0.035, 0.012, 0.008], // Database - right
-  ];
-
-  // Color based on individual tech scores
-  const getColor = (techScore: number) => {
-    if (techScore >= 80) return "#4ADE80"; // Green
-    if (techScore >= 60) return "#FBBF24"; // Yellow
-    if (techScore >= 40) return "#F97316"; // Orange
-    return "#EF4444"; // Red
-  };
+  // Button label positions (in model space, before rotation)
+  // These are approximate - adjust based on actual button positions
+  const buttonPositions = useMemo(() => ({
+    spin: [-0.022, -0.024, 0.003] as [number, number, number],    // button-1 (left)
+    share: [0.022, -0.024, 0.003] as [number, number, number],   // button-2 (right)
+  }), []);
 
   return (
     <group>
-      <FloatingLabel
-        text={backend.shortName}
-        subText="Backend"
-        position={positions[0]}
-        color={getColor(backend.baseScore)}
-        delay={0}
-        visible={!!showLabels}
-        rotationY={0.3} // Rotate right to face camera
+      {/* Button labels - always visible */}
+      <ButtonLabel
+        text="SPIN"
+        position={buttonPositions.spin}
+        color="#AAAAAA"
+        activeColor="#4ADE80"
+        isActive={true}
       />
-      <FloatingLabel
-        text={frontend.shortName}
-        subText="Frontend"
-        position={positions[1]}
-        color={getColor(frontend.baseScore)}
-        delay={0.15}
-        visible={!!showLabels}
+      <ButtonLabel
+        text="SHARE"
+        position={buttonPositions.share}
+        color="#555555"
+        activeColor="#00AAFF"
+        isActive={!!lastResult}
       />
-      <FloatingLabel
-        text={database.shortName}
-        subText="Database"
-        position={positions[2]}
-        color={getColor(database.baseScore)}
-        delay={0.3}
-        visible={!!showLabels}
-        rotationY={-0.3} // Rotate left to face camera
-      />
+
+      {/* Tech result labels - only after spin */}
+      {lastResult && (
+        <>
+          <FloatingLabel
+            text={lastResult.backend.shortName}
+            subText="Backend"
+            position={[-0.035, 0.012, 0.008]}
+            color={getColorForScore(lastResult.backend.baseScore)}
+            delay={0}
+            visible={!!showLabels}
+            rotationY={0.3}
+          />
+          <FloatingLabel
+            text={lastResult.frontend.shortName}
+            subText="Frontend"
+            position={[0, 0.02, 0.008]}
+            color={getColorForScore(lastResult.frontend.baseScore)}
+            delay={0.15}
+            visible={!!showLabels}
+          />
+          <FloatingLabel
+            text={lastResult.database.shortName}
+            subText="Database"
+            position={[0.035, 0.012, 0.008]}
+            color={getColorForScore(lastResult.database.baseScore)}
+            delay={0.3}
+            visible={!!showLabels}
+            rotationY={-0.3}
+          />
+        </>
+      )}
     </group>
   );
+};
+
+// Color based on individual tech scores
+const getColorForScore = (techScore: number) => {
+  if (techScore >= 80) return "#4ADE80"; // Green
+  if (techScore >= 60) return "#FBBF24"; // Yellow
+  if (techScore >= 40) return "#F97316"; // Orange
+  return "#EF4444"; // Red
 };
 
 export default TechLabels;

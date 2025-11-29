@@ -7,6 +7,7 @@ import {
   createAnimatedGlowBorder,
   type AnimatedGlowBorderMaterial,
 } from "./display-border-material";
+import { type ShareButtonMaterial } from "./SlotMachineContext";
 
 // ============================================================================
 // Types
@@ -26,7 +27,8 @@ export type StaticPartName =
   | "slot-indicator-1"
   | "slot-indicator-2"
   | "slot-indicator-3"
-  | "slot-indicator-4";
+  | "slot-indicator-4"
+  | "button-2-body";
 
 export type StaticPartOverrideMap = Record<StaticPartName, THREE.Material>;
 
@@ -35,6 +37,7 @@ export interface StaticPartOverridesResult {
   knobMaterial: AnimatedGlowBorderMaterial;
   displayPlate: DynamicDisplayPlate;
   indicatorMaterials: THREE.MeshPhysicalMaterial[];
+  shareButtonMaterial: ShareButtonMaterial;
 }
 
 // ============================================================================
@@ -60,6 +63,31 @@ const createIndicatorMaterial = (): THREE.MeshPhysicalMaterial =>
     metalness: 0.2,
     roughness: 0.3,
   });
+
+/** Creates a share button material that glows when active */
+const createShareButtonMaterial = (): ShareButtonMaterial => {
+  const material = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#1a1a1a"), // Dark when inactive
+    emissive: new THREE.Color("#00AAFF"), // Blue glow
+    emissiveIntensity: 0, // Start with no glow
+    metalness: 0.3,
+    roughness: 0.4,
+    clearcoat: 0.5,
+  });
+
+  return {
+    material,
+    setActive: (active: boolean) => {
+      if (active) {
+        material.emissiveIntensity = 1.5;
+        material.color.set("#00AAFF");
+      } else {
+        material.emissiveIntensity = 0;
+        material.color.set("#1a1a1a");
+      }
+    },
+  };
+};
 
 /**
  * Creates materials for all static parts (everything except spinners).
@@ -98,6 +126,9 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     createIndicatorMaterial(),
   ];
 
+  // Create share button material
+  const shareButtonMaterial = createShareButtonMaterial();
+
   const overrides: StaticPartOverrideMap = {
     "display-plate": displayPlate.material,
     "display-border": displayBorderMaterial.material,
@@ -121,7 +152,8 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     "slot-indicator-2": indicatorMaterials[1],
     "slot-indicator-3": indicatorMaterials[2],
     "slot-indicator-4": indicatorMaterials[3],
+    "button-2-body": shareButtonMaterial.material,
   };
 
-  return { overrides, knobMaterial, displayPlate, indicatorMaterials };
+  return { overrides, knobMaterial, displayPlate, indicatorMaterials, shareButtonMaterial };
 };

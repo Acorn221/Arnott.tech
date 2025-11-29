@@ -1,4 +1,5 @@
-import { type FC, useRef, useCallback, Suspense } from "react";
+import { type FC, useRef, useCallback, Suspense, useEffect } from "react";
+import * as THREE from "three";
 import { type Group } from "three";
 import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
@@ -24,6 +25,10 @@ const MIN_VELOCITY = 0.5;
 const SWAP_INTERVAL = 0.3;
 // Offset to center faces (360/8/2 = 22.5 degrees = π/8 radians)
 const FACE_ALIGNMENT_OFFSET = Math.PI / 8;
+
+// Share button animation
+const SHARE_BUTTON_PRESS_DEPTH = 0.0002;
+const SHARE_BUTTON_PRESS_DURATION = 0.1;
 
 const SPINNER_NAMES = [
   "slot-spinner-1",
@@ -53,6 +58,9 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     calculateFinalResult,
     setIsSpinning,
     lastResult,
+    shareButtonRef,
+    shareButtonMaterialRef,
+    shareResult,
   } = useSlotMachine();
   const { gl } = useThree();
 
@@ -63,6 +71,12 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
   // Indicator animation state
   const indicatorTimeRef = useRef(0);
+
+  // Share button state
+  const shareButtonBaseZ = useRef<number | null>(null);
+  const shareButtonPressProgress = useRef(0);
+  const isShareButtonPressed = useRef(false);
+  const shareButtonGlowTime = useRef(0);
 
   const triggerRumble = useCallback(() => {
     isRumblingRef.current = true;
@@ -77,6 +91,76 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
   const { handlePointerDown, handlePointerOver, handlePointerOut } =
     useSlotMachineHandle({ onTrigger: handleTrigger });
+
+  // Activate/deactivate share button glow based on result availability
+  useEffect(() => {
+    const material = shareButtonMaterialRef.current;
+    if (material) {
+      material.setActive(lastResult !== null);
+    }
+  }, [lastResult, shareButtonMaterialRef]);
+
+  // Check if an object is the share button or its child
+  const isShareButton = useCallback((object: THREE.Object3D | null): boolean => {
+    let current = object;
+    while (current) {
+      if (current.name === "button-2-body") {
+        return true;
+      }
+      current = current.parent;
+    }
+    return false;
+  }, []);
+
+  // Share button click handler
+  const handleShareButtonClick = useCallback(() => {
+    if (!lastResult) return;
+    
+    // Trigger button press animation
+    isShareButtonPressed.current = true;
+    shareButtonPressProgress.current = 0;
+    
+    // Execute share after a small delay for visual feedback
+    setTimeout(() => {
+      shareResult();
+    }, 100);
+  }, [lastResult, shareResult]);
+
+  // Combined pointer down handler - handle + share button
+  const combinedPointerDown = useCallback(
+    (event: { object: THREE.Object3D; stopPropagation: () => void }) => {
+      // Check for share button first
+      if (isShareButton(event.object)) {
+        if (lastResult) {
+          handleShareButtonClick();
+          event.stopPropagation();
+        }
+        return;
+      }
+      // Otherwise delegate to handle
+      handlePointerDown(event);
+    },
+    [isShareButton, lastResult, handleShareButtonClick, handlePointerDown],
+  );
+
+  // Combined pointer over handler
+  const combinedPointerOver = useCallback(
+    (event: { object: THREE.Object3D }) => {
+      if (isShareButton(event.object)) {
+        if (lastResult) {
+          gl.domElement.style.cursor = "pointer";
+        }
+        return;
+      }
+      handlePointerOver(event);
+    },
+    [isShareButton, lastResult, gl, handlePointerOver],
+  );
+
+  // Combined pointer out handler
+  const combinedPointerOut = useCallback(() => {
+    handlePointerOut();
+  }, [handlePointerOut]);
 
   // Main animation loop - handles reels, rumble, and cursor
   useFrame((_, delta) => {
@@ -194,6 +278,51 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       }
     }
 
+    // Share button animation
+    const shareButton = shareButtonRef.current;
+    const shareButtonMaterial = shareButtonMaterialRef.current;
+    if (shareButton && shareButtonMaterial) {
+      // Store base Z position (model is rotated -90° on X, so Z is the "forward" axis)
+      if (shareButtonBaseZ.current === null) {
+        shareButtonBaseZ.current = shareButton.position.z;
+      }
+
+      // Glow pulsing when active (has result)
+      if (lastResult) {
+        shareButtonGlowTime.current += delta;
+        const pulse = 1.0 + Math.sin(shareButtonGlowTime.current * 3) * 0.5;
+        shareButtonMaterial.material.emissiveIntensity = pulse;
+      }
+
+      // Button press animation (move on Z axis - into the machine)
+      if (isShareButtonPressed.current) {
+        shareButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
+        
+        if (shareButtonPressProgress.current >= 2) {
+          // Animation complete (press down + release)
+          isShareButtonPressed.current = false;
+          shareButtonPressProgress.current = 0;
+          shareButton.position.z = shareButtonBaseZ.current;
+        } else if (shareButtonPressProgress.current >= 1) {
+          // Release phase - move back out, brighten
+          const releaseProgress = shareButtonPressProgress.current - 1;
+          const eased = 1 - Math.pow(1 - releaseProgress, 2);
+          shareButton.position.z = shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * (1 - eased);
+          // Brighten back up
+          const darkenAmount = 0.4 * (1 - eased);
+          shareButtonMaterial.material.color.setRGB(0, 0.67 * (1 - darkenAmount), 1 * (1 - darkenAmount));
+        } else {
+          // Press phase - move in, darken
+          const pressProgress = shareButtonPressProgress.current;
+          const eased = 1 - Math.pow(1 - pressProgress, 2);
+          shareButton.position.z = shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * eased;
+          // Darken the color
+          const darkenAmount = 0.4 * eased;
+          shareButtonMaterial.material.color.setRGB(0, 0.67 * (1 - darkenAmount), 1 * (1 - darkenAmount));
+        }
+      }
+    }
+
     // Rumble animation
     if (!groupRef.current || !isRumblingRef.current) return;
 
@@ -232,9 +361,9 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       ref={groupRef}
       scale={scale}
       position={position}
-      onPointerDown={handlePointerDown}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
+      onPointerDown={combinedPointerDown}
+      onPointerOver={combinedPointerOver}
+      onPointerOut={combinedPointerOut}
       {...props}
     >
       <SlotMachineModel />

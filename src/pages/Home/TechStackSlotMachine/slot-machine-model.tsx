@@ -65,6 +65,8 @@ const SlotMachineModel: FC = () => {
     setDisplayPlate,
     setIndicatorMaterials,
     setReelFaceObjects,
+    setShareButton,
+    setShareButtonMaterial,
     reelManagersRef,
     isInitialized,
   } = useSlotMachine();
@@ -91,6 +93,7 @@ const SlotMachineModel: FC = () => {
       setKnobMaterial(staticOverridesRef.current.knobMaterial);
       setDisplayPlate(staticOverridesRef.current.displayPlate);
       setIndicatorMaterials(staticOverridesRef.current.indicatorMaterials);
+      setShareButtonMaterial(staticOverridesRef.current.shareButtonMaterial);
     }
 
     const materials = materialsRef.current;
@@ -136,7 +139,7 @@ const SlotMachineModel: FC = () => {
     });
 
     hasInitializedMaterials.current = true;
-  }, [scene, setKnobMaterial, setDisplayPlate, setIndicatorMaterials]);
+  }, [scene, setKnobMaterial, setDisplayPlate, setIndicatorMaterials, setShareButtonMaterial]);
 
   // Apply dynamic reel textures when initialized
   useEffect(() => {
@@ -207,6 +210,19 @@ const SlotMachineModel: FC = () => {
       setHandlePivot(pivot);
     }
   }, [scene, setHandlePivot]);
+
+  // Find share button (button-2-body)
+  useEffect(() => {
+    let shareButton: THREE.Object3D | null = null;
+    scene.traverse((obj) => {
+      if (obj.name === "button-2-body") {
+        shareButton = obj;
+      }
+    });
+    if (shareButton) {
+      setShareButton(shareButton);
+    }
+  }, [scene, setShareButton]);
 
   // Create spinner pivots
   useEffect(() => {

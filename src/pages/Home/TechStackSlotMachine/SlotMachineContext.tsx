@@ -25,6 +25,12 @@ import {
   getScoreMessage,
 } from "./config/scoring";
 
+// Share button material type
+export interface ShareButtonMaterial {
+  material: THREE.MeshPhysicalMaterial;
+  setActive: (active: boolean) => void;
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -56,6 +62,10 @@ export interface SlotMachineContextValue {
   /** Face objects for each reel: reelIndex -> (faceIndex -> Object3D) */
   reelFaceObjectsRef: React.MutableRefObject<Map<number, Map<number, THREE.Object3D>>>;
 
+  // Share button
+  shareButtonRef: React.MutableRefObject<THREE.Object3D | null>;
+  shareButtonMaterialRef: React.MutableRefObject<ShareButtonMaterial | null>;
+
   // Reel state
   reelManagersRef: React.MutableRefObject<ReelTextureManager[] | null>;
   reelStatesRef: React.MutableRefObject<ReelState[]>;
@@ -74,9 +84,12 @@ export interface SlotMachineContextValue {
   setDisplayPlate: (plate: DynamicDisplayPlate) => void;
   setIndicatorMaterials: (materials: THREE.MeshPhysicalMaterial[]) => void;
   setReelFaceObjects: (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => void;
+  setShareButton: (button: THREE.Object3D | null) => void;
+  setShareButtonMaterial: (material: ShareButtonMaterial) => void;
   initializeReels: () => Promise<void>;
   calculateFinalResult: () => void;
   setIsSpinning: (spinning: boolean) => void;
+  shareResult: () => void;
 }
 
 // ============================================================================
@@ -112,10 +125,12 @@ export const useSlotMachine = (): SlotMachineContextValue => {
 
 interface SlotMachineProviderProps {
   children: ReactNode;
+  onShareDialog?: (result: SpinResult) => void;
 }
 
 export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   children,
+  onShareDialog,
 }) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -125,6 +140,10 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   const indicatorMaterialsRef = useRef<THREE.MeshPhysicalMaterial[]>([]);
   const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
   const reelFaceObjectsRef = useRef<Map<number, Map<number, THREE.Object3D>>>(new Map());
+
+  // Share button refs
+  const shareButtonRef = useRef<THREE.Object3D | null>(null);
+  const shareButtonMaterialRef = useRef<ShareButtonMaterial | null>(null);
 
   // Reel state refs
   const reelStatesRef = useRef<ReelState[]>([
@@ -191,6 +210,14 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     [],
   );
 
+  const setShareButton = useCallback((button: THREE.Object3D | null) => {
+    shareButtonRef.current = button;
+  }, []);
+
+  const setShareButtonMaterial = useCallback((material: ShareButtonMaterial) => {
+    shareButtonMaterialRef.current = material;
+  }, []);
+
   const setIsSpinning = useCallback((spinning: boolean) => {
     isSpinningRef.current = spinning;
     if (!spinning) {
@@ -249,6 +276,37 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     );
   }, []);
 
+  // Share the result
+  const shareResult = useCallback(() => {
+    if (!lastResult) return;
+
+    const { backend, frontend, database, score, message } = lastResult;
+    const text = `🎰 Tech Stack Slot Machine Result!\n\n` +
+      `Backend: ${backend.name}\n` +
+      `Frontend: ${frontend.name}\n` +
+      `Database: ${database.name}\n\n` +
+      `${score.emoji} Score: ${score.score}/100 - ${score.label}\n` +
+      `${message}\n\n` +
+      `Try your luck at: ${window.location.href}`;
+
+    // Only use navigator.share on mobile devices
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share) {
+      void navigator.share({
+        title: "Tech Stack Slot Machine",
+        text,
+        url: window.location.href,
+      });
+    } else if (onShareDialog) {
+      // Desktop - open share dialog with screenshot
+      onShareDialog(lastResult);
+    } else {
+      // Fallback - log to console
+      console.log(text);
+    }
+  }, [lastResult, onShareDialog]);
+
   // Start the game
   const startGame = useCallback(() => {
     const anyReelActive = reelStatesRef.current.some(
@@ -303,6 +361,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       displayPlateRef,
       indicatorMaterialsRef,
       reelFaceObjectsRef,
+      shareButtonRef,
+      shareButtonMaterialRef,
       reelManagersRef,
       reelStatesRef,
       swapTimersRef,
@@ -316,9 +376,12 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setDisplayPlate,
       setIndicatorMaterials,
       setReelFaceObjects,
+      setShareButton,
+      setShareButtonMaterial,
       initializeReels,
       calculateFinalResult,
       setIsSpinning,
+      shareResult,
     }),
     [
       isInitialized,
@@ -330,9 +393,12 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setDisplayPlate,
       setIndicatorMaterials,
       setReelFaceObjects,
+      setShareButton,
+      setShareButtonMaterial,
       initializeReels,
       calculateFinalResult,
       setIsSpinning,
+      shareResult,
     ],
   );
 
