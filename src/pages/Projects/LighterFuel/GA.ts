@@ -1,5 +1,4 @@
  
-/* eslint-disable import/prefer-default-export */
 if (!import.meta.env.VITE_PUBLIC_GTAG_ID) {
   throw new Error('VITE_PUBLIC_GTAG_ID environment variable not set.');
 }
@@ -15,7 +14,7 @@ const secretApiKey = import.meta.env.VITE_PUBLIC_SECRET_API_KEY;
 // https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events
 type CollectEventPayload = {
 	name: string,
-	params?: any,
+	params?: Record<string, unknown>,
 };
 
 /**

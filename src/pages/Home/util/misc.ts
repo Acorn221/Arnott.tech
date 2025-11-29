@@ -16,5 +16,4 @@ const getEmail = () => String.fromCharCode(...email.split('').map((char) => {
   return charCode;
 }));
 
-// eslint-disable-next-line import/prefer-default-export
 export { getEmail };

@@ -1,11 +1,10 @@
-/* eslint-disable import/prefer-default-export */
 import { useEffect } from 'react';
 import { AnalyticsEvent } from './GA';
 import LighterFuelLogo from '@/pages/Home/Projects/assets/LighterFuel512.png';
 
 export const LighterfuelUninstall = () => {
   useEffect(() => {
-    AnalyticsEvent([{
+    void AnalyticsEvent([{
       name: 'uninstall',
     }]);
   });
