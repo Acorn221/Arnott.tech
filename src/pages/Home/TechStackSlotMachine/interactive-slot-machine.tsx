@@ -22,6 +22,8 @@ const GEOMETRY_FACES = 8;
 const FRICTION = 0.92;
 const MIN_VELOCITY = 0.5;
 const SWAP_INTERVAL = 0.3;
+// Offset to center faces (360/8/2 = 22.5 degrees = π/8 radians)
+const FACE_ALIGNMENT_OFFSET = Math.PI / 8;
 
 const SPINNER_NAMES = [
   "slot-spinner-1",
@@ -135,7 +137,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         }
       }
 
-      spinner.rotation.x = -state.angle;
+      spinner.rotation.x = -state.angle + FACE_ALIGNMENT_OFFSET;
     });
 
     // Check if all reels stopped
