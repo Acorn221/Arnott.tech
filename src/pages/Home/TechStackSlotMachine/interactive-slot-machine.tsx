@@ -4,10 +4,11 @@ import {
   useCallback,
 } from 'react';
 import { Group } from 'three';
-import { useFrame, ThreeElements } from '@react-three/fiber';
+import { useFrame, ThreeElements, useThree } from '@react-three/fiber';
 import SlotMachineModel from './slot-machine-model';
 import { useSlotMachineHandle } from './useSlotMachineHandle';
 import { useSlotMachineGame } from './useSlotMachineGame';
+import { getHandleKnobAnimatedMaterial } from './reel-config';
 
 // Rumble configuration
 const RUMBLE_DURATION = 0.5; // Duration in seconds
@@ -25,7 +26,9 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   ...props
 }) => {
   const groupRef = useRef<Group>(null);
-  const { startGame, onSpinnersRef } = useSlotMachineGame();
+  const { startGame, onSpinnersRef, isSpinningRef } = useSlotMachineGame();
+  const { gl } = useThree();
+  const prevSpinningState = useRef(false);
 
   // Rumble state
   const rumbleTimeRef = useRef(0);
@@ -45,10 +48,43 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
   const { onHandleRef, handlePointerDown } = useSlotMachineHandle({
     onTrigger: handleTrigger,
+    isDisabledRef: isSpinningRef,
   });
 
-  // Rumble animation
+  // Handle pointer over for cursor
+  const handlePointerOver = useCallback((event: { object: { name: string; parent: { name: string; parent: unknown } | null } }) => {
+    if (isSpinningRef.current) return;
+
+    let current: { name: string; parent: unknown } | null = event.object;
+
+    while (current) {
+      if (current.name === 'handle-knob' || current.name === 'handle-body') {
+        gl.domElement.style.cursor = 'grab';
+        return;
+      }
+      current = current.parent as { name: string; parent: unknown } | null;
+    }
+  }, [gl, isSpinningRef]);
+
+  const handlePointerOut = useCallback(() => {
+    gl.domElement.style.cursor = 'auto';
+  }, [gl]);
+
+  // Rumble animation and knob glow control
   useFrame((_, delta) => {
+    // Control knob glow based on spinning state changes
+    const knobMaterial = getHandleKnobAnimatedMaterial();
+    if (knobMaterial && prevSpinningState.current !== isSpinningRef.current) {
+      knobMaterial.setPaused(isSpinningRef.current);
+      prevSpinningState.current = isSpinningRef.current;
+    }
+
+    // Reset cursor to auto if spinning and cursor is grab
+    if (isSpinningRef.current && gl.domElement.style.cursor === 'grab') {
+      gl.domElement.style.cursor = 'auto';
+    }
+
+    // Rumble animation
     if (!groupRef.current || !isRumblingRef.current) return;
 
     rumbleTimeRef.current += delta;
@@ -92,9 +128,14 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       scale={scale}
       position={position}
       onPointerDown={handlePointerDown}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
       {...props}
     >
-      <SlotMachineModel onHandleRef={onHandleRef} onSpinnersRef={onSpinnersRef} />
+      <SlotMachineModel
+        onHandleRef={onHandleRef}
+        onSpinnersRef={onSpinnersRef}
+      />
     </group>
   );
 };

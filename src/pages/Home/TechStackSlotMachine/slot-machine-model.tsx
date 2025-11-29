@@ -2,17 +2,17 @@
 import { FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { GroupProps } from '@react-three/fiber';
+import { ThreeElements } from '@react-three/fiber';
 
 import { createMaterials } from './materials';
 import { createPartOverrides } from './reel-config';
 import { createHandlePivot } from './utils/create-handle-pivot';
 import { createSpinnerPivots } from './utils/create-spinner-pivots';
 
-interface SlotMachineModelProps extends GroupProps {
+type SlotMachineModelProps = ThreeElements['group'] & {
   onHandleRef?: (pivot: THREE.Object3D | null) => void;
   onSpinnersRef?: (spinners: Record<string, THREE.Object3D>) => void;
-}
+};
 
 const getPartName = (object: THREE.Object3D): string | null => {
   let current: THREE.Object3D | null = object;

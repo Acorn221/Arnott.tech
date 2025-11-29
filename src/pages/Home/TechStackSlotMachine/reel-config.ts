@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createTextureMaterial } from './materials';
 import { createAnimatedDisplayPlate } from './display-plate';
-import { createAnimatedGlowBorder } from './display-border-material';
+import { createAnimatedGlowBorder, AnimatedGlowBorderMaterial } from './display-border-material';
 
 import amplifyIcon from '../Carousel/Slides/util/Icons/assets/ampliify.svg';
 import discordIcon from '../Carousel/Slides/util/Icons/assets/discord.svg';
@@ -26,7 +26,23 @@ const screwMetalMaterial = () => new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.1,
 });
 
-export const createPartOverrides = () => ({
+// Store handle knob animated material for external control
+let handleKnobAnimatedMaterial: AnimatedGlowBorderMaterial | null = null;
+
+export const getHandleKnobAnimatedMaterial = () => handleKnobAnimatedMaterial;
+
+export const createPartOverrides = () => {
+  // Create handle knob material and store reference
+  handleKnobAnimatedMaterial = createAnimatedGlowBorder({
+    color: '#FF3333',
+    pulseSpeed: 1.2,
+    minIntensity: 1.0,
+    maxIntensity: 5.0,
+    minOpacity: 0.4,
+    maxOpacity: 0.7,
+  });
+
+  return {
   // Display plate for text - very dark background
   'display-plate': createAnimatedDisplayPlate({
     text: 'SPIN TO WIN!',
@@ -56,14 +72,7 @@ export const createPartOverrides = () => ({
     clearcoat: 0.6,
   }),
   // Red glowing handle knob - pulses to attract attention!
-  'handle-knob': createAnimatedGlowBorder({
-    color: '#FF3333',
-    pulseSpeed: 1.2, // Slower pulse
-    minIntensity: 1.0,
-    maxIntensity: 5.0, // Strong glow for bloom pickup
-    minOpacity: 0.4,
-    maxOpacity: 0.7, // Keeps it translucent
-  }).material,
+  'handle-knob': handleKnobAnimatedMaterial!.material,
   'slot-spinner-1': createTextureMaterial(reel1Icons),
   'slot-spinner-2': createTextureMaterial(reel2Icons),
   'slot-spinner-3': createTextureMaterial(reel3Icons),
@@ -73,4 +82,5 @@ export const createPartOverrides = () => ({
   'screw-2': screwMetalMaterial(),
   'screw-3': screwMetalMaterial(),
   'screw-4': screwMetalMaterial(),
-});
+};
+};

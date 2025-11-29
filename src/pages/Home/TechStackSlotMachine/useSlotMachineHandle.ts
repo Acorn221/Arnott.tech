@@ -1,4 +1,4 @@
-import {
+import React, {
   useCallback,
   useEffect,
   useRef,
@@ -18,9 +18,10 @@ const easeInOutCubic = (t: number): number => (t < 0.5
 
 interface UseSlotMachineHandleProps {
   onTrigger?: () => void;
+  isDisabledRef?: React.MutableRefObject<boolean>;
 }
 
-export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleProps = {}) => {
+export const useSlotMachineHandle = ({ onTrigger, isDisabledRef }: UseSlotMachineHandleProps = {}) => {
   const handleRef = useRef<THREE.Object3D | null>(null);
   const handleRotation = useRef(0); // Current rotation
   const targetRotation = useRef(0); // Target rotation (0 when released)
@@ -42,6 +43,9 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleProps = 
 
   // Pointer down - start dragging if we hit the handle
   const handlePointerDown = useCallback((event: THREE.Event) => {
+    // Check disabled ref at event time, not render time
+    if (isDisabledRef?.current) return;
+
     const e = event as unknown as { object: THREE.Object3D; clientY?: number; point?: THREE.Vector3 };
     let current: THREE.Object3D | null = e.object;
 
@@ -59,7 +63,7 @@ export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleProps = 
       }
       current = current.parent;
     }
-  }, [gl]);
+  }, [gl, isDisabledRef]);
 
   // Pointer move - update rotation while dragging
   useEffect(() => {

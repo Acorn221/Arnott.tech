@@ -23,6 +23,7 @@ export class AnimatedGlowBorderMaterial {
   private config: Required<GlowBorderConfig>;
   private animationId: number | null = null;
   private startTime: number = 0;
+  private isPaused: boolean = false;
 
   constructor(config: Partial<GlowBorderConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
@@ -50,19 +51,30 @@ export class AnimatedGlowBorderMaterial {
     this.material.emissive = new THREE.Color(color);
   }
 
+  setPaused(paused: boolean): void {
+    this.isPaused = paused;
+    if (paused) {
+      // Fade to zero glow when paused
+      this.material.emissiveIntensity = 0;
+      this.material.opacity = this.config.minOpacity;
+    }
+  }
+
   private animate = (): void => {
-    const elapsed = performance.now() / 1000 - this.startTime;
-    const {
-      pulseSpeed, minIntensity, maxIntensity, minOpacity, maxOpacity,
-    } = this.config;
+    if (!this.isPaused) {
+      const elapsed = performance.now() / 1000 - this.startTime;
+      const {
+        pulseSpeed, minIntensity, maxIntensity, minOpacity, maxOpacity,
+      } = this.config;
 
-    // Smooth sine wave pulse
-    const pulse = (Math.sin(elapsed * pulseSpeed * Math.PI) + 1) / 2;
-    const intensity = minIntensity + pulse * (maxIntensity - minIntensity);
-    const opacity = minOpacity + pulse * (maxOpacity - minOpacity);
+      // Smooth sine wave pulse
+      const pulse = (Math.sin(elapsed * pulseSpeed * Math.PI) + 1) / 2;
+      const intensity = minIntensity + pulse * (maxIntensity - minIntensity);
+      const opacity = minOpacity + pulse * (maxOpacity - minOpacity);
 
-    this.material.emissiveIntensity = intensity;
-    this.material.opacity = opacity;
+      this.material.emissiveIntensity = intensity;
+      this.material.opacity = opacity;
+    }
 
     this.animationId = requestAnimationFrame(this.animate);
   };

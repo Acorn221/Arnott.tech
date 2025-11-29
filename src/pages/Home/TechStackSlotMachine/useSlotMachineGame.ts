@@ -34,6 +34,7 @@ const SPINNER_NAMES = ['slot-spinner-1', 'slot-spinner-2', 'slot-spinner-3'] as 
 export const useSlotMachineGame = () => {
   const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
   const stopTimers = useRef<NodeJS.Timeout[]>([]);
+  const isSpinningRef = useRef(false);
 
   const reelStates = useRef<ReelState[]>([
     { angle: 0, velocity: 0, phase: 'stopped' },
@@ -62,6 +63,9 @@ export const useSlotMachineGame = () => {
     // Clear any existing timers
     stopTimers.current.forEach(clearTimeout);
     stopTimers.current = [];
+
+    // Mark as spinning
+    isSpinningRef.current = true;
 
     // Start all reels with slight velocity variation
     reelStates.current.forEach((state) => {
@@ -118,10 +122,19 @@ export const useSlotMachineGame = () => {
       // Apply rotation (negative for correct spin direction)
       spinner.rotation.x = -state.angle;
     });
+
+    // Check if all reels have stopped
+    if (isSpinningRef.current) {
+      const allStopped = reelStates.current.every((state) => state.phase === 'stopped');
+      if (allStopped) {
+        isSpinningRef.current = false;
+      }
+    }
   });
 
   return {
     startGame,
     onSpinnersRef,
+    isSpinningRef,
   };
 };
