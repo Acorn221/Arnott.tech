@@ -7,13 +7,17 @@ import {
   type Dispatch,
 } from "react";
 import * as THREE from "three";
-import { type GroupProps, type ThreeEvent, useFrame } from "@react-three/fiber";
+import {
+  type ThreeElements,
+  type ThreeEvent,
+  useFrame,
+} from "@react-three/fiber";
 import SpinnerModel from "./spinner-model";
 
-interface InteractiveSpinnerProps extends GroupProps {
+type InteractiveSpinnerProps = ThreeElements["group"] & {
   setSpinCount: Dispatch<SetStateAction<number>>;
   onLoad?: () => void;
-}
+};
 
 const FULL_ROTATION = Math.PI * 2;
 const MAX_ANGULAR_VELOCITY = 100;
