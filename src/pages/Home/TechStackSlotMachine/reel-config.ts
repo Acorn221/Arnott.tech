@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { createTextureMaterial } from './materials';
+import { createReelTextureMaterial } from './materials';
 import { createAnimatedDisplayPlate } from './display-plate';
 import { createAnimatedGlowBorder, AnimatedGlowBorderMaterial } from './display-border-material';
 
+// Icon imports
 import amplifyIcon from '../Carousel/Slides/util/Icons/assets/ampliify.svg';
 import discordIcon from '../Carousel/Slides/util/Icons/assets/discord.svg';
 import dynamoIcon from '../Carousel/Slides/util/Icons/assets/dynamoDB.svg';
@@ -12,13 +13,30 @@ import lambdaIcon from '../Carousel/Slides/util/Icons/assets/lambda.svg';
 import postmanIcon from '../Carousel/Slides/util/Icons/assets/postman.svg';
 import viteIcon from '../Carousel/Slides/util/Icons/assets/vite.svg';
 
-// Must have exactly 8 icons per reel to match 8-face cylinder geometry
-const reel1Icons = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon];
-const reel2Icons = [amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon, amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon];
-const reel3Icons = [dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon];
+// Part names in the GLTF model that get custom materials
+export type PartName =
+  | 'display-plate'
+  | 'display-border'
+  | 'faceplate'
+  | 'spinner-housing'
+  | 'handle-knob'
+  | 'slot-spinner-1'
+  | 'slot-spinner-2'
+  | 'slot-spinner-3'
+  | 'screw-1'
+  | 'screw-2'
+  | 'screw-3'
+  | 'screw-4';
 
-// Shared metallic material for screw parts
-const screwMetalMaterial = () => new THREE.MeshPhysicalMaterial({
+export type PartOverrideMap = Record<PartName, THREE.Material>;
+
+// Reel icon configurations (8 icons per reel for octagonal geometry)
+const REEL_1_ICONS = [viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon, viteIcon, eslintIcon];
+const REEL_2_ICONS = [amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon, amplifyIcon, lambdaIcon, postmanIcon, gitkrakenIcon];
+const REEL_3_ICONS = [dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon, dynamoIcon, discordIcon];
+
+/** Creates a shiny metallic material for screws */
+const createScrewMaterial = (): THREE.MeshPhysicalMaterial => new THREE.MeshPhysicalMaterial({
   color: new THREE.Color('#C0C0C0'),
   metalness: 1.0,
   roughness: 0.15,
@@ -26,14 +44,16 @@ const screwMetalMaterial = () => new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.1,
 });
 
-// Store handle knob animated material for external control
-let handleKnobAnimatedMaterial: AnimatedGlowBorderMaterial | null = null;
+/** Result of creating part overrides, includes both materials map and animated material refs */
+export interface PartOverridesResult {
+  materials: PartOverrideMap;
+  knobMaterial: AnimatedGlowBorderMaterial;
+}
 
-export const getHandleKnobAnimatedMaterial = () => handleKnobAnimatedMaterial;
-
-export const createPartOverrides = () => {
-  // Create handle knob material and store reference
-  handleKnobAnimatedMaterial = createAnimatedGlowBorder({
+/** Creates all custom materials for slot machine parts */
+export const createPartOverrides = (): PartOverridesResult => {
+  // Animated materials (keep references for external control)
+  const knobMaterial = createAnimatedGlowBorder({
     color: '#FF3333',
     pulseSpeed: 1.2,
     minIntensity: 1.0,
@@ -42,45 +62,43 @@ export const createPartOverrides = () => {
     maxOpacity: 0.7,
   });
 
-  return {
-  // Display plate for text - very dark background
-  'display-plate': createAnimatedDisplayPlate({
-    text: 'SPIN TO WIN!',
-    textColor: '#FFFFFF',
-    backgroundColor: '#020202', // Much darker
-    fontSize: 42,
-  }).material,
-
-  // Animated glowing border - dark base with strong emissive glow
-  'display-border': createAnimatedGlowBorder({
+  const displayBorderMaterial = createAnimatedGlowBorder({
     color: '#00FF88',
     pulseSpeed: 1,
     minIntensity: 0.5,
-    maxIntensity: 1.0, // Stronger glow
-  }).material,
+    maxIntensity: 1.0,
+  });
 
-  // Faceplate - dark matte surface
-  faceplate: new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#0a0a0a'),
-    metalness: 0.1,
-    roughness: 0.8,
-  }),
-  'spinner-housing': new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#1a1a1a'),
-    metalness: 0.8,
-    roughness: 0.2,
-    clearcoat: 0.6,
-  }),
-  // Red glowing handle knob - pulses to attract attention!
-  'handle-knob': handleKnobAnimatedMaterial!.material,
-  'slot-spinner-1': createTextureMaterial(reel1Icons),
-  'slot-spinner-2': createTextureMaterial(reel2Icons),
-  'slot-spinner-3': createTextureMaterial(reel3Icons),
+  const displayPlateMaterial = createAnimatedDisplayPlate({
+    text: 'SPIN TO WIN!',
+    textColor: '#FFFFFF',
+    backgroundColor: '#020202',
+    fontSize: 42,
+  });
 
-  // Screw parts - shiny metallic finish
-  'screw-1': screwMetalMaterial(),
-  'screw-2': screwMetalMaterial(),
-  'screw-3': screwMetalMaterial(),
-  'screw-4': screwMetalMaterial(),
-};
+  const materials: PartOverrideMap = {
+    'display-plate': displayPlateMaterial.material,
+    'display-border': displayBorderMaterial.material,
+    faceplate: new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#0a0a0a'),
+      metalness: 0.1,
+      roughness: 0.8,
+    }),
+    'spinner-housing': new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#1a1a1a'),
+      metalness: 0.8,
+      roughness: 0.2,
+      clearcoat: 0.6,
+    }),
+    'handle-knob': knobMaterial.material,
+    'slot-spinner-1': createReelTextureMaterial(REEL_1_ICONS),
+    'slot-spinner-2': createReelTextureMaterial(REEL_2_ICONS),
+    'slot-spinner-3': createReelTextureMaterial(REEL_3_ICONS),
+    'screw-1': createScrewMaterial(),
+    'screw-2': createScrewMaterial(),
+    'screw-3': createScrewMaterial(),
+    'screw-4': createScrewMaterial(),
+  };
+
+  return { materials, knobMaterial };
 };

@@ -1,19 +1,14 @@
-/* eslint-disable no-param-reassign */
 import { FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { ThreeElements } from '@react-three/fiber';
 
-import { createMaterials } from './materials';
-import { createPartOverrides } from './reel-config';
+import { useSlotMachine } from './SlotMachineContext';
+import { createMaterials, MaterialMap, GltfMaterialKey } from './materials';
+import { createPartOverrides, PartOverrideMap, PartName, PartOverridesResult } from './reel-config';
 import { createHandlePivot } from './utils/create-handle-pivot';
 import { createSpinnerPivots } from './utils/create-spinner-pivots';
 
-type SlotMachineModelProps = ThreeElements['group'] & {
-  onHandleRef?: (pivot: THREE.Object3D | null) => void;
-  onSpinnersRef?: (spinners: Record<string, THREE.Object3D>) => void;
-};
-
+/** Walks up the scene graph to find the named part this mesh belongs to */
 const getPartName = (object: THREE.Object3D): string | null => {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -30,79 +25,125 @@ const getPartName = (object: THREE.Object3D): string | null => {
   return null;
 };
 
-const SlotMachineModel: FC<SlotMachineModelProps> = ({ onHandleRef, onSpinnersRef, ...props }) => {
-  const materials = useRef(createMaterials());
-  const partOverrides = useRef(createPartOverrides());
+/** Checks if a string is a valid GLTF material key */
+const isGltfMaterialKey = (key: string, materials: MaterialMap): key is GltfMaterialKey => key in materials;
+
+/** Checks if a string is a valid part name */
+const isPartName = (name: string, overrides: PartOverrideMap): name is PartName => name in overrides;
+
+const SlotMachineModel: FC = () => {
+  const { setHandlePivot, setSpinners, setKnobMaterial } = useSlotMachine();
+
+  const materialsRef = useRef<MaterialMap | null>(null);
+  const overridesRef = useRef<PartOverridesResult | null>(null);
   const groupRef = useRef<THREE.Group>(null);
   const handlePivotRef = useRef<THREE.Group | null>(null);
-  const spinnerPivotsRef = useRef<Record<string, THREE.Object3D>>({});
+  const spinnerPivotsRef = useRef<Record<string, THREE.Object3D> | null>(null);
+  const hasInitializedMaterials = useRef(false);
+
   const { scene } = useGLTF('/tech-stack-slot-machine.gltf');
 
+  // Initialize materials and apply to meshes (runs once)
   useEffect(() => {
-    const customMaterials = materials.current;
-    const overrides = partOverrides.current;
+    if (hasInitializedMaterials.current) return;
 
-    // Debug: Log all part names to help identify display plate
-    const partNames = new Set<string>();
+    // Create materials once
+    if (!materialsRef.current) {
+      materialsRef.current = createMaterials();
+    }
+    if (!overridesRef.current) {
+      overridesRef.current = createPartOverrides();
+      setKnobMaterial(overridesRef.current.knobMaterial);
+    }
+
+    const materials = materialsRef.current;
+    const { materials: partOverrides } = overridesRef.current;
+
+    // Apply materials to meshes
     scene.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        const name = getPartName(object);
-        if (name) partNames.add(name);
+      if (!(object instanceof THREE.Mesh)) return;
+
+      const materialKey = object.material.name;
+      const partName = getPartName(object);
+
+      object.userData.materialKey = materialKey;
+      object.userData.partName = partName;
+
+      if (partName && isPartName(partName, partOverrides)) {
+        object.material = partOverrides[partName];
+      } else if (isGltfMaterialKey(materialKey, materials)) {
+        object.material = materials[materialKey];
       }
+
+      object.castShadow = true;
+      object.receiveShadow = true;
     });
-    console.log('Slot Machine Parts:', Array.from(partNames));
 
-    scene.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        const materialKey = object.material.name;
-        const partName = getPartName(object);
+    hasInitializedMaterials.current = true;
+  }, [scene, setKnobMaterial]);
 
-        object.userData.materialKey = materialKey;
-        object.userData.partName = partName;
-
-        // @ts-ignore
-        if (partName && overrides[partName]) {
-          // @ts-ignore
-          object.material = overrides[partName];
-        // @ts-ignore
-        } else if (customMaterials[materialKey]) {
-          // @ts-ignore
-          object.material = customMaterials[materialKey];
-        }
-
-        object.castShadow = true;
-        object.receiveShadow = true;
-      }
-    });
-  }, [scene]);
-
+  // Create handle pivot (runs once, with guard)
   useEffect(() => {
+    // Skip if already created
     if (handlePivotRef.current) {
-      if (onHandleRef) onHandleRef(handlePivotRef.current);
+      setHandlePivot(handlePivotRef.current);
       return;
     }
 
+    // Check if pivot already exists in scene (from previous render)
+    let existingPivot: THREE.Object3D | null = null;
+    scene.traverse((obj) => {
+      if (obj.name === 'handle-pivot') {
+        existingPivot = obj;
+      }
+    });
+
+    if (existingPivot) {
+      handlePivotRef.current = existingPivot as THREE.Group;
+      setHandlePivot(existingPivot);
+      return;
+    }
+
+    // Create new pivot
     const pivot = createHandlePivot(scene);
     if (pivot) {
       handlePivotRef.current = pivot;
-      if (onHandleRef) onHandleRef(pivot);
+      setHandlePivot(pivot);
     }
-  }, [scene, onHandleRef]);
+  }, [scene, setHandlePivot]);
 
+  // Create spinner pivots (runs once, with guard)
   useEffect(() => {
-    if (Object.keys(spinnerPivotsRef.current).length > 0) {
-      if (onSpinnersRef) onSpinnersRef(spinnerPivotsRef.current);
+    // Skip if already created
+    if (spinnerPivotsRef.current) {
+      setSpinners(spinnerPivotsRef.current);
       return;
     }
 
+    // Check if pivots already exist
+    const existingPivots: Record<string, THREE.Object3D> = {};
+    scene.traverse((obj) => {
+      if (obj.name.match(/^slot-spinner-\d+-pivot$/)) {
+        const spinnerName = obj.name.replace('-pivot', '');
+        existingPivots[spinnerName] = obj;
+      }
+    });
+
+    if (Object.keys(existingPivots).length > 0) {
+      spinnerPivotsRef.current = existingPivots;
+      setSpinners(existingPivots);
+      return;
+    }
+
+    // Create new pivots
     const pivots = createSpinnerPivots(scene);
     spinnerPivotsRef.current = pivots;
-    if (onSpinnersRef) onSpinnersRef(pivots);
-  }, [scene, onSpinnersRef]);
+    setSpinners(pivots);
+  }, [scene, setSpinners]);
 
   return (
     <group ref={groupRef} rotation={[-Math.PI / 2, 0, 0]}>
-      <primitive object={scene} {...props} />
+      <primitive object={scene} />
     </group>
   );
 };

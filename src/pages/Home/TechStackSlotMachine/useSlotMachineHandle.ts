@@ -1,30 +1,28 @@
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
+import { useSlotMachine } from './SlotMachineContext';
 
 // Handle rotation constants
 const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
-const SPRING_BACK_DURATION = 0.5; // Duration in seconds for spring back
-const TRIGGER_THRESHOLD = 0.8; // 80% of max rotation triggers the game
+const SPRING_BACK_DURATION = 0.5;
+const TRIGGER_THRESHOLD = 0.8; // 80% of max rotation triggers
 
-// Ease-in-out cubic for smooth slow → fast → slow curve
-const easeInOutCubic = (t: number): number => (t < 0.5
-  ? 4 * t * t * t
-  : 1 - (-2 * t + 2) ** 3 / 2);
+// Ease-in-out cubic
+const easeInOutCubic = (t: number): number => (
+  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+);
 
-interface UseSlotMachineHandleProps {
+interface UseSlotMachineHandleOptions {
   onTrigger?: () => void;
-  isDisabledRef?: React.MutableRefObject<boolean>;
 }
 
-export const useSlotMachineHandle = ({ onTrigger, isDisabledRef }: UseSlotMachineHandleProps = {}) => {
-  const handleRef = useRef<THREE.Object3D | null>(null);
-  const handleRotation = useRef(0); // Current rotation
-  const targetRotation = useRef(0); // Target rotation (0 when released)
+export const useSlotMachineHandle = ({ onTrigger }: UseSlotMachineHandleOptions = {}) => {
+  const { handlePivotRef, isSpinningRef } = useSlotMachine();
+  const { gl } = useThree();
+
+  // Handle state
+  const handleRotation = useRef(0);
   const isDragging = useRef(false);
   const dragStartY = useRef(0);
   const dragStartRotation = useRef(0);
@@ -34,68 +32,62 @@ export const useSlotMachineHandle = ({ onTrigger, isDisabledRef }: UseSlotMachin
   const springBackProgress = useRef(0);
   const isSpringBackActive = useRef(false);
 
-  const { gl } = useThree();
+  // Pointer down handler
+  const handlePointerDown = useCallback((event: { object: THREE.Object3D; stopPropagation: () => void }) => {
+    if (isSpinningRef.current) return;
 
-  // Callback to receive handle ref from model
-  const onHandleRef = useCallback((handle: THREE.Object3D | null) => {
-    handleRef.current = handle;
-  }, []);
-
-  // Pointer down - start dragging if we hit the handle
-  const handlePointerDown = useCallback((event: THREE.Event) => {
-    // Check disabled ref at event time, not render time
-    if (isDisabledRef?.current) return;
-
-    const e = event as unknown as { object: THREE.Object3D; clientY?: number; point?: THREE.Vector3 };
-    let current: THREE.Object3D | null = e.object;
-
-    // Check if we clicked on handle-knob or handle-body
+    let current: THREE.Object3D | null = event.object;
     while (current) {
       if (current.name === 'handle-knob' || current.name === 'handle-body') {
         isDragging.current = true;
-        // Get the Y position from the event
-        const clientY = e.clientY ?? (e.point?.y ?? 0) * 100;
-        dragStartY.current = clientY;
+        dragStartY.current = 0; // Will be set on first move
         dragStartRotation.current = handleRotation.current;
         gl.domElement.style.cursor = 'grabbing';
-        event.stopPropagation(); // Prevent lower elements from catching it
+        event.stopPropagation();
         return;
       }
       current = current.parent;
     }
-  }, [gl, isDisabledRef]);
+  }, [gl, isSpinningRef]);
 
-  // Pointer move - update rotation while dragging
+  // Global pointer events
   useEffect(() => {
+    let lastY = 0;
+    let hasFirstMove = false;
+
     const onPointerMove = (event: PointerEvent) => {
       if (!isDragging.current) return;
 
-      const deltaY = event.clientY - dragStartY.current;
-      // Pulling down (positive deltaY) = positive rotation
-      const newRotation = dragStartRotation.current + deltaY * 0.005;
-      // Clamp between 0 and max
-      targetRotation.current = Math.max(0, Math.min(MAX_HANDLE_ROTATION, newRotation));
-      handleRotation.current = targetRotation.current;
+      if (!hasFirstMove) {
+        lastY = event.clientY;
+        hasFirstMove = true;
+        return;
+      }
+
+      const deltaY = event.clientY - lastY;
+      lastY = event.clientY;
+
+      const newRotation = handleRotation.current + deltaY * 0.008;
+      handleRotation.current = Math.max(0, Math.min(MAX_HANDLE_ROTATION, newRotation));
     };
 
     const onPointerUp = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        
-        // Check trigger condition
-        if (onTrigger && handleRotation.current > MAX_HANDLE_ROTATION * TRIGGER_THRESHOLD) {
-          onTrigger();
-        }
+      if (!isDragging.current) return;
 
-        targetRotation.current = 0; // Spring back to 0
-        gl.domElement.style.cursor = 'auto';
+      isDragging.current = false;
+      hasFirstMove = false;
+      gl.domElement.style.cursor = 'auto';
 
-        // Start spring-back animation
-        if (handleRotation.current > 0) {
-          springBackStartRotation.current = handleRotation.current;
-          springBackProgress.current = 0;
-          isSpringBackActive.current = true;
-        }
+      // Check trigger
+      if (onTrigger && handleRotation.current > MAX_HANDLE_ROTATION * TRIGGER_THRESHOLD) {
+        onTrigger();
+      }
+
+      // Start spring-back
+      if (handleRotation.current > 0) {
+        springBackStartRotation.current = handleRotation.current;
+        springBackProgress.current = 0;
+        isSpringBackActive.current = true;
       }
     };
 
@@ -108,34 +100,51 @@ export const useSlotMachineHandle = ({ onTrigger, isDisabledRef }: UseSlotMachin
     };
   }, [gl, onTrigger]);
 
-  // Animation frame - apply rotation and spring back
+  // Animation frame
   useFrame((_, delta) => {
-    if (!handleRef.current) return;
+    const pivot = handlePivotRef.current;
+    if (!pivot) return;
 
-    // Spring back with ease-in-out curve when not dragging
+    // Spring back animation
     if (isSpringBackActive.current && !isDragging.current) {
       springBackProgress.current += delta / SPRING_BACK_DURATION;
 
       if (springBackProgress.current >= 1) {
-        // Animation complete
         springBackProgress.current = 1;
         isSpringBackActive.current = false;
         handleRotation.current = 0;
       } else {
-        // Apply eased interpolation: start → 0
-        const easedProgress = easeInOutCubic(springBackProgress.current);
-        handleRotation.current = springBackStartRotation.current * (1 - easedProgress);
+        const eased = easeInOutCubic(springBackProgress.current);
+        handleRotation.current = springBackStartRotation.current * (1 - eased);
       }
     }
 
-    // Apply rotation around the pivot point (X axis in local space)
-    // The handle rotates around its attachment point
-    handleRef.current.rotation.x = handleRotation.current;
+    pivot.rotation.x = handleRotation.current;
   });
 
+  // Pointer over/out for cursor
+  const handlePointerOver = useCallback((event: { object: THREE.Object3D }) => {
+    if (isSpinningRef.current) return;
+
+    let current: THREE.Object3D | null = event.object;
+    while (current) {
+      if (current.name === 'handle-knob' || current.name === 'handle-body') {
+        gl.domElement.style.cursor = 'grab';
+        return;
+      }
+      current = current.parent;
+    }
+  }, [gl, isSpinningRef]);
+
+  const handlePointerOut = useCallback(() => {
+    if (!isDragging.current) {
+      gl.domElement.style.cursor = 'auto';
+    }
+  }, [gl]);
+
   return {
-    onHandleRef,
     handlePointerDown,
-    isDragging: isDragging.current,
+    handlePointerOver,
+    handlePointerOut,
   };
 };

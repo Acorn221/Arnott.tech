@@ -1,12 +1,28 @@
 import * as THREE from 'three';
 
-export const createMaterials = () => ({
+// Material keys from the GLTF model (based on vertex colors)
+export type GltfMaterialKey =
+  | '0.980392_0.713725_0.003922_0.000000_0.000000'  // Gold/brass
+  | '0.917647_0.917647_0.917647_0.000000_0.000000'  // Off-white
+  | '0.498039_0.498039_0.498039_0.000000_0.000000'  // Silver
+  | '0.615686_0.811765_0.929412_0.000000_0.000000'  // Glass/transparent
+  | '0.231373_0.380392_0.705882_0.000000_0.000000'  // Dark blue
+  | '0.768627_0.886275_0.952941_0.000000_0.000000'  // Light gray
+  | '0.647059_0.647059_0.647059_0.000000_0.000000'  // Dark gray
+  | '0.972549_0.529412_0.003922_0.000000_0.000000'; // Brown/wood
+
+export type MaterialMap = Record<GltfMaterialKey, THREE.Material>;
+
+/** Creates materials mapped to GLTF vertex color keys */
+export const createMaterials = (): MaterialMap => ({
+  // Gold/brass accent
   '0.980392_0.713725_0.003922_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#B8860B'),
     metalness: 1.0,
     roughness: 0.2,
     clearcoat: 0.3,
   }),
+  // Off-white/cream
   '0.917647_0.917647_0.917647_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#F5F5DC'),
     metalness: 0.0,
@@ -14,12 +30,14 @@ export const createMaterials = () => ({
     clearcoat: 0.6,
     clearcoatRoughness: 0.3,
   }),
+  // Silver metal
   '0.498039_0.498039_0.498039_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#C0C0C0'),
     metalness: 1.0,
     roughness: 0.15,
     clearcoat: 0.5,
   }),
+  // Glass/transparent
   '0.615686_0.811765_0.929412_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#E8F4F8'),
     metalness: 0.0,
@@ -29,23 +47,27 @@ export const createMaterials = () => ({
     transparent: true,
     opacity: 0.4,
   }),
+  // Dark blue
   '0.231373_0.380392_0.705882_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#1a365d'),
     metalness: 0.1,
     roughness: 0.2,
     clearcoat: 0.8,
   }),
+  // Light gray metal
   '0.768627_0.886275_0.952941_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#D4D4D4'),
     metalness: 0.9,
     roughness: 0.3,
   }),
+  // Dark gray/charcoal
   '0.647059_0.647059_0.647059_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#1a1a1a'),
     metalness: 0.9,
     roughness: 0.3,
     clearcoat: 0.4,
   }),
+  // Brown/wood
   '0.972549_0.529412_0.003922_0.000000_0.000000': new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#8B4513'),
     metalness: 0.0,
@@ -55,40 +77,42 @@ export const createMaterials = () => ({
   }),
 });
 
-export const createTextureMaterial = (icons: string[]) => {
-  const numSegments = icons.length;
+/** Creates a textured material for spinner reels with icons */
+export const createReelTextureMaterial = (icons: string[]): THREE.MeshPhysicalMaterial => {
   const segmentSize = 1024;
-  const canvasWidth = numSegments * segmentSize;
+  const canvasWidth = icons.length * segmentSize;
   const canvasHeight = segmentSize;
 
   const canvas = document.createElement('canvas');
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
-  const context = canvas.getContext('2d');
-  const texture = new THREE.CanvasTexture(canvas);
+  const ctx = canvas.getContext('2d');
 
+  const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.anisotropy = 16;
 
-  if (context) {
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, canvasWidth, canvasHeight);
+  if (ctx) {
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    let imagesLoaded = 0;
-
+    // Draw segments
     icons.forEach((_, i) => {
       const x = i * segmentSize;
-      context.fillStyle = i % 2 === 0 ? '#f8f9fa' : '#e9ecef';
-      context.fillRect(x, 0, segmentSize, canvasHeight);
-      context.strokeStyle = '#dee2e6';
-      context.lineWidth = 4;
-      context.beginPath();
-      context.moveTo(x, 0);
-      context.lineTo(x, canvasHeight);
-      context.stroke();
+      ctx.fillStyle = i % 2 === 0 ? '#f8f9fa' : '#e9ecef';
+      ctx.fillRect(x, 0, segmentSize, canvasHeight);
+      ctx.strokeStyle = '#dee2e6';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvasHeight);
+      ctx.stroke();
     });
 
+    // Load and draw icons
+    let imagesLoaded = 0;
     icons.forEach((iconUrl, i) => {
       const img = new Image();
       img.src = iconUrl;
@@ -98,14 +122,14 @@ export const createTextureMaterial = (icons: string[]) => {
         const xOffset = (segmentSize - iconSize) / 2;
         const yOffset = (canvasHeight - iconSize) / 2;
 
-        context.save();
-        context.translate(x + xOffset + iconSize / 2, yOffset + iconSize / 2);
-        context.rotate(-Math.PI / 2);
-        context.filter = 'grayscale(100%) brightness(0)';
-        context.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
-        context.restore();
+        ctx.save();
+        ctx.translate(x + xOffset + iconSize / 2, yOffset + iconSize / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.filter = 'grayscale(100%) brightness(0)';
+        ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+        ctx.restore();
 
-        imagesLoaded++;
+        imagesLoaded += 1;
         if (imagesLoaded === icons.length) {
           texture.needsUpdate = true;
         }
