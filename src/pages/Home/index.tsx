@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { XyzTransition } from '@animxyz/react';
 import { AiFillLinkedin } from 'react-icons/ai';
 import { MdEmail } from 'react-icons/md';
@@ -54,7 +55,7 @@ const Home = () => {
       title: document.title,
     });
     window.open(getGmailLink());
-  }, [email]);
+  }, [email, getGmailLink]);
 
   const handleLinkedInLinkClick = useCallback(() => {
     ReactGA.send({
