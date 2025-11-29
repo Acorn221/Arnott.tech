@@ -51,9 +51,9 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
       if (object instanceof THREE.Mesh) {
         object.userData.materialKey = object.material.name;
         const materialKey = object.material.name;
-        // @ts-ignore - materialKey is fine
+        // @ts-expect-error - materialKey is fine
         if (customMaterials[materialKey]) {
-          // @ts-ignore - materialKey is fine
+          // @ts-expect-error - materialKey is fine
           object.material = customMaterials[materialKey];
           object.castShadow = true;
           object.receiveShadow = true;
@@ -75,7 +75,7 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
           });
         } else {
           const { materialKey } = object.userData;
-          // @ts-ignore - materialKey is fine
+          // @ts-expect-error - materialKey is fine
           const originalMaterial = materials.current[materialKey];
           if (originalMaterial) {
             object.material = originalMaterial;

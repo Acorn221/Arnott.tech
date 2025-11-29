@@ -131,7 +131,7 @@ export const createReelTextureManager = async (
       allTechs = [...DATABASE_TECHNOLOGIES];
       break;
     default:
-      throw new Error(`Unknown category: ${category}`);
+      throw new Error(`Unknown category: ${category as string}`);
   }
 
   // Shuffle and pick initial 8

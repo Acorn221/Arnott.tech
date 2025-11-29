@@ -1,6 +1,6 @@
 const Arrow = (props: {
   left?: boolean
-  onClick: (e: any) => void
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void | Promise<void>
 }) => {
   const { left, onClick } = props;
 

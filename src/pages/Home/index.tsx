@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { XyzTransition } from '@animxyz/react';
 import { AiFillLinkedin } from 'react-icons/ai';
 import { MdEmail } from 'react-icons/md';

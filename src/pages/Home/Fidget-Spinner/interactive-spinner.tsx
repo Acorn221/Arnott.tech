@@ -14,7 +14,7 @@ const FULL_ROTATION = Math.PI * 2;
 const MAX_ANGULAR_VELOCITY = 100;
 const FRICTION_BASE = 0.999;
 
-const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad, ...props }) => {
+const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({ setSpinCount, onLoad: _onLoad, ...props }) => {
   const groupRef = useRef<THREE.Group>(null);
   const isDragging = useRef(false);
   const hasInitializedDrag = useRef(false);

@@ -6,7 +6,6 @@ import {
   ContactShadows,
   BakeShadows,
 } from '@react-three/drei';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   EffectComposer,
   Bloom,

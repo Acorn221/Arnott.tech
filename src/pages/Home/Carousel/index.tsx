@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 import React, { useEffect, useState, createContext } from 'react';
 import { useKeenSlider } from 'keen-slider/react';
 import './carousel.css';
@@ -62,10 +61,16 @@ const Carousel = ({ children, className, slideContainerClass }: CarouselProps) =
           <>
             <Arrow
               left
-              onClick={(e: any) => e.stopPropagation() || instanceRef.current?.prev()}
+              onClick={(e) => {
+                e.stopPropagation();
+                instanceRef.current?.prev();
+              }}
             />
             <Arrow
-              onClick={(e: any) => e.stopPropagation() || instanceRef.current?.next()}
+              onClick={(e) => {
+                e.stopPropagation();
+                instanceRef.current?.next();
+              }}
             />
           </>
         )}
@@ -75,7 +80,6 @@ const Carousel = ({ children, className, slideContainerClass }: CarouselProps) =
           {[
             ...Array(instanceRef.current.track.details.slides.length).keys(),
           ].map((idx) => (
-          // eslint-disable-next-line jsx-a11y/control-has-associated-label
             <button
               key={idx}
               onClick={() => {

@@ -1,4 +1,4 @@
-import { Technology, getTechnologyById } from './technologies';
+import { getTechnologyById } from './technologies';
 
 // ============================================================================
 // Types

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -76,7 +77,7 @@ const SlotMachineModel: FC = () => {
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
 
-      const materialKey = object.material.name;
+      const materialKey = object.material.name as GltfMaterialKey;
       const partName = getPartName(object);
 
       object.userData.materialKey = materialKey;

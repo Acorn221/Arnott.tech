@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import ReactGA from 'react-ga4';
 import Home from '@/pages/Home';
 import NotFound from '@/pages/NotFound';
 import StandardLayout from '@/layout/StandardLayout';

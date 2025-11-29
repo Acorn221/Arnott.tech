@@ -253,7 +253,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({ children }) 
 
   // Initialize on mount
   useEffect(() => {
-    initializeReels();
+    void initializeReels();
   }, [initializeReels]);
 
   const value = useMemo<SlotMachineContextValue>(() => ({
