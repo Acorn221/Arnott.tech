@@ -1,6 +1,5 @@
 // Technology icons from devicon - using original/plain filled versions for visibility
 // Backend - Good languages
-import TypeScriptIcon from "devicon/icons/typescript/typescript-original.svg";
 import GoIcon from "devicon/icons/go/go-original.svg";
 import RustIcon from "devicon/icons/rust/rust-original.svg";
 import PythonIcon from "devicon/icons/python/python-original.svg";
@@ -10,6 +9,11 @@ import ElixirIcon from "devicon/icons/elixir/elixir-original.svg";
 import CppIcon from "devicon/icons/cplusplus/cplusplus-original.svg";
 import CIcon from "devicon/icons/c/c-original.svg";
 import SwiftIcon from "devicon/icons/swift/swift-original.svg";
+
+// Backend - Runtimes
+import NodeJsIcon from "devicon/icons/nodejs/nodejs-original.svg";
+import BunIcon from "devicon/icons/bun/bun-original.svg";
+import DenoIcon from "devicon/icons/denojs/denojs-original.svg";
 
 // Backend - Bad/Legacy languages
 import JavaIcon from "devicon/icons/java/java-original.svg";
@@ -75,16 +79,36 @@ export interface Technology {
 // ============================================================================
 
 export const BACKEND_TECHNOLOGIES: Technology[] = [
-  // === GOOD LANGUAGES ===
+  // === RUNTIMES ===
   {
-    id: "typescript",
-    name: "TypeScript",
-    shortName: "TS",
-    icon: TypeScriptIcon,
+    id: "bun",
+    name: "Bun",
+    shortName: "Bun",
+    icon: BunIcon,
     category: "backend",
-    baseScore: 92,
-    tags: ["typed", "modern", "node"],
+    baseScore: 95,
+    tags: ["runtime", "fast", "modern"],
   },
+  {
+    id: "nodejs",
+    name: "Node.js",
+    shortName: "Node",
+    icon: NodeJsIcon,
+    category: "backend",
+    baseScore: 75,
+    tags: ["runtime", "javascript", "npm"],
+  },
+  {
+    id: "deno",
+    name: "Deno",
+    shortName: "Deno",
+    icon: DenoIcon,
+    category: "backend",
+    baseScore: 60,
+    tags: ["runtime", "secure", "typescript"],
+  },
+
+  // === GOOD LANGUAGES ===
   {
     id: "go",
     name: "Go",
@@ -290,7 +314,7 @@ export const BACKEND_TECHNOLOGIES: Technology[] = [
   {
     id: "brainfuck",
     name: "Brainfuck",
-    shortName: "BF",
+    shortName: "BrainFuck",
     icon: BrainfuckIcon,
     category: "backend",
     baseScore: 1,
@@ -496,7 +520,7 @@ export const DATABASE_TECHNOLOGIES: Technology[] = [
     shortName: "Firebase",
     icon: FirebaseIcon,
     category: "database",
-    baseScore: 45,
+    baseScore: 25,
     tags: ["nosql", "google", "realtime"],
   },
   {
