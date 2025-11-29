@@ -5,12 +5,15 @@ import { useSlotMachine } from "./SlotMachineContext";
 
 // Handle rotation constants
 const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
-const SPRING_BACK_DURATION = 0.5;
+const SPRING_BACK_DURATION = 0.6;
 const TRIGGER_THRESHOLD = 0.8; // 80% of max rotation triggers
 
-// Ease-in-out cubic
-const easeInOutCubic = (t: number): number =>
-  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+// Overshoot easing - goes past target then bounces back
+const easeOutBack = (t: number): number => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+};
 
 interface UseSlotMachineHandleOptions {
   onTrigger?: () => void;
@@ -115,7 +118,7 @@ export const useSlotMachineHandle = ({
     const pivot = handlePivotRef.current;
     if (!pivot) return;
 
-    // Spring back animation
+    // Spring back animation with overshoot
     if (isSpringBackActive.current && !isDragging.current) {
       springBackProgress.current += delta / SPRING_BACK_DURATION;
 
@@ -124,7 +127,8 @@ export const useSlotMachineHandle = ({
         isSpringBackActive.current = false;
         handleRotation.current = 0;
       } else {
-        const eased = easeInOutCubic(springBackProgress.current);
+        // easeOutBack overshoots past 1, so rotation goes negative (past 0) then back
+        const eased = easeOutBack(springBackProgress.current);
         handleRotation.current = springBackStartRotation.current * (1 - eased);
       }
     }

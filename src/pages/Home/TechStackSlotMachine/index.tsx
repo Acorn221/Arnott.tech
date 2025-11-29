@@ -103,11 +103,11 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
 
         {/* Post-processing effects */}
         <EffectComposer multisampling={8}>
-          {/* Bloom - makes emissive glow (reduced for cleaner text) */}
+          {/* Bloom - subtle glow on bright elements */}
           <Bloom
-            intensity={0.6}
-            luminanceThreshold={0.3}
-            luminanceSmoothing={0.5}
+            intensity={0.35}
+            luminanceThreshold={0.5}
+            luminanceSmoothing={0.7}
             mipmapBlur
           />
           {/* Vignette - darkens edges for cinematic focus */}
