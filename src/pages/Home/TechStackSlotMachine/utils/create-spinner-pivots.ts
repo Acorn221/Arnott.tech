@@ -40,11 +40,6 @@ export const createSpinnerPivots = (
     }
   });
 
-  console.log("Found reel faces:", {
-    reel1: reelFaces["1"].length,
-    reel2: reelFaces["2"].length,
-    reel3: reelFaces["3"].length,
-  });
 
   // Create a pivot for each reel
   Object.entries(reelFaces).forEach(([reelNum, faces]) => {
@@ -91,8 +86,6 @@ export const createSpinnerPivots = (
 
     newPivots[spinnerName] = pivot;
   });
-
-  console.log("Created pivots:", Object.keys(newPivots));
 
   return newPivots;
 };

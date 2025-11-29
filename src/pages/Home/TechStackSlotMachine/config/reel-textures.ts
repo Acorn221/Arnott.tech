@@ -80,15 +80,42 @@ const drawFaceTexture = (
   loadedImages: Map<string, HTMLImageElement>,
   faceIndex: number,
 ) => {
+  // DEBUG: Show face numbers instead of icons
+  const DEBUG_SHOW_NUMBERS = false;
+
   // Dark background (alternating slightly for visibility)
   ctx.fillStyle = faceIndex % 2 === 0 ? "#1a1a1a" : "#222222";
   ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
+
+  if (DEBUG_SHOW_NUMBERS) {
+    // Draw big number in center
+    ctx.save();
+    ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = "#00ff00";
+    ctx.font = "bold 200px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(faceIndex + 1), 0, 0);
+    ctx.restore();
+
+    // Also show tech name smaller
+    ctx.save();
+    ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE - 60);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 24px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(tech.shortName, 0, 0);
+    ctx.restore();
+    return;
+  }
 
   // Icon - draw with original colors
   const img = loadedImages.get(tech.id);
   if (img) {
     const iconSize = TEXTURE_SIZE * 0.6;
-    const offset = (TEXTURE_SIZE - iconSize) / 2;
 
     ctx.save();
     ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE / 2);
@@ -235,23 +262,55 @@ export const getTechAtFace = (
   faceIndex: number,
 ): Technology => manager.currentTechs[faceIndex % FACES_PER_REEL];
 
-/** Calculate which face is currently at the front based on rotation angle */
-export const getFrontFaceIndex = (angle: number): number => {
+/**
+ * Detect which face is at front by checking world Z positions.
+ * Uses bounding box center since face groups are at same origin.
+ * The face with highest Z is facing the camera.
+ * @param faceObjects - Map of faceIndex (0-7) to THREE.Object3D
+ * @returns The index (0-7) of the face at front
+ */
+export const detectFrontFaceByPosition = (
+  faceObjects: Map<number, THREE.Object3D>,
+): number => {
+  let maxZ = -Infinity;
+  let frontFaceIndex = 0;
+
+  faceObjects.forEach((obj, faceIndex) => {
+    // Ensure world matrix is up to date after rotation
+    obj.updateMatrixWorld(true);
+
+    // Get bounding box center in world coordinates
+    const bbox = new THREE.Box3().setFromObject(obj);
+    const center = new THREE.Vector3();
+    bbox.getCenter(center);
+
+    if (center.z > maxZ) {
+      maxZ = center.z;
+      frontFaceIndex = faceIndex;
+    }
+  });
+
+  return frontFaceIndex;
+};
+
+/**
+ * DEPRECATED - Use detectFrontFaceByPosition instead.
+ * Calculate which face is currently at the front based on rotation angle
+ */
+export const getFrontFaceIndex = (angle: number, _reelIndex = 0): number => {
   const radiansPerFace = (Math.PI * 2) / FACES_PER_REEL;
   // Normalize angle to 0-2π range
   const normalizedAngle =
     ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  // Calculate face index
+  // Calculate raw face index
   const rawIndex = Math.round(normalizedAngle / radiansPerFace);
-  const invertedIndex = (FACES_PER_REEL - rawIndex) % FACES_PER_REEL;
-  // Offset to align with actual visual front (adjust if misaligned)
-  const FACE_OFFSET = 2;
-  return (invertedIndex + FACE_OFFSET) % FACES_PER_REEL;
+  const calculatedIndex = (FACES_PER_REEL - rawIndex) % FACES_PER_REEL;
+  return calculatedIndex;
 };
 
 /** Get the faces that are hidden (safe to swap) based on current angle */
-export const getHiddenFaces = (angle: number): number[] => {
-  const frontFace = getFrontFaceIndex(angle);
+export const getHiddenFaces = (angle: number, reelIndex = 0): number[] => {
+  const frontFace = getFrontFaceIndex(angle, reelIndex);
   const hidden: number[] = [];
 
   // Faces 3-5 positions away from front are hidden (back of cylinder)

@@ -100,7 +100,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         if (swapTimersRef.current[i] >= SWAP_INTERVAL) {
           swapTimersRef.current[i] = 0;
 
-          const hiddenFaces = getHiddenFaces(state.angle);
+          const hiddenFaces = getHiddenFaces(state.angle, i);
           if (hiddenFaces.length > 0) {
             const faceToSwap =
               hiddenFaces[Math.floor(Math.random() * hiddenFaces.length)];

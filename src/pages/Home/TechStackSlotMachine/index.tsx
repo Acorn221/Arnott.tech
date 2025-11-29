@@ -12,7 +12,7 @@ import { SlotMachineProvider } from "./SlotMachineContext";
 
 /** 3D Scene content - must be inside Canvas */
 const SlotMachineScene: FC = () => (
-  <>
+  <SlotMachineProvider>
     {/* Dark background for better glow contrast */}
     <color attach="background" args={["#030306"]} />
 
@@ -98,30 +98,28 @@ const SlotMachineScene: FC = () => (
       {/* Vignette - darkens edges for cinematic focus */}
       <Vignette offset={0.3} darkness={0.5} />
     </EffectComposer>
-  </>
+  </SlotMachineProvider>
 );
 
 /** Main component with Canvas */
 const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => (
-  <SlotMachineProvider>
-    <div {...props}>
-      <Canvas
-        camera={{
-          position: [0, 0.15, 1.8],
-          fov: 55,
-          near: 0.1,
-          far: 100,
-        }}
-        shadows
-        dpr={[1, 1.5]}
-        gl={{ antialias: true }}
-      >
-        <SlotMachineScene />
-      </Canvas>
-    </div>
-  </SlotMachineProvider>
+  <div {...props}>
+    <Canvas
+      camera={{
+        position: [0, 0.15, 1.8],
+        fov: 55,
+        near: 0.1,
+        far: 100,
+      }}
+      shadows
+      dpr={[1, 1.5]}
+      gl={{ antialias: true }}
+    >
+      <SlotMachineScene />
+    </Canvas>
+  </div>
 );
 
 export default TechStackSlotMachine;

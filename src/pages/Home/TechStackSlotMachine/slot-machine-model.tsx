@@ -64,6 +64,7 @@ const SlotMachineModel: FC = () => {
     setKnobMaterial,
     setDisplayPlate,
     setIndicatorMaterials,
+    setReelFaceObjects,
     reelManagersRef,
     isInitialized,
   } = useSlotMachine();
@@ -142,36 +143,43 @@ const SlotMachineModel: FC = () => {
     if (!isInitialized || !reelManagersRef.current) return;
 
     const managers = reelManagersRef.current;
-    let facesFound = 0;
+    
+    // Collect face objects for each reel (for position-based detection)
+    const reelFaces: Map<number, Map<number, THREE.Object3D>> = new Map();
 
-    // Find reel face GROUPS (not meshes) and apply materials to their child meshes
+    // Simple approach: assign materials based on face number directly
     scene.traverse((object) => {
-      // Match group names like "reel-1-face-1"
       const match = REEL_FACE_REGEX.exec(object.name);
       if (!match) return;
 
       const reelIndex = parseInt(match[1], 10) - 1; // 0-indexed
-      const faceIndex = parseInt(match[2], 10) - 1; // 0-indexed
+      const faceNum = parseInt(match[2], 10) - 1; // 0-indexed (face-1 -> 0)
       const manager = managers[reelIndex];
 
-      if (!manager || !manager.faces[faceIndex]) {
-        console.warn(`No material for reel ${reelIndex}, face ${faceIndex}`);
-        return;
+      if (!manager || !manager.faces[faceNum]) return;
+      
+      // Store reference to face object for position detection
+      if (!reelFaces.has(reelIndex)) {
+        reelFaces.set(reelIndex, new Map());
       }
+      reelFaces.get(reelIndex)!.set(faceNum, object);
 
-      // Find child mesh(es) and apply material
+      // Apply material to child meshes
       object.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          child.material = manager.faces[faceIndex].material;
+          child.material = manager.faces[faceNum].material;
           child.castShadow = true;
           child.receiveShadow = true;
-          facesFound++;
         }
       });
     });
+    
+    // Store face object refs in context
+    reelFaces.forEach((faces, reelIndex) => {
+      setReelFaceObjects(reelIndex, faces);
+    });
 
-    console.log(`Applied materials to ${facesFound} reel faces`);
-  }, [scene, isInitialized, reelManagersRef]);
+  }, [scene, isInitialized, reelManagersRef, setReelFaceObjects]);
 
   // Create handle pivot
   useEffect(() => {

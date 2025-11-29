@@ -15,7 +15,7 @@ import { type DynamicDisplayPlate } from "./display-plate";
 import {
   type ReelTextureManager,
   createReelTextureManager,
-  getFrontFaceIndex,
+  detectFrontFaceByPosition,
   shuffleReel,
 } from "./config/reel-textures";
 import { type Technology } from "./config/technologies";
@@ -53,6 +53,8 @@ interface SlotMachineContextValue {
   knobMaterialRef: React.MutableRefObject<AnimatedGlowBorderMaterial | null>;
   displayPlateRef: React.MutableRefObject<DynamicDisplayPlate | null>;
   indicatorMaterialsRef: React.MutableRefObject<THREE.MeshPhysicalMaterial[]>;
+  /** Face objects for each reel: reelIndex -> (faceIndex -> Object3D) */
+  reelFaceObjectsRef: React.MutableRefObject<Map<number, Map<number, THREE.Object3D>>>;
 
   // Reel state
   reelManagersRef: React.MutableRefObject<ReelTextureManager[] | null>;
@@ -71,6 +73,7 @@ interface SlotMachineContextValue {
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
   setDisplayPlate: (plate: DynamicDisplayPlate) => void;
   setIndicatorMaterials: (materials: THREE.MeshPhysicalMaterial[]) => void;
+  setReelFaceObjects: (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => void;
   initializeReels: () => Promise<void>;
   calculateFinalResult: () => void;
   setIsSpinning: (spinning: boolean) => void;
@@ -121,6 +124,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   const displayPlateRef = useRef<DynamicDisplayPlate | null>(null);
   const indicatorMaterialsRef = useRef<THREE.MeshPhysicalMaterial[]>([]);
   const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
+  const reelFaceObjectsRef = useRef<Map<number, Map<number, THREE.Object3D>>>(new Map());
 
   // Reel state refs
   const reelStatesRef = useRef<ReelState[]>([
@@ -180,6 +184,13 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     [],
   );
 
+  const setReelFaceObjects = useCallback(
+    (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => {
+      reelFaceObjectsRef.current.set(reelIndex, faceObjects);
+    },
+    [],
+  );
+
   const setIsSpinning = useCallback((spinning: boolean) => {
     isSpinningRef.current = spinning;
     if (!spinning) {
@@ -199,10 +210,21 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     const managers = reelManagersRef.current;
     const results: Technology[] = [];
 
-    reelStatesRef.current.forEach((state, i) => {
-      const faceIndex = getFrontFaceIndex(state.angle);
-      results.push(managers[i].currentTechs[faceIndex]);
-    });
+    for (let reelIndex = 0; reelIndex < 3; reelIndex++) {
+      const faceObjects = reelFaceObjectsRef.current.get(reelIndex);
+      
+      let faceIndex: number;
+      if (faceObjects && faceObjects.size > 0) {
+        // Use position-based detection (reliable)
+        faceIndex = detectFrontFaceByPosition(faceObjects);
+      } else {
+        // Fallback - shouldn't happen if model is set up correctly
+        faceIndex = 0;
+      }
+      
+      const tech = managers[reelIndex].currentTechs[faceIndex];
+      results.push(tech);
+    }
 
     const [backend, frontend, database] = results;
     const score = calculateScore(backend.id, frontend.id, database.id);
@@ -280,6 +302,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       knobMaterialRef,
       displayPlateRef,
       indicatorMaterialsRef,
+      reelFaceObjectsRef,
       reelManagersRef,
       reelStatesRef,
       swapTimersRef,
@@ -292,6 +315,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setKnobMaterial,
       setDisplayPlate,
       setIndicatorMaterials,
+      setReelFaceObjects,
       initializeReels,
       calculateFinalResult,
       setIsSpinning,
@@ -305,6 +329,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setKnobMaterial,
       setDisplayPlate,
       setIndicatorMaterials,
+      setReelFaceObjects,
       initializeReels,
       calculateFinalResult,
       setIsSpinning,
