@@ -18,6 +18,7 @@ interface FloatingLabelProps {
   color: string;
   delay: number;
   visible: boolean;
+  rotationY?: number; // Base Y rotation to face camera
 }
 
 const FloatingLabel: FC<FloatingLabelProps> = ({
@@ -27,6 +28,7 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
   color,
   delay,
   visible,
+  rotationY = 0,
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
@@ -75,8 +77,8 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
     const floatY = Math.sin(t * 1.5) * 0.0005;
     groupRef.current.position.y = position[1] + floatY;
 
-    // Subtle rotation
-    groupRef.current.rotation.y = Math.sin(t * 0.8) * 0.05;
+    // Subtle rotation on top of base rotation
+    groupRef.current.rotation.y = rotationY + Math.sin(t * 0.8) * 0.05;
   });
 
   if (!visible) return null;
@@ -164,6 +166,7 @@ const TechLabels: FC = () => {
         color={getColor(backend.baseScore)}
         delay={0}
         visible={!!showLabels}
+        rotationY={0.3} // Rotate right to face camera
       />
       <FloatingLabel
         text={frontend.shortName}
@@ -180,6 +183,7 @@ const TechLabels: FC = () => {
         color={getColor(database.baseScore)}
         delay={0.3}
         visible={!!showLabels}
+        rotationY={-0.3} // Rotate left to face camera
       />
     </group>
   );
