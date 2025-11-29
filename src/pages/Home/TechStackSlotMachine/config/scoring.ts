@@ -184,6 +184,30 @@ export const COMBO_RULES: ComboRule[] = [
     priority: 100,
   },
   {
+    pattern: ['*', 'vanilla-js', '*'],
+    modifier: -20,
+    reason: 'No framework? No types? Brave.',
+    priority: 90,
+  },
+  {
+    pattern: ['*', 'react-js', '*'],
+    modifier: -15,
+    reason: 'React without TypeScript 😬',
+    priority: 90,
+  },
+  {
+    pattern: ['*', 'vue-js', '*'],
+    modifier: -15,
+    reason: 'Vue without TypeScript 😬',
+    priority: 90,
+  },
+  {
+    pattern: ['*', 'svelte-js', '*'],
+    modifier: -15,
+    reason: 'Svelte without TypeScript 😬',
+    priority: 90,
+  },
+  {
     pattern: ['php', 'jquery', '*'],
     modifier: -50,
     reason: 'Time traveler from 2008 detected',

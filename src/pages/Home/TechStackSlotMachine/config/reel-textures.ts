@@ -88,17 +88,16 @@ const drawFace = (
   ctx.lineTo(x, CANVAS_HEIGHT);
   ctx.stroke();
 
-  // Icon
+  // Icon - draw with original colors
   const img = loadedImages.get(tech.id);
   if (img) {
-    const iconSize = SEGMENT_SIZE * 0.7;
+    const iconSize = SEGMENT_SIZE * 0.55;
     const xOffset = (SEGMENT_SIZE - iconSize) / 2;
     const yOffset = (CANVAS_HEIGHT - iconSize) / 2;
 
     ctx.save();
     ctx.translate(x + xOffset + iconSize / 2, yOffset + iconSize / 2);
     ctx.rotate(-Math.PI / 2); // Rotate for cylinder orientation
-    ctx.filter = 'grayscale(100%) brightness(0)'; // Black
     ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
     ctx.restore();
   }
@@ -224,8 +223,14 @@ export const getFrontFaceIndex = (angle: number): number => {
   const radiansPerFace = (Math.PI * 2) / FACES_PER_REEL;
   // Normalize angle to 0-2π range
   const normalizedAngle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  // Calculate face index (inverted because of rotation direction)
-  return Math.round(normalizedAngle / radiansPerFace) % FACES_PER_REEL;
+  // Calculate face index
+  // Note: spinner uses -angle rotation, so we need to invert
+  // Also add offset of 2 to account for cylinder geometry UV mapping
+  const rawIndex = Math.round(normalizedAngle / radiansPerFace);
+  const invertedIndex = (FACES_PER_REEL - rawIndex) % FACES_PER_REEL;
+  // Offset to align with actual visual front (adjust this if still misaligned)
+  const FACE_OFFSET = 2;
+  return (invertedIndex + FACE_OFFSET) % FACES_PER_REEL;
 };
 
 /** Get the faces that are hidden (safe to swap) based on current angle */
