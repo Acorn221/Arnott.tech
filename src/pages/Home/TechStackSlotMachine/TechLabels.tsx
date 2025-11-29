@@ -4,9 +4,9 @@ import { useFrame } from "@react-three/fiber";
 import type * as THREE from "three";
 import { useSlotMachine } from "./SlotMachineContext";
 
-// Using a CDN-hosted font for 3D text
+// Using a CDN-hosted font for 3D text - droid sans has better character distinction
 const FONT_URL =
-  "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/helvetiker_bold.typeface.json";
+  "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/droid/droid_sans_bold.typeface.json";
 
 // Preload the font to avoid flash on first render
 useFont.preload(FONT_URL);
@@ -94,8 +94,8 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
             height={0.001}
             letterSpacing={0.0005}
             bevelEnabled
-            bevelSize={0.0002}
-            bevelThickness={0.0001}
+            bevelSize={0.0003}
+            bevelThickness={0.0002}
           >
             {text}
             <meshStandardMaterial
