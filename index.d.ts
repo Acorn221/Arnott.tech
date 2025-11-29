@@ -1,9 +1,9 @@
 declare module '*.scss' {
-  const css: { [key: string]: string };
+  const css: Record<string, string>;
   export default css;
 }
 declare module '*.sass' {
-  const css: { [key: string]: string };
+  const css: Record<string, string>;
   export default css;
 }
 declare module 'react-markup';

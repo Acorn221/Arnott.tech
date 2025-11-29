@@ -34,11 +34,11 @@ export class DynamicDisplayPlate {
 
   private config: Required<DisplayPlateConfig>;
 
-  private isScoreMode: boolean = false;
+  private isScoreMode = false;
 
-  private scoreValue: number = 0;
+  private scoreValue = 0;
 
-  private scoreLabel: string = '';
+  private scoreLabel = '';
 
   constructor(config: Partial<DisplayPlateConfig> = {}) {
     this.config = { ...defaultConfig, ...config };

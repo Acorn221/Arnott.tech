@@ -8,7 +8,7 @@ export const createSpinnerPivots = (
 ): Record<string, THREE.Object3D> => {
   const foundSpinners: Record<string, THREE.Object3D> = {};
   scene.traverse((object) => {
-    if (object.name.match(/^slot-spinner-\d+$/)) {
+    if (/^slot-spinner-\d+$/.exec(object.name)) {
       foundSpinners[object.name] = object;
     }
   });

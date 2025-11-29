@@ -3,23 +3,23 @@ import {
   useContext,
   useRef,
   useCallback,
-  FC,
-  ReactNode,
+  type FC,
+  type ReactNode,
   useMemo,
   useState,
   useEffect,
 } from 'react';
-import * as THREE from 'three';
-import { AnimatedGlowBorderMaterial } from './display-border-material';
-import { DynamicDisplayPlate } from './display-plate';
+import type * as THREE from 'three';
+import { type AnimatedGlowBorderMaterial } from './display-border-material';
+import { type DynamicDisplayPlate } from './display-plate';
 import {
-  ReelTextureManager,
+  type ReelTextureManager,
   createReelTextureManager,
   getFrontFaceIndex,
   shuffleReel,
 } from './config/reel-textures';
-import { Technology } from './config/technologies';
-import { calculateScore, ScoreResult, getScoreMessage } from './config/scoring';
+import { type Technology } from './config/technologies';
+import { calculateScore, type ScoreResult, getScoreMessage } from './config/scoring';
 
 // ============================================================================
 // Types

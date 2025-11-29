@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-globals */
+ 
 /* eslint-disable import/prefer-default-export */
 if (!import.meta.env.VITE_PUBLIC_GTAG_ID) {
   throw new Error('VITE_PUBLIC_GTAG_ID environment variable not set.');

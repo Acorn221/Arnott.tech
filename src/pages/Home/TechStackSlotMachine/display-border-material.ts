@@ -22,8 +22,8 @@ export class AnimatedGlowBorderMaterial {
   public material: THREE.MeshPhysicalMaterial;
   private config: Required<GlowBorderConfig>;
   private animationId: number | null = null;
-  private startTime: number = 0;
-  private isPaused: boolean = false;
+  private startTime = 0;
+  private isPaused = false;
 
   constructor(config: Partial<GlowBorderConfig> = {}) {
     this.config = { ...defaultConfig, ...config };

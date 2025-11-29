@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import {
-  Technology,
+  type Technology,
   BACKEND_TECHNOLOGIES,
   FRONTEND_TECHNOLOGIES,
   DATABASE_TECHNOLOGIES,
-  ReelCategory,
+  type ReelCategory,
 } from './technologies';
 
 // ============================================================================

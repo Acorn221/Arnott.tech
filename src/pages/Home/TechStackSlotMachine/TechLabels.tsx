@@ -1,7 +1,7 @@
-import { FC, useRef, useEffect, Suspense } from 'react';
+import { type FC, useRef, useEffect, Suspense } from 'react';
 import { Text3D, Center, useFont } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { useSlotMachine } from './SlotMachineContext';
 
 // Using a CDN-hosted font for 3D text

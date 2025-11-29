@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { createAnimatedDisplayPlate, DynamicDisplayPlate } from './display-plate';
-import { createAnimatedGlowBorder, AnimatedGlowBorderMaterial } from './display-border-material';
+import { createAnimatedDisplayPlate, type DynamicDisplayPlate } from './display-plate';
+import { createAnimatedGlowBorder, type AnimatedGlowBorderMaterial } from './display-border-material';
 
 // ============================================================================
 // Types

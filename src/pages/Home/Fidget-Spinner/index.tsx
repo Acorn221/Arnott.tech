@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import {
-  FC, InputHTMLAttributes, Suspense, useState,
+  type FC, type InputHTMLAttributes, Suspense, useState,
 } from 'react';
 import { OrbitControls, Environment } from '@react-three/drei';
 import InteractiveSpinner from './interactive-spinner';

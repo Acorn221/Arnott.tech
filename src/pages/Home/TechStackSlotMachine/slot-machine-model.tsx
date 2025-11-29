@@ -1,10 +1,10 @@
-import { FC, useRef, useEffect } from 'react';
+import { type FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 import { useSlotMachine } from './SlotMachineContext';
-import { createMaterials, MaterialMap, GltfMaterialKey } from './materials';
-import { createStaticPartOverrides, StaticPartOverrideMap, StaticPartName, StaticPartOverridesResult } from './reel-config';
+import { createMaterials, type MaterialMap, type GltfMaterialKey } from './materials';
+import { createStaticPartOverrides, type StaticPartOverrideMap, type StaticPartName, type StaticPartOverridesResult } from './reel-config';
 import { createHandlePivot } from './utils/create-handle-pivot';
 import { createSpinnerPivots } from './utils/create-spinner-pivots';
 
@@ -159,7 +159,7 @@ const SlotMachineModel: FC = () => {
 
     const existingPivots: Record<string, THREE.Object3D> = {};
     scene.traverse((obj) => {
-      if (obj.name.match(/^slot-spinner-\d+-pivot$/)) {
+      if (/^slot-spinner-\d+-pivot$/.exec(obj.name)) {
         const spinnerName = obj.name.replace('-pivot', '');
         existingPivots[spinnerName] = obj;
       }

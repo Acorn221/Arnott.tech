@@ -1,5 +1,5 @@
-/* eslint-disable react/require-default-props */
-import { ReactNode } from 'react';
+ 
+import { type ReactNode } from 'react';
 
 type SlideProps = {
 	className?: string;

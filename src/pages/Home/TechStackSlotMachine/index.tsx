@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { FC, HTMLAttributes, Suspense } from 'react';
+import { type FC, type HTMLAttributes, Suspense } from 'react';
 import {
   OrbitControls,
   Environment,

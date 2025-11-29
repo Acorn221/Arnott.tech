@@ -1,8 +1,8 @@
 import {
-  FC, useRef, useEffect, useState, SetStateAction, Dispatch,
+  type FC, useRef, useEffect, useState, type SetStateAction, type Dispatch,
 } from 'react';
 import * as THREE from 'three';
-import { GroupProps, ThreeEvent, useFrame } from '@react-three/fiber';
+import { type GroupProps, type ThreeEvent, useFrame } from '@react-three/fiber';
 import SpinnerModel from './spinner-model';
 
 interface InteractiveSpinnerProps extends GroupProps {

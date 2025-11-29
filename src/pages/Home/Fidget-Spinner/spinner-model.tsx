@@ -1,8 +1,8 @@
-/* eslint-disable no-param-reassign */
-import { FC, useRef, useEffect } from 'react';
+ 
+import { type FC, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { GroupProps, useFrame } from '@react-three/fiber';
+import { type GroupProps, useFrame } from '@react-three/fiber';
 
 interface SpinnerModelProps extends GroupProps {
   isXray: boolean;

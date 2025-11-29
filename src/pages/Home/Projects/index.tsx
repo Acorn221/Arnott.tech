@@ -1,4 +1,4 @@
-/* eslint-disable react/no-array-index-key */
+ 
 import { XyzTransition } from '@animxyz/react';
 import { AiFillGithub, AiFillChrome } from 'react-icons/ai';
 import { ImFirefox } from 'react-icons/im';
@@ -63,7 +63,7 @@ const Projects = () => {
           </div>
           <div className="flex justify-center align-middle p-4 gap-4">
             {
-              project.links && project.links.map((link) => {
+              project.links?.map((link) => {
                 let content;
                 const iconStyles = 'h-14 w-14 m-auto';
                 switch (link.type) {

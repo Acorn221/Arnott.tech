@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import TechStackSlotMachine from '../Home/TechStackSlotMachine';
 
 const Dev: FC = () => (

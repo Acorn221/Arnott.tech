@@ -1,6 +1,6 @@
-import { FC, useRef, useCallback } from 'react';
-import { Group } from 'three';
-import { useFrame, ThreeElements, useThree } from '@react-three/fiber';
+import { type FC, useRef, useCallback } from 'react';
+import { type Group } from 'three';
+import { useFrame, type ThreeElements, useThree } from '@react-three/fiber';
 
 import { useSlotMachine } from './SlotMachineContext';
 import SlotMachineModel from './slot-machine-model';
