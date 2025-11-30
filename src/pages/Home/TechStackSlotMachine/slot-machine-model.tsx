@@ -64,6 +64,7 @@ const SlotMachineModel: FC = () => {
     setKnobMaterial,
     setDisplayPlate,
     setIndicatorMaterials,
+    setFaceplateMaterial,
     setReelFaceObjects,
     setShareButton,
     setShareButtonMaterial,
@@ -94,6 +95,7 @@ const SlotMachineModel: FC = () => {
       setDisplayPlate(staticOverridesRef.current.displayPlate);
       setIndicatorMaterials(staticOverridesRef.current.indicatorMaterials);
       setShareButtonMaterial(staticOverridesRef.current.shareButtonMaterial);
+      setFaceplateMaterial(staticOverridesRef.current.faceplateMaterial);
     }
 
     const materials = materialsRef.current;
@@ -139,7 +141,7 @@ const SlotMachineModel: FC = () => {
     });
 
     hasInitializedMaterials.current = true;
-  }, [scene, setKnobMaterial, setDisplayPlate, setIndicatorMaterials, setShareButtonMaterial]);
+  }, [scene, setKnobMaterial, setDisplayPlate, setIndicatorMaterials, setShareButtonMaterial, setFaceplateMaterial]);
 
   // Apply dynamic reel textures when initialized
   useEffect(() => {

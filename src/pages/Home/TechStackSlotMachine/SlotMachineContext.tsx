@@ -12,6 +12,7 @@ import {
 import type * as THREE from "three";
 import { type AnimatedGlowBorderMaterial } from "./display-border-material";
 import { type DynamicDisplayPlate } from "./display-plate";
+import { type AnimatedFaceplateMaterial } from "./faceplate-material";
 import {
   type ReelTextureManager,
   createReelTextureManager,
@@ -59,6 +60,7 @@ export interface SlotMachineContextValue {
   knobMaterialRef: React.MutableRefObject<AnimatedGlowBorderMaterial | null>;
   displayPlateRef: React.MutableRefObject<DynamicDisplayPlate | null>;
   indicatorMaterialsRef: React.MutableRefObject<THREE.MeshPhysicalMaterial[]>;
+  faceplateMaterialRef: React.MutableRefObject<AnimatedFaceplateMaterial | null>;
   /** Face objects for each reel: reelIndex -> (faceIndex -> Object3D) */
   reelFaceObjectsRef: React.MutableRefObject<Map<number, Map<number, THREE.Object3D>>>;
 
@@ -83,6 +85,7 @@ export interface SlotMachineContextValue {
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
   setDisplayPlate: (plate: DynamicDisplayPlate) => void;
   setIndicatorMaterials: (materials: THREE.MeshPhysicalMaterial[]) => void;
+  setFaceplateMaterial: (material: AnimatedFaceplateMaterial) => void;
   setReelFaceObjects: (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => void;
   setShareButton: (button: THREE.Object3D | null) => void;
   setShareButtonMaterial: (material: ShareButtonMaterial) => void;
@@ -140,6 +143,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   const knobMaterialRef = useRef<AnimatedGlowBorderMaterial | null>(null);
   const displayPlateRef = useRef<DynamicDisplayPlate | null>(null);
   const indicatorMaterialsRef = useRef<THREE.MeshPhysicalMaterial[]>([]);
+  const faceplateMaterialRef = useRef<AnimatedFaceplateMaterial | null>(null);
   const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
   const reelFaceObjectsRef = useRef<Map<number, Map<number, THREE.Object3D>>>(new Map());
 
@@ -205,6 +209,13 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     [],
   );
 
+  const setFaceplateMaterial = useCallback(
+    (material: AnimatedFaceplateMaterial) => {
+      faceplateMaterialRef.current = material;
+    },
+    [],
+  );
+
   const setReelFaceObjects = useCallback(
     (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => {
       reelFaceObjectsRef.current.set(reelIndex, faceObjects);
@@ -222,6 +233,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
   const setIsSpinning = useCallback((spinning: boolean) => {
     isSpinningRef.current = spinning;
+    faceplateMaterialRef.current?.setSpinning(spinning);
     if (!spinning) {
       knobMaterialRef.current?.setPaused(false);
     }
@@ -353,6 +365,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     // Mark as spinning and pause knob glow
     isSpinningRef.current = true;
     knobMaterialRef.current?.setPaused(true);
+    faceplateMaterialRef.current?.setSpinning(true);
 
     // Update display to show spinning
     displayPlateRef.current?.showSpinning();
@@ -388,6 +401,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       knobMaterialRef,
       displayPlateRef,
       indicatorMaterialsRef,
+      faceplateMaterialRef,
       reelFaceObjectsRef,
       shareButtonRef,
       shareButtonMaterialRef,
@@ -403,6 +417,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setKnobMaterial,
       setDisplayPlate,
       setIndicatorMaterials,
+      setFaceplateMaterial,
       setReelFaceObjects,
       setShareButton,
       setShareButtonMaterial,
@@ -420,6 +435,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setKnobMaterial,
       setDisplayPlate,
       setIndicatorMaterials,
+      setFaceplateMaterial,
       setReelFaceObjects,
       setShareButton,
       setShareButtonMaterial,
