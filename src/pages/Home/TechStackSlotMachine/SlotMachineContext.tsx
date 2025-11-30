@@ -126,11 +126,13 @@ export const useSlotMachine = (): SlotMachineContextValue => {
 interface SlotMachineProviderProps {
   children: ReactNode;
   onShareDialog?: (result: SpinResult) => void;
+  captureScreenshot?: () => string | null;
 }
 
 export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   children,
   onShareDialog,
+  captureScreenshot,
 }) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -277,7 +279,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   }, []);
 
   // Share the result
-  const shareResult = useCallback(() => {
+  const shareResult = useCallback(async () => {
     if (!lastResult) return;
 
     const { backend, frontend, database, score, message } = lastResult;
@@ -293,6 +295,32 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isMobile && navigator.share) {
+      // Capture screenshot and convert to file for sharing
+      const dataUrl = captureScreenshot?.();
+      if (dataUrl && navigator.canShare) {
+        try {
+          // Convert data URL to blob
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], `tech-stack-${score.score}.png`, { type: "image/png" });
+          
+          const shareData = {
+            title: "Tech Stack Slot Machine",
+            text,
+            files: [file],
+          };
+          
+          // Check if we can share with files
+          if (navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            return;
+          }
+        } catch {
+          // Fall through to text-only share
+        }
+      }
+      
+      // Fallback to text-only share
       void navigator.share({
         title: "Tech Stack Slot Machine",
         text,
@@ -305,7 +333,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       // Fallback - log to console
       console.log(text);
     }
-  }, [lastResult, onShareDialog]);
+  }, [lastResult, onShareDialog, captureScreenshot]);
 
   // Start the game
   const startGame = useCallback(() => {
