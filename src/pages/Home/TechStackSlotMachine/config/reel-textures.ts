@@ -80,8 +80,6 @@ const drawFaceTexture = (
   loadedImages: Map<string, HTMLImageElement>,
   faceIndex: number,
 ) => {
-  // DEBUG: Show face numbers instead of icons
-
   // Dark background (alternating slightly for visibility)
   ctx.fillStyle = faceIndex % 2 === 0 ? "#1a1a1a" : "#222222";
   ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
@@ -320,10 +318,11 @@ export const detectFrontFaceByPosition = (
 };
 
 /**
- * DEPRECATED - Use detectFrontFaceByPosition instead.
- * Calculate which face is currently at the front based on rotation angle
+ * Calculate which face is currently at the front based on rotation angle.
+ * Note: For final result detection, use detectFrontFaceByPosition instead.
+ * This angle-based calculation is still used for getHiddenFaces during spin animation.
  */
-export const getFrontFaceIndex = (angle: number, _reelIndex = 0): number => {
+const getFrontFaceIndex = (angle: number): number => {
   const radiansPerFace = (Math.PI * 2) / FACES_PER_REEL;
   // Normalize angle to 0-2π range
   const normalizedAngle =
@@ -335,8 +334,8 @@ export const getFrontFaceIndex = (angle: number, _reelIndex = 0): number => {
 };
 
 /** Get the faces that are hidden (safe to swap) based on current angle */
-export const getHiddenFaces = (angle: number, reelIndex = 0): number[] => {
-  const frontFace = getFrontFaceIndex(angle, reelIndex);
+export const getHiddenFaces = (angle: number): number[] => {
+  const frontFace = getFrontFaceIndex(angle);
   const hidden: number[] = [];
 
   // Faces 3-5 positions away from front are hidden (back of cylinder)

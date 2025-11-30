@@ -136,7 +136,6 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
   const shareButtonMaterial = createShareButtonMaterial();
 
   // Create barber pole striped faceplate
-  // ============ TWEAK THESE VALUES ============
   const faceplateMaterial = createAnimatedFaceplate({
     // Stripe geometry
     stripeWidth: 100,
@@ -158,10 +157,9 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     clearcoat: 0.25, // Glossy top layer
     envMapIntensity: 1.0, // Environment reflection strength
 
-    // Animation (stripes move when spinning!)
-    animationSpeed: 0.3, // Speed of stripe movement
+    // Animation (stripes move when spinning)
+    animationSpeed: 0.3,
   });
-  // ============================================
 
   const overrides: StaticPartOverrideMap = {
     "display-plate": displayPlate.material,

@@ -432,7 +432,7 @@ export const FRONTEND_TECHNOLOGIES: Technology[] = [
     id: "htmx",
     name: "HTMX",
     shortName: "HTMX",
-    icon: htmxIcon, // Use JS icon as placeholder
+    icon: htmxIcon,
     category: "frontend",
     baseScore: 78,
     tags: ["simple", "hypermedia", "minimal"],

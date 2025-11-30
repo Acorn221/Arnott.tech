@@ -199,8 +199,6 @@ export class AnimatedFaceplateMaterial {
 
   private currentSpeed = 0; // 0-1 multiplier for easing
 
-  private wasSpinning = false;
-
   constructor(config: Partial<BarberPoleFaceplateConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
 
@@ -238,7 +236,6 @@ export class AnimatedFaceplateMaterial {
       this.spinStopTime = now;
     }
 
-    this.wasSpinning = this.isSpinning;
     this.isSpinning = spinning;
   }
 

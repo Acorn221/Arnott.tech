@@ -111,9 +111,6 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
         >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 
-          {/* Hemisphere light for ambient fill */}
-          {/* <hemisphereLight intensity={0.1} groundColor="#000" color="#111" /> */}
-
           {/* Key light - main front light */}
           <spotLight
             position={[3, 4, 5]}
