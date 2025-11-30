@@ -40,16 +40,20 @@ export const createMaterials = (): MaterialMap => ({
       roughness: 0.15,
       clearcoat: 0.5,
     }),
-  // Glass/transparent
+  // Glass panel - transparent with reflections
   "0.615686_0.811765_0.929412_0.000000_0.000000":
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color("#E8F4F8"),
+      color: new THREE.Color("#555555"),
       metalness: 0.0,
       roughness: 0.0,
-      transmission: 0.9,
-      thickness: 0.3,
+      transmission: 0.5, // See through
+      thickness: 0.1,
       transparent: true,
-      opacity: 0.4,
+      ior: 1.5, // Glass refraction
+      reflectivity: 0.5,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05,
+      envMapIntensity: 1.0,
     }),
   // Dark blue
   "0.231373_0.380392_0.705882_0.000000_0.000000":

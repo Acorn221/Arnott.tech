@@ -1,7 +1,7 @@
 import { type FC, useRef, useEffect, useMemo } from "react";
 import { Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import type * as THREE from "three";
 import { useSlotMachine } from "./SlotMachineContext";
 
 interface FloatingLabelProps {
@@ -156,10 +156,13 @@ const TechLabels: FC = () => {
 
   // Button label positions (in model space, before rotation)
   // These are approximate - adjust based on actual button positions
-  const buttonPositions = useMemo(() => ({
-    spin: [-0.022, -0.024, 0.003] as [number, number, number],    // button-1 (left)
-    share: [0.022, -0.024, 0.003] as [number, number, number],   // button-2 (right)
-  }), []);
+  const buttonPositions = useMemo(
+    () => ({
+      spin: [-0.022, -0.024, 0.003] as [number, number, number], // button-1 (left)
+      share: [0.022, -0.024, 0.003] as [number, number, number], // button-2 (right)
+    }),
+    [],
+  );
 
   return (
     <group>
@@ -185,16 +188,16 @@ const TechLabels: FC = () => {
           <FloatingLabel
             text={lastResult.backend.shortName}
             subText="Backend"
-            position={[-0.035, 0.012, 0.008]}
+            position={[-0.015, 0.018, 0.006]}
             color={getColorForScore(lastResult.backend.baseScore)}
             delay={0}
             visible={!!showLabels}
-            rotationY={0.3}
+            rotationY={0.2}
           />
           <FloatingLabel
             text={lastResult.frontend.shortName}
             subText="Frontend"
-            position={[0, 0.02, 0.008]}
+            position={[0, 0.025, 0.006]}
             color={getColorForScore(lastResult.frontend.baseScore)}
             delay={0.15}
             visible={!!showLabels}
@@ -202,11 +205,11 @@ const TechLabels: FC = () => {
           <FloatingLabel
             text={lastResult.database.shortName}
             subText="Database"
-            position={[0.035, 0.012, 0.008]}
+            position={[0.015, 0.018, 0.006]}
             color={getColorForScore(lastResult.database.baseScore)}
             delay={0.3}
             visible={!!showLabels}
-            rotationY={-0.3}
+            rotationY={-0.2}
           />
         </>
       )}

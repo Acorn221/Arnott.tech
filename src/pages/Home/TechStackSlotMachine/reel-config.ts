@@ -106,8 +106,8 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     pulseSpeed: 1.2,
     minIntensity: 1.0,
     maxIntensity: 5.0,
-    minOpacity: 0.4,
-    maxOpacity: 0.7,
+    minOpacity: 1.0,
+    maxOpacity: 1.0,
   });
 
   const displayBorderMaterial = createAnimatedGlowBorder({
