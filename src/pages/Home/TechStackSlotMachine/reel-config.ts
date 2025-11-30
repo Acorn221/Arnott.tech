@@ -7,6 +7,10 @@ import {
   createAnimatedGlowBorder,
   type AnimatedGlowBorderMaterial,
 } from "./display-border-material";
+import {
+  createAnimatedFaceplate,
+  type AnimatedFaceplateMaterial,
+} from "./faceplate-material";
 import { type ShareButtonMaterial } from "./SlotMachineContext";
 
 // ============================================================================
@@ -38,6 +42,7 @@ export interface StaticPartOverridesResult {
   displayPlate: DynamicDisplayPlate;
   indicatorMaterials: THREE.MeshPhysicalMaterial[];
   shareButtonMaterial: ShareButtonMaterial;
+  faceplateMaterial: AnimatedFaceplateMaterial;
 }
 
 // ============================================================================
@@ -129,14 +134,18 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
   // Create share button material
   const shareButtonMaterial = createShareButtonMaterial();
 
+  // Create barber pole striped faceplate
+  const faceplateMaterial = createAnimatedFaceplate({
+    stripeWidth: 50,
+    angle: 45,
+    whiteColor: "#f0f0f0",
+    blackColor: "#080808",
+  });
+
   const overrides: StaticPartOverrideMap = {
     "display-plate": displayPlate.material,
     "display-border": displayBorderMaterial.material,
-    faceplate: new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color("#0a0a0a"),
-      metalness: 0.1,
-      roughness: 0.8,
-    }),
+    faceplate: faceplateMaterial.material,
     "spinner-housing": new THREE.MeshPhysicalMaterial({
       color: new THREE.Color("#1a1a1a"),
       metalness: 0.8,
@@ -155,5 +164,12 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     "button-2-body": shareButtonMaterial.material,
   };
 
-  return { overrides, knobMaterial, displayPlate, indicatorMaterials, shareButtonMaterial };
+  return {
+    overrides,
+    knobMaterial,
+    displayPlate,
+    indicatorMaterials,
+    shareButtonMaterial,
+    faceplateMaterial,
+  };
 };
