@@ -35,7 +35,11 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
     const ctx = brandedCanvas.getContext("2d");
     if (!ctx) return sourceCanvas.toDataURL("image/png");
 
-    // Draw the original canvas first
+    // Fill with black background first (no transparency)
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, brandedCanvas.width, brandedCanvas.height);
+
+    // Draw the original canvas on top
     ctx.drawImage(sourceCanvas, 0, 0);
 
     // Overlay branding bar at top (semi-transparent)
