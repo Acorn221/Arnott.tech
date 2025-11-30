@@ -1,10 +1,25 @@
 import * as THREE from "three";
 
 export interface BarberPoleFaceplateConfig {
+  // Stripe geometry
   stripeWidth?: number;
   angle?: number; // Degrees
+
+  // Stripe colors
   whiteColor?: string;
   blackColor?: string;
+
+  // White stripe material properties (shiny)
+  whiteRoughness?: number; // 0 = mirror, 1 = matte (default: 0.25)
+  whiteMetalness?: number; // 0 = plastic, 1 = metal (default: 0.9)
+
+  // Black stripe material properties (matte)
+  blackRoughness?: number; // 0 = mirror, 1 = matte (default: 0.8)
+  blackMetalness?: number; // 0 = plastic, 1 = metal (default: 0.2)
+
+  // Overall material
+  clearcoat?: number; // 0-1, glossy top layer (default: 0.4)
+  envMapIntensity?: number; // Environment reflection strength (default: 1.5)
 }
 
 const defaultConfig: Required<BarberPoleFaceplateConfig> = {
@@ -12,12 +27,32 @@ const defaultConfig: Required<BarberPoleFaceplateConfig> = {
   angle: 45,
   whiteColor: "#e8e8e8",
   blackColor: "#0a0a0a",
+
+  // Shiny white stripes - slightly less reflective
+  whiteRoughness: 0.35,
+  whiteMetalness: 0.8,
+
+  // Matte black stripes
+  blackRoughness: 0.8,
+  blackMetalness: 0.2,
+
+  // Overall finish
+  clearcoat: 0.3,
+  envMapIntensity: 1.2,
 };
 
 /**
  * Creates diagonal stripe textures for barber pole effect
  * Uses a large texture with many stripes to avoid UV tiling issues
  */
+/** Convert 0-1 value to hex grayscale color */
+const toGray = (value: number): string => {
+  const hex = Math.round(value * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `#${hex}${hex}${hex}`;
+};
+
 const createStripeTextures = (
   config: Required<BarberPoleFaceplateConfig>,
 ): {
@@ -26,7 +61,16 @@ const createStripeTextures = (
   metalnessMap: THREE.CanvasTexture;
 } => {
   const size = 2048; // Large texture to avoid tiling
-  const { stripeWidth, angle, whiteColor, blackColor } = config;
+  const {
+    stripeWidth,
+    angle,
+    whiteColor,
+    blackColor,
+    whiteRoughness,
+    whiteMetalness,
+    blackRoughness,
+    blackMetalness,
+  } = config;
 
   // Create canvases
   const colorCanvas = document.createElement("canvas");
@@ -52,13 +96,13 @@ const createStripeTextures = (
   [colorCtx, roughnessCtx, metalnessCtx].forEach((ctx, mapIndex) => {
     ctx.save();
 
-    // Fill with base (black for color, high roughness, low metalness)
+    // Fill with base (black stripe properties)
     if (mapIndex === 0) {
       ctx.fillStyle = blackColor;
     } else if (mapIndex === 1) {
-      ctx.fillStyle = "#cccccc"; // High roughness for black stripes (matte)
+      ctx.fillStyle = toGray(blackRoughness); // Black stripe roughness
     } else {
-      ctx.fillStyle = "#333333"; // Low metalness for black stripes
+      ctx.fillStyle = toGray(blackMetalness); // Black stripe metalness
     }
     ctx.fillRect(0, 0, size, size);
 
@@ -74,11 +118,11 @@ const createStripeTextures = (
       const x = -coverage / 2 + i * stripeSpacing;
 
       if (mapIndex === 0) {
-        ctx.fillStyle = whiteColor; // White color
+        ctx.fillStyle = whiteColor; // White stripe color
       } else if (mapIndex === 1) {
-        ctx.fillStyle = "#222222"; // Low roughness for white stripes (shiny)
+        ctx.fillStyle = toGray(whiteRoughness); // White stripe roughness
       } else {
-        ctx.fillStyle = "#ffffff"; // High metalness for white stripes (reflective)
+        ctx.fillStyle = toGray(whiteMetalness); // White stripe metalness
       }
 
       ctx.fillRect(x, -coverage / 2, stripeWidth, coverage);
@@ -125,9 +169,9 @@ export class AnimatedFaceplateMaterial {
       metalnessMap,
       metalness: 1.0, // Controlled by metalnessMap
       roughness: 1.0, // Controlled by roughnessMap
-      clearcoat: 0.4,
+      clearcoat: this.config.clearcoat,
       clearcoatRoughness: 0.2,
-      envMapIntensity: 1.5,
+      envMapIntensity: this.config.envMapIntensity,
     });
   }
 
