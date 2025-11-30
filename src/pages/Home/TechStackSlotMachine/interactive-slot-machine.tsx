@@ -28,8 +28,9 @@ const SWAP_INTERVAL = 0.3;
 const FACE_ALIGNMENT_OFFSET = Math.PI / 8;
 
 // Share button animation
-const SHARE_BUTTON_PRESS_DEPTH = 0.0002;
-const SHARE_BUTTON_PRESS_DURATION = 0.1;
+const SHARE_BUTTON_PRESS_DEPTH = 0.0006; // Deeper press for more satisfying click
+const SHARE_BUTTON_PRESS_DURATION = 0.08; // Snappier press
+const SHARE_BUTTON_RELEASE_DURATION = 0.15; // Slightly slower release with bounce
 
 const SPINNER_NAMES = [
   "slot-spinner-1",
@@ -59,6 +60,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     calculateFinalResult,
     setIsSpinning,
     lastResult,
+    spinButtonRef,
+    spinButtonMaterialRef,
     shareButtonRef,
     shareButtonMaterialRef,
     shareResult,
@@ -73,11 +76,14 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   // Indicator animation state
   const indicatorTimeRef = useRef(0);
 
-  // Share button state
+  // Button animation state (both buttons RGB cycle)
+  const buttonGlowTime = useRef(0);
+  const spinButtonBaseZ = useRef<number | null>(null);
+  const spinButtonPressProgress = useRef(0);
+  const isSpinButtonPressed = useRef(false);
   const shareButtonBaseZ = useRef<number | null>(null);
   const shareButtonPressProgress = useRef(0);
   const isShareButtonPressed = useRef(false);
-  const shareButtonGlowTime = useRef(0);
 
   // Sound effect state
   const prevPhasesRef = useRef<string[]>(["stopped", "stopped", "stopped"]);
@@ -99,52 +105,47 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   const { handlePointerDown, handlePointerOver, handlePointerOut } =
     useSlotMachineHandle({ onTrigger: handleTrigger });
 
-  // Activate/deactivate share button glow based on result availability
-  useEffect(() => {
-    const material = shareButtonMaterialRef.current;
-    if (material) {
-      material.setActive(lastResult !== null);
-    }
-  }, [lastResult, shareButtonMaterialRef]);
-
-  // Check if an object is the share button or its child
-  const isShareButton = useCallback((object: THREE.Object3D | null): boolean => {
-    let current = object;
+  // Check if object is either share button (walk up parent chain)
+  const isShareButton = useCallback((object: THREE.Object3D | null): "left" | "right" | null => {
+    let current: THREE.Object3D | null = object;
     while (current) {
-      if (current.name === "button-2-body") {
-        return true;
-      }
+      const name = current.name.toLowerCase();
+      if (name === "button-1-body" || name.includes("button-1")) return "left";
+      if (name === "button-2-body" || name.includes("button-2")) return "right";
       current = current.parent;
     }
-    return false;
+    return null;
   }, []);
 
-  // Share button click handler
-  const handleShareButtonClick = useCallback(() => {
+  // Share button click handler (works for both buttons)
+  const handleShareButtonClick = useCallback((which: "left" | "right") => {
     if (!lastResult) return;
     
-    // Trigger button press animation
-    isShareButtonPressed.current = true;
-    shareButtonPressProgress.current = 0;
+    soundManager.playButtonClick();
+    if (which === "left") {
+      isSpinButtonPressed.current = true;
+      spinButtonPressProgress.current = 0;
+    } else {
+      isShareButtonPressed.current = true;
+      shareButtonPressProgress.current = 0;
+    }
     
-    // Execute share after a small delay for visual feedback
     setTimeout(() => {
       shareResult();
-    }, 100);
+    }, 120);
   }, [lastResult, shareResult]);
 
-  // Combined pointer down handler - handle + share button
+  // Combined pointer down handler
   const combinedPointerDown = useCallback(
     (event: { object: THREE.Object3D; stopPropagation: () => void }) => {
-      // Check for share button first
-      if (isShareButton(event.object)) {
-        if (lastResult) {
-          handleShareButtonClick();
-          event.stopPropagation();
-        }
+      const buttonType = isShareButton(event.object);
+      
+      if (buttonType && lastResult) {
+        handleShareButtonClick(buttonType);
+        event.stopPropagation();
         return;
       }
-      // Otherwise delegate to handle
+      
       handlePointerDown(event);
     },
     [isShareButton, lastResult, handleShareButtonClick, handlePointerDown],
@@ -153,12 +154,16 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   // Combined pointer over handler
   const combinedPointerOver = useCallback(
     (event: { object: THREE.Object3D }) => {
-      if (isShareButton(event.object)) {
+      const buttonType = isShareButton(event.object);
+      
+      // Show pointer cursor for buttons when there's a result to share
+      if (buttonType) {
         if (lastResult) {
           gl.domElement.style.cursor = "pointer";
         }
-        return;
+        return; // Don't pass to handle hover
       }
+      
       handlePointerOver(event);
     },
     [isShareButton, lastResult, gl, handlePointerOver],
@@ -166,8 +171,9 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
   // Combined pointer out handler
   const combinedPointerOut = useCallback(() => {
+    gl.domElement.style.cursor = "auto";
     handlePointerOut();
-  }, [handlePointerOut]);
+  }, [gl, handlePointerOut]);
 
   // Main animation loop - handles reels, rumble, and cursor
   useFrame((_, delta) => {
@@ -300,47 +306,83 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       }
     }
 
-    // Share button animation
+    // RGB button animations - BOTH are share buttons, only glow when there's a result
+    buttonGlowTime.current += delta;
+    const rgbTime = buttonGlowTime.current;
+    const hasResult = lastResult !== null;
+    
+    // LEFT SHARE BUTTON - RGB cycle
+    const spinButton = spinButtonRef.current;
+    const spinButtonMaterial = spinButtonMaterialRef.current;
+    if (spinButton && spinButtonMaterial) {
+      if (spinButtonBaseZ.current === null) {
+        spinButtonBaseZ.current = spinButton.position.z;
+      }
+      
+      if (hasResult && !isSpinButtonPressed.current) {
+        // RGB rainbow cycle (toned down)
+        const hue = (rgbTime * 0.3) % 1;
+        const pulse = 0.8 + Math.sin(rgbTime * 4) * 0.4;
+        spinButtonMaterial.material.emissive.setHSL(hue, 0.9, 0.4);
+        spinButtonMaterial.material.color.setHSL(hue, 0.7, 0.3);
+        spinButtonMaterial.material.emissiveIntensity = pulse;
+      } else if (!hasResult) {
+        // Dim when no result
+        spinButtonMaterial.material.emissiveIntensity = 0;
+        spinButtonMaterial.material.color.set("#1a1a1a");
+      }
+      
+      // Press animation
+      if (isSpinButtonPressed.current) {
+        spinButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
+        if (spinButtonPressProgress.current >= 1.5) {
+          isSpinButtonPressed.current = false;
+          spinButtonPressProgress.current = 0;
+          spinButton.position.z = spinButtonBaseZ.current;
+        } else {
+          const press = Math.min(spinButtonPressProgress.current, 1);
+          const release = Math.max(0, spinButtonPressProgress.current - 1) * 2;
+          const depth = press * (1 - release);
+          spinButton.position.z = spinButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+          spinButtonMaterial.material.emissiveIntensity = 1.8;
+        }
+      }
+    }
+    
+    // RIGHT SHARE BUTTON - RGB cycle offset by 0.5 (opposite colors)
     const shareButton = shareButtonRef.current;
     const shareButtonMaterial = shareButtonMaterialRef.current;
     if (shareButton && shareButtonMaterial) {
-      // Store base Z position (model is rotated -90° on X, so Z is the "forward" axis)
       if (shareButtonBaseZ.current === null) {
         shareButtonBaseZ.current = shareButton.position.z;
       }
-
-      // Glow pulsing when active (has result)
-      if (lastResult) {
-        shareButtonGlowTime.current += delta;
-        const pulse = 1.0 + Math.sin(shareButtonGlowTime.current * 3) * 0.5;
+      
+      if (hasResult && !isShareButtonPressed.current) {
+        // RGB rainbow cycle - offset by 0.5 for opposite colors (toned down)
+        const hue = (rgbTime * 0.3 + 0.5) % 1;
+        const pulse = 0.8 + Math.sin(rgbTime * 4) * 0.4;
+        shareButtonMaterial.material.emissive.setHSL(hue, 0.9, 0.4);
+        shareButtonMaterial.material.color.setHSL(hue, 0.7, 0.3);
         shareButtonMaterial.material.emissiveIntensity = pulse;
+      } else if (!hasResult) {
+        // Dim when no result
+        shareButtonMaterial.material.emissiveIntensity = 0;
+        shareButtonMaterial.material.color.set("#1a1a1a");
       }
-
-      // Button press animation (move on Z axis - into the machine)
+      
+      // Press animation
       if (isShareButtonPressed.current) {
         shareButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
-        
-        if (shareButtonPressProgress.current >= 2) {
-          // Animation complete (press down + release)
+        if (shareButtonPressProgress.current >= 1.5) {
           isShareButtonPressed.current = false;
           shareButtonPressProgress.current = 0;
           shareButton.position.z = shareButtonBaseZ.current;
-        } else if (shareButtonPressProgress.current >= 1) {
-          // Release phase - move back out, brighten
-          const releaseProgress = shareButtonPressProgress.current - 1;
-          const eased = 1 - Math.pow(1 - releaseProgress, 2);
-          shareButton.position.z = shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * (1 - eased);
-          // Brighten back up
-          const darkenAmount = 0.4 * (1 - eased);
-          shareButtonMaterial.material.color.setRGB(0, 0.67 * (1 - darkenAmount), 1 * (1 - darkenAmount));
         } else {
-          // Press phase - move in, darken
-          const pressProgress = shareButtonPressProgress.current;
-          const eased = 1 - Math.pow(1 - pressProgress, 2);
-          shareButton.position.z = shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * eased;
-          // Darken the color
-          const darkenAmount = 0.4 * eased;
-          shareButtonMaterial.material.color.setRGB(0, 0.67 * (1 - darkenAmount), 1 * (1 - darkenAmount));
+          const press = Math.min(shareButtonPressProgress.current, 1);
+          const release = Math.max(0, shareButtonPressProgress.current - 1) * 2;
+          const depth = press * (1 - release);
+          shareButton.position.z = shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+          shareButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }
     }

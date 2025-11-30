@@ -65,9 +65,11 @@ export interface SlotMachineContextValue {
   /** Face objects for each reel: reelIndex -> (faceIndex -> Object3D) */
   reelFaceObjectsRef: React.MutableRefObject<Map<number, Map<number, THREE.Object3D>>>;
 
-  // Share button
+  // Buttons
   shareButtonRef: React.MutableRefObject<THREE.Object3D | null>;
   shareButtonMaterialRef: React.MutableRefObject<ShareButtonMaterial | null>;
+  spinButtonRef: React.MutableRefObject<THREE.Object3D | null>;
+  spinButtonMaterialRef: React.MutableRefObject<ShareButtonMaterial | null>;
 
   // Reel state
   reelManagersRef: React.MutableRefObject<ReelTextureManager[] | null>;
@@ -90,6 +92,8 @@ export interface SlotMachineContextValue {
   setReelFaceObjects: (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => void;
   setShareButton: (button: THREE.Object3D | null) => void;
   setShareButtonMaterial: (material: ShareButtonMaterial) => void;
+  setSpinButton: (button: THREE.Object3D | null) => void;
+  setSpinButtonMaterial: (material: ShareButtonMaterial) => void;
   initializeReels: () => Promise<void>;
   calculateFinalResult: () => void;
   setIsSpinning: (spinning: boolean) => void;
@@ -148,9 +152,11 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
   const reelFaceObjectsRef = useRef<Map<number, Map<number, THREE.Object3D>>>(new Map());
 
-  // Share button refs
+  // Button refs
   const shareButtonRef = useRef<THREE.Object3D | null>(null);
   const shareButtonMaterialRef = useRef<ShareButtonMaterial | null>(null);
+  const spinButtonRef = useRef<THREE.Object3D | null>(null);
+  const spinButtonMaterialRef = useRef<ShareButtonMaterial | null>(null);
 
   // Reel state refs
   const reelStatesRef = useRef<ReelState[]>([
@@ -230,6 +236,14 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
   const setShareButtonMaterial = useCallback((material: ShareButtonMaterial) => {
     shareButtonMaterialRef.current = material;
+  }, []);
+
+  const setSpinButton = useCallback((button: THREE.Object3D | null) => {
+    spinButtonRef.current = button;
+  }, []);
+
+  const setSpinButtonMaterial = useCallback((material: ShareButtonMaterial) => {
+    spinButtonMaterialRef.current = material;
   }, []);
 
   const setIsSpinning = useCallback((spinning: boolean) => {
@@ -413,6 +427,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       reelFaceObjectsRef,
       shareButtonRef,
       shareButtonMaterialRef,
+      spinButtonRef,
+      spinButtonMaterialRef,
       reelManagersRef,
       reelStatesRef,
       swapTimersRef,
@@ -429,6 +445,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setReelFaceObjects,
       setShareButton,
       setShareButtonMaterial,
+      setSpinButton,
+      setSpinButtonMaterial,
       initializeReels,
       calculateFinalResult,
       setIsSpinning,
@@ -447,6 +465,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       setReelFaceObjects,
       setShareButton,
       setShareButtonMaterial,
+      setSpinButton,
+      setSpinButtonMaterial,
       initializeReels,
       calculateFinalResult,
       setIsSpinning,

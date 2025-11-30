@@ -33,6 +33,7 @@ export type StaticPartName =
   | "slot-indicator-2"
   | "slot-indicator-3"
   | "slot-indicator-4"
+  | "button-1-body"
   | "button-2-body";
 
 export type StaticPartOverrideMap = Record<StaticPartName, THREE.Material>;
@@ -42,6 +43,7 @@ export interface StaticPartOverridesResult {
   knobMaterial: AnimatedGlowBorderMaterial;
   displayPlate: DynamicDisplayPlate;
   indicatorMaterials: THREE.MeshPhysicalMaterial[];
+  spinButtonMaterial: ShareButtonMaterial;
   shareButtonMaterial: ShareButtonMaterial;
   faceplateMaterial: AnimatedFaceplateMaterial;
 }
@@ -132,7 +134,8 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     createIndicatorMaterial(),
   ];
 
-  // Create share button material
+  // Create button materials (both will be RGB animated)
+  const spinButtonMaterial = createShareButtonMaterial();
   const shareButtonMaterial = createShareButtonMaterial();
 
   // Create barber pole striped faceplate
@@ -189,6 +192,7 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     "slot-indicator-2": indicatorMaterials[1],
     "slot-indicator-3": indicatorMaterials[2],
     "slot-indicator-4": indicatorMaterials[3],
+    "button-1-body": spinButtonMaterial.material,
     "button-2-body": shareButtonMaterial.material,
   };
 
@@ -197,6 +201,7 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     knobMaterial,
     displayPlate,
     indicatorMaterials,
+    spinButtonMaterial,
     shareButtonMaterial,
     faceplateMaterial,
   };

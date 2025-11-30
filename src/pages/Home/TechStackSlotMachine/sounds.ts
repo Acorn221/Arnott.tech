@@ -111,6 +111,16 @@ class RetroSoundManager {
     setTimeout(() => this.playTone(200, 0.4, "square", 0.5, 100), 650);
   }
 
+  /** Button click - satisfying mechanical click */
+  playButtonClick(): void {
+    // Sharp attack click
+    this.playTone(1200, 0.03, "square", 0.5);
+    // Lower thunk for body
+    this.playTone(400, 0.05, "square", 0.4);
+    // Subtle release click
+    setTimeout(() => this.playTone(800, 0.02, "square", 0.3), 80);
+  }
+
   setVolume(vol: number): void {
     this.volume = Math.max(0, Math.min(1, vol));
   }
