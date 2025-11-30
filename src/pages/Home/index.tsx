@@ -1,33 +1,28 @@
-import { XyzTransition } from '@animxyz/react';
-import { AiFillLinkedin } from 'react-icons/ai';
-import { MdEmail } from 'react-icons/md';
-import { SiGmail } from 'react-icons/si';
-import { useCallback, useEffect, useState } from 'react';
-import ReactGA from 'react-ga4';
-import Text from '@/misc/Text';
-import Carousel from './Carousel';
-import Frontend from './Carousel/Slides/Frontend';
-import DevTools from './Carousel/Slides/DevTools';
-import Backend from './Carousel/Slides/Backend';
-import OtherPrograms from './Carousel/Slides/OtherPrograms';
-import Projects from './Projects';
-import { getEmail } from './util/misc';
-import StyledToolTip from '@/misc/StyledComponents/StyledToolTip';
-import FidgetSpinner from './Fidget-Spinner';
+import { XyzTransition } from "@animxyz/react";
+import { AiFillLinkedin } from "react-icons/ai";
+import { MdEmail } from "react-icons/md";
+import { SiGmail } from "react-icons/si";
+import { useCallback, useEffect, useState } from "react";
+import ReactGA from "react-ga4";
+import Text from "@/misc/Text";
+import Carousel from "./Carousel";
+import Frontend from "./Carousel/Slides/Frontend";
+import DevTools from "./Carousel/Slides/DevTools";
+import Backend from "./Carousel/Slides/Backend";
+import OtherPrograms from "./Carousel/Slides/OtherPrograms";
+import Projects from "./Projects";
+import { getEmail } from "./util/misc";
+import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
+import FidgetSpinner from "./Fidget-Spinner";
 
 const txt = Text.home;
 
-const fadeAnimation = 'fade in-out delay-4 duration-24';
+const fadeAnimation = "fade in-out delay-4 duration-24";
 
-const slides = [
-  Frontend,
-  Backend,
-  DevTools,
-  OtherPrograms,
-];
+const slides = [Frontend, Backend, DevTools, OtherPrograms];
 
 const Home = () => {
-  const [email, setEmail] = useState('/');
+  const [email, setEmail] = useState("/");
 
   const requestEmail = useCallback(() => {
     const unencryptedEmail = getEmail();
@@ -36,31 +31,47 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    ReactGA.initialize('G-WW6JYGLDCW');
-    ReactGA.send({ hitType: 'pageview', page: window.location.pathname, title: document.title });
+    ReactGA.initialize("G-WW6JYGLDCW");
+    ReactGA.send({
+      hitType: "pageview",
+      page: window.location.pathname,
+      title: document.title,
+    });
 
     requestEmail();
   });
 
-  const getGmailLink = () => `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(requestEmail())}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
+  const getGmailLink = () =>
+    `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
+      requestEmail(),
+    )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
 
   const handleGmailLinkClick = useCallback(() => {
     ReactGA.send({
-      category: 'UrlClick', action: 'gmail-click', page: window.location.pathname, title: document.title,
+      category: "UrlClick",
+      action: "gmail-click",
+      page: window.location.pathname,
+      title: document.title,
     });
     window.open(getGmailLink());
-  }, [email]);
+  }, [email, getGmailLink]);
 
   const handleLinkedInLinkClick = useCallback(() => {
     ReactGA.send({
-      category: 'UrlClick', action: 'linkedin-click', page: window.location.pathname, title: document.title,
+      category: "UrlClick",
+      action: "linkedin-click",
+      page: window.location.pathname,
+      title: document.title,
     });
-    window.open('https://www.linkedin.com/in/james-arnott-341705143/');
+    window.open("https://www.linkedin.com/in/james-arnott-341705143/");
   }, [email]);
 
   const handleEmailLinkClick = useCallback(() => {
     ReactGA.send({
-      category: 'UrlClick', action: 'email-click', page: window.location.pathname, title: document.title,
+      category: "UrlClick",
+      action: "email-click",
+      page: window.location.pathname,
+      title: document.title,
     });
     window.open(`mailto:${requestEmail()}`);
   }, [email]);
@@ -75,11 +86,9 @@ const Home = () => {
       <XyzTransition appear xyz={`${fadeAnimation} up-2`}>
         <div>
           <Carousel className="h-[35vh] min-h-[5em]">
-            {
-            slides.map((Slide, index) => (
+            {slides.map((Slide, index) => (
               <Slide index={index} />
-            ))
-          }
+            ))}
           </Carousel>
         </div>
       </XyzTransition>
@@ -113,48 +122,62 @@ const Home = () => {
                 {txt.contactMe.title}
               </div>
               <div className="flex w-full text-center justify-center m-2">
-                <div className="flex-1 justify-center" onClick={() => handleLinkedInLinkClick()}>
-                  <StyledToolTip placement="top" arrow title="James-Arnott-341705143">
+                <div
+                  className="flex-1 justify-center"
+                  onClick={() => handleLinkedInLinkClick()}
+                >
+                  <StyledToolTip
+                    placement="top"
+                    arrow
+                    title="James-Arnott-341705143"
+                  >
                     <div className="m-auto w-[15vmin] flex-col flex">
                       <AiFillLinkedin className="w-[15vmin] h-full m-auto" />
-                      <div>
-                        {txt.contactMe.linkedIn.text}
-                      </div>
+                      <div>{txt.contactMe.linkedIn.text}</div>
                     </div>
                   </StyledToolTip>
                 </div>
 
-                <div onClick={() => handleEmailLinkClick()} className="flex-1 justify-center ">
-                  <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
+                <div
+                  onClick={() => handleEmailLinkClick()}
+                  className="flex-1 justify-center "
+                >
+                  <StyledToolTip
+                    placement="top"
+                    arrow
+                    onOpen={() => requestEmail()}
+                    title={email}
+                  >
                     <div className="m-auto w-[15vmin] flex-col flex">
                       <MdEmail className="w-[15vmin] h-full cursor-pointer m-auto" />
-                      <div>
-                        {txt.contactMe.email.text}
-                      </div>
+                      <div>{txt.contactMe.email.text}</div>
                     </div>
                   </StyledToolTip>
                 </div>
 
-                <div onClick={() => handleGmailLinkClick()} className="flex-1 justify-center ">
-                  <StyledToolTip placement="top" arrow onOpen={() => requestEmail()} title={email}>
+                <div
+                  onClick={() => handleGmailLinkClick()}
+                  className="flex-1 justify-center "
+                >
+                  <StyledToolTip
+                    placement="top"
+                    arrow
+                    onOpen={() => requestEmail()}
+                    title={email}
+                  >
                     <div className="m-auto w-[15vmin] flex-col flex">
                       <SiGmail className="w-[15vmin] h-full cursor-pointer m-auto" />
-                      <div>
-                        {txt.contactMe.gmail.text}
-                      </div>
+                      <div>{txt.contactMe.gmail.text}</div>
                     </div>
                   </StyledToolTip>
                 </div>
-
               </div>
             </div>
           </div>
         </div>
         {/* </XyzTransition> */}
       </div>
-
     </div>
-
   );
 };
 

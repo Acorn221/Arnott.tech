@@ -1,8 +1,8 @@
-import StyledToolTip from '@/misc/StyledComponents/StyledToolTip';
-import { IconInterface } from './Icons';
+import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
+import { type IconInterface } from "./Icons";
 
 interface IconContainerProps {
-	icon: IconInterface;
+  icon: IconInterface;
   iconStyles?: string;
 }
 
