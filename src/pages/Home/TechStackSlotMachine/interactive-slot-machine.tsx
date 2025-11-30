@@ -12,6 +12,7 @@ import {
   getRandomUnusedTech,
   updateReelFace,
 } from "./config/reel-textures";
+import { soundManager } from "./sounds";
 
 // Rumble configuration
 const RUMBLE_DURATION = 0.5;
@@ -78,6 +79,11 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   const isShareButtonPressed = useRef(false);
   const shareButtonGlowTime = useRef(0);
 
+  // Sound effect state
+  const prevPhasesRef = useRef<string[]>(["stopped", "stopped", "stopped"]);
+  const clickTimerRef = useRef(0);
+  const CLICK_INTERVAL = 0.08; // Time between clicks during spin
+
   const triggerRumble = useCallback(() => {
     isRumblingRef.current = true;
     rumbleTimeRef.current = 0;
@@ -85,6 +91,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   }, [position]);
 
   const handleTrigger = useCallback(() => {
+    soundManager.playHandlePull();
     triggerRumble();
     startGame();
   }, [triggerRumble, startGame]);
@@ -222,7 +229,22 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       }
 
       spinner.rotation.x = -state.angle + FACE_ALIGNMENT_OFFSET;
+
+      // Play stop sound when reel transitions to stopped
+      if (state.phase === "stopped" && prevPhasesRef.current[i] !== "stopped") {
+        soundManager.playReelStop();
+      }
+      prevPhasesRef.current[i] = state.phase;
     });
+
+    // Play clicking sounds during spin
+    if (isSpinningRef.current) {
+      clickTimerRef.current += delta;
+      if (clickTimerRef.current >= CLICK_INTERVAL) {
+        clickTimerRef.current = 0;
+        soundManager.playReelClick();
+      }
+    }
 
     // Check if all reels stopped
     if (isSpinningRef.current) {

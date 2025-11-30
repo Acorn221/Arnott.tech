@@ -25,6 +25,7 @@ import {
   type ScoreResult,
   getScoreMessage,
 } from "./config/scoring";
+import { soundManager } from "./sounds";
 
 // Share button material type
 export interface ShareButtonMaterial {
@@ -280,6 +281,13 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     };
 
     setLastResult(result);
+
+    // Play win/lose sound based on score
+    if (score.score >= 50) {
+      soundManager.playWin();
+    } else {
+      soundManager.playLose();
+    }
 
     // Update display plate with score
     displayPlateRef.current?.showScore(
