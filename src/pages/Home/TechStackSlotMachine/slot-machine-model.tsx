@@ -188,7 +188,7 @@ const SlotMachineModel: FC = () => {
 
   }, [scene, isInitialized, reelManagersRef, setReelFaceObjects]);
 
-  // Create handle pivot
+  // Create handle pivot and add larger hit area for mobile
   useEffect(() => {
     if (handlePivotRef.current) {
       setHandlePivot(handlePivotRef.current);
@@ -210,12 +210,26 @@ const SlotMachineModel: FC = () => {
 
     const pivot = createHandlePivot(scene);
     if (pivot) {
+      // Add invisible hit area for easier mobile dragging
+      const handleKnob = pivot.getObjectByName("handle-knob");
+      if (handleKnob && !handleKnob.getObjectByName("handle-hitarea")) {
+        const hitGeometry = new THREE.SphereGeometry(0.022, 8, 8); // ~3x knob size - easier to grab
+        const hitMaterial = new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        });
+        const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+        hitMesh.name = "handle-hitarea";
+        handleKnob.add(hitMesh);
+      }
+      
       handlePivotRef.current = pivot;
       setHandlePivot(pivot);
     }
   }, [scene, setHandlePivot]);
 
-  // Find buttons
+  // Find buttons and add larger hit areas for mobile
   useEffect(() => {
     let spinButton: THREE.Object3D | null = null;
     let shareButton: THREE.Object3D | null = null;
@@ -226,10 +240,29 @@ const SlotMachineModel: FC = () => {
         shareButton = obj;
       }
     });
+    
+    // Add invisible hit areas for easier mobile tapping
+    const addHitArea = (button: THREE.Object3D, name: string) => {
+      // Check if hit area already exists
+      if (button.getObjectByName(`${name}-hitarea`)) return;
+      
+      const hitGeometry = new THREE.SphereGeometry(0.018, 8, 8); // ~4x button size - good for mobile
+      const hitMaterial = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      });
+      const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+      hitMesh.name = `${name}-hitarea`;
+      button.add(hitMesh);
+    };
+    
     if (spinButton) {
+      addHitArea(spinButton, "button-1");
       setSpinButton(spinButton);
     }
     if (shareButton) {
+      addHitArea(shareButton, "button-2");
       setShareButton(shareButton);
     }
   }, [scene, setSpinButton, setShareButton]);
