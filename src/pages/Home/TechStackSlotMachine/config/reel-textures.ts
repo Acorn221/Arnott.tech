@@ -81,36 +81,10 @@ const drawFaceTexture = (
   faceIndex: number,
 ) => {
   // DEBUG: Show face numbers instead of icons
-  const DEBUG_SHOW_NUMBERS = false;
 
   // Dark background (alternating slightly for visibility)
   ctx.fillStyle = faceIndex % 2 === 0 ? "#1a1a1a" : "#222222";
   ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
-
-  if (DEBUG_SHOW_NUMBERS) {
-    // Draw big number in center
-    ctx.save();
-    ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = "#00ff00";
-    ctx.font = "bold 200px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(faceIndex + 1), 0, 0);
-    ctx.restore();
-
-    // Also show tech name smaller
-    ctx.save();
-    ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE - 60);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(tech.shortName, 0, 0);
-    ctx.restore();
-    return;
-  }
 
   // Icon - draw with original colors
   // Compensate for face aspect ratio (wider than tall on octagon)
