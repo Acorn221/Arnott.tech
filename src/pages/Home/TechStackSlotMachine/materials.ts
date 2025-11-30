@@ -23,14 +23,14 @@ export const createMaterials = (): MaterialMap => ({
       roughness: 0.2,
       clearcoat: 0.3,
     }),
-  // Off-white/cream
+  // Off-white/cream (top casing) - less reflective
   "0.917647_0.917647_0.917647_0.000000_0.000000":
     new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color("#F5F5DC"),
+      color: new THREE.Color("#E8E8E8"),
       metalness: 0.0,
-      roughness: 0.3,
-      clearcoat: 0.6,
-      clearcoatRoughness: 0.3,
+      roughness: 0.6, // Higher = more matte
+      clearcoat: 0.15, // Lower = less shiny top layer
+      clearcoatRoughness: 0.4,
     }),
   // Silver metal
   "0.498039_0.498039_0.498039_0.000000_0.000000":

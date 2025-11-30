@@ -22,6 +22,7 @@ export type StaticPartName =
   | "display-plate"
   | "display-border"
   | "faceplate"
+  | "top-plate"
   | "spinner-housing"
   | "handle-knob"
   | "screw-1"
@@ -166,6 +167,15 @@ export const createStaticPartOverrides = (): StaticPartOverridesResult => {
     "display-plate": displayPlate.material,
     "display-border": displayBorderMaterial.material,
     faceplate: faceplateMaterial.material,
+    // Top plate - matte finish, less reflective than faceplate
+    "top-plate": new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color("#111111"),
+      metalness: 0.15,
+      roughness: 0.4, // Nice and matte
+      clearcoat: 0.1,
+      sheen: 0.01,
+      sheenColor: new THREE.Color("#FFF"),
+    }),
     "spinner-housing": new THREE.MeshPhysicalMaterial({
       color: new THREE.Color("#1a1a1a"),
       metalness: 0.8,
