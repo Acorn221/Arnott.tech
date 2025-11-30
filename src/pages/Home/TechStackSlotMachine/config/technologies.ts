@@ -32,6 +32,7 @@ import FortranIcon from "devicon/icons/fortran/fortran-original.svg";
 // Custom icons from public folder
 const BrainfuckIcon = "/brainfuck-icon.svg";
 const NeonIcon = "/neon-icon.svg";
+const htmxIcon = "/htmx-icon.svg";
 
 // Frontend
 import ReactIcon from "devicon/icons/react/react-original.svg";
@@ -431,7 +432,7 @@ export const FRONTEND_TECHNOLOGIES: Technology[] = [
     id: "htmx",
     name: "HTMX",
     shortName: "HTMX",
-    icon: JavaScriptIcon, // Use JS icon as placeholder
+    icon: htmxIcon, // Use JS icon as placeholder
     category: "frontend",
     baseScore: 78,
     tags: ["simple", "hypermedia", "minimal"],
@@ -451,7 +452,7 @@ export const FRONTEND_TECHNOLOGIES: Technology[] = [
     shortName: "Vanilla",
     icon: JavaScriptIcon,
     category: "frontend",
-    baseScore: 25,
+    baseScore: 15,
     tags: ["untyped", "basic", "no-types"],
   },
 ];
@@ -539,7 +540,7 @@ export const DATABASE_TECHNOLOGIES: Technology[] = [
     shortName: "Cassandra",
     icon: CassandraIcon,
     category: "database",
-    baseScore: 65,
+    baseScore: 85,
     tags: ["nosql", "distributed", "wide-column"],
   },
   {
@@ -566,7 +567,7 @@ export const DATABASE_TECHNOLOGIES: Technology[] = [
     shortName: "Neon",
     icon: NeonIcon,
     category: "database",
-    baseScore: 90,
+    baseScore: 95,
     tags: ["postgres", "serverless", "modern"],
   },
 ];
