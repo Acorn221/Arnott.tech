@@ -1,11 +1,13 @@
 import { Canvas } from "@react-three/fiber";
-import { type FC, type HTMLAttributes, Suspense, useState, useRef, useCallback } from "react";
 import {
-  OrbitControls,
-  Environment,
-  ContactShadows,
-  BakeShadows,
-} from "@react-three/drei";
+  type FC,
+  type HTMLAttributes,
+  Suspense,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
+import { OrbitControls, Environment, BakeShadows } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import InteractiveSlotMachine from "./interactive-slot-machine";
 import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
@@ -24,12 +26,12 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
     if (!canvasRef.current) return null;
 
     const sourceCanvas = canvasRef.current;
-    
+
     // Create a canvas same size - overlay branding on existing space
     const brandedCanvas = document.createElement("canvas");
     brandedCanvas.width = sourceCanvas.width;
     brandedCanvas.height = sourceCanvas.height;
-    
+
     const ctx = brandedCanvas.getContext("2d");
     if (!ctx) return sourceCanvas.toDataURL("image/png");
 
@@ -54,28 +56,35 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
     ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+
     // Gradient text effect
     const gradient = ctx.createLinearGradient(0, 0, brandedCanvas.width, 0);
     gradient.addColorStop(0, "#00FF88");
     gradient.addColorStop(0.5, "#00AAFF");
     gradient.addColorStop(1, "#00FF88");
     ctx.fillStyle = gradient;
-    
-    ctx.fillText("🎰 Tech Stack Slot Machine  •  a.rno.tt", brandedCanvas.width / 2, barHeight / 2);
+
+    ctx.fillText(
+      "🎰 Tech Stack Slot Machine  •  a.rno.tt",
+      brandedCanvas.width / 2,
+      barHeight / 2,
+    );
 
     return brandedCanvas.toDataURL("image/png");
   }, []);
 
-  const openShareDialog = useCallback((result: SpinResult) => {
-    // Capture screenshot from canvas
-    const dataUrl = captureScreenshot();
-    if (dataUrl) {
-      setScreenshot(dataUrl);
-    }
-    setDialogResult(result);
-    setDialogOpen(true);
-  }, [captureScreenshot]);
+  const openShareDialog = useCallback(
+    (result: SpinResult) => {
+      // Capture screenshot from canvas
+      const dataUrl = captureScreenshot();
+      if (dataUrl) {
+        setScreenshot(dataUrl);
+      }
+      setDialogResult(result);
+      setDialogOpen(true);
+    },
+    [captureScreenshot],
+  );
 
   const closeShareDialog = useCallback(() => {
     setDialogOpen(false);
@@ -93,17 +102,17 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
         }}
         shadows
         dpr={[1, 1.5]}
-        gl={{ antialias: true, preserveDrawingBuffer: true }}
+        gl={{ antialias: true, preserveDrawingBuffer: true, alpha: true }}
       >
         {/* Provider MUST be inside Canvas for R3F reconciler */}
-        <SlotMachineProvider onShareDialog={openShareDialog} captureScreenshot={captureScreenshot}>
-          {/* Dark background for better glow contrast */}
-          <color attach="background" args={["#030306"]} />
-
+        <SlotMachineProvider
+          onShareDialog={openShareDialog}
+          captureScreenshot={captureScreenshot}
+        >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 
           {/* Hemisphere light for ambient fill */}
-          <hemisphereLight intensity={0.1} groundColor="#000" color="#111" />
+          {/* <hemisphereLight intensity={0.1} groundColor="#000" color="#111" /> */}
 
           {/* Key light - main front light */}
           <spotLight
@@ -141,16 +150,6 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
             intensity={0.15}
             color="#00FF88"
             decay={0}
-          />
-
-          {/* Contact shadows for grounding */}
-          <ContactShadows
-            position={[0, -0.8, 0]}
-            opacity={0.7}
-            scale={10}
-            blur={2.5}
-            far={4}
-            color="#000"
           />
 
           {/* Locks the camera where we want it */}

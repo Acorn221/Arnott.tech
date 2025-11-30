@@ -14,7 +14,6 @@ import Projects from "./Projects";
 import { getEmail } from "./util/misc";
 import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
 import FidgetSpinner from "./Fidget-Spinner";
-import TechStackSlotMachine from "./TechStackSlotMachine";
 
 const txt = Text.home;
 
@@ -100,7 +99,6 @@ const Home = () => {
           <div className="flex-col flex gap-4 text-center">
             <div className="flex flex-col lg:flex-row gap-4">
               <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
-              <TechStackSlotMachine className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
               <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
                 <div className="flex-1 px-5">
                   <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
