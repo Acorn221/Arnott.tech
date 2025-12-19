@@ -56,55 +56,52 @@ export function CrashProjectCard() {
         return;
       }
 
-      // Uncomment below to actually crash the GPU
-      // const device = await adapter.requestDevice();
+      const device = await adapter.requestDevice();
 
-      // const shader = device.createShaderModule({
-      //   code: `
-      // 			@group(0) @binding(0) var<storage, read_write> data: array<u32>;
-      //
-      // 			@compute @workgroup_size(256)
-      // 			fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-      // 				var x = id.x;
-      // 				for (var i = 0u; i < 4294967295u; i++) {
-      // 					x = x * 1103515245u + 12345u;
-      // 					for (var j = 0u; j < 4294967295u; j++) {
-      // 						x = x ^ (x << 13u);
-      // 						x = x ^ (x >> 17u);
-      // 						x = x ^ (x << 5u);
-      // 					}
-      // 				}
-      // 				data[id.x] = x;
-      // 			}
-      // 		`,
-      // });
+      const shader = device.createShaderModule({
+        code: `
+					@group(0) @binding(0) var<storage, read_write> data: array<u32>;
+					
+					@compute @workgroup_size(256)
+					fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+						var x = id.x;
+						for (var i = 0u; i < 4294967295u; i++) {
+							x = x * 1103515245u + 12345u;
+							for (var j = 0u; j < 4294967295u; j++) {
+								x = x ^ (x << 13u);
+								x = x ^ (x >> 17u);
+								x = x ^ (x << 5u);
+							}
+						}
+						data[id.x] = x;
+					}
+				`,
+      });
 
-      // const buffer = device.createBuffer({
-      //   size: 1024 * 1024 * 4,
-      //   usage: GPUBufferUsage.STORAGE,
-      // });
+      const buffer = device.createBuffer({
+        size: 1024 * 1024 * 4,
+        usage: GPUBufferUsage.STORAGE,
+      });
 
-      // const pipeline = device.createComputePipeline({
-      //   layout: "auto",
-      //   compute: { module: shader, entryPoint: "main" },
-      // });
+      const pipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: shader, entryPoint: "main" },
+      });
 
-      // const bindGroup = device.createBindGroup({
-      //   layout: pipeline.getBindGroupLayout(0),
-      //   entries: [{ binding: 0, resource: { buffer } }],
-      // });
+      const bindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{ binding: 0, resource: { buffer } }],
+      });
 
-      // const encoder = device.createCommandEncoder();
-      // const pass = encoder.beginComputePass();
-      // pass.setPipeline(pipeline);
-      // pass.setBindGroup(0, bindGroup);
-      // pass.dispatchWorkgroups(65535, 65535, 1);
-      // pass.end();
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.dispatchWorkgroups(65535, 65535, 1);
+      pass.end();
 
-      // device.queue.submit([encoder.finish()]);
+      device.queue.submit([encoder.finish()]);
 
-      // For testing - just show the meme without crashing
-      console.log("GPU crash would happen here... but it's commented out");
       setStatus("rip");
     } catch (error) {
       console.error("Failed to crash:", error);
