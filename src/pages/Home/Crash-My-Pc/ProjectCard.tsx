@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { XyzTransition } from "@animxyz/react";
 import { Skull } from "lucide-react";
 
@@ -12,22 +12,35 @@ const BUTTON_CLASSES = {
 } as const;
 
 const BUTTON_TEXT = {
-  idle: "💀 Crash My PC 💀",
+  idle: "Crash My PC",
   loading: "Initializing...",
-  rip: "RIP ☠️",
+  rip: "RIP",
 } as const;
 
 export function CrashProjectCard() {
   const [status, setStatus] = useState<Status>("idle");
   const [showDialog, setShowDialog] = useState(false);
+  const [showMeme, setShowMeme] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   async function crashGPU() {
     setShowDialog(false);
+    setShowMeme(true);
+
+    // Play the "to be continued" sound
+    const audio = new Audio("/to-be-continued.mp3");
+    audioRef.current = audio;
+    audio.play();
+
+    // Wait 3.8 seconds before executing the crash
+    await new Promise((resolve) => setTimeout(resolve, 3800));
+
     setStatus("loading");
 
     if (!navigator.gpu) {
       alert("WebGPU not supported - your PC lives another day");
       setStatus("idle");
+      setShowMeme(false);
       return;
     }
 
@@ -39,61 +52,65 @@ export function CrashProjectCard() {
       if (!adapter) {
         alert("No GPU adapter found - saved by the hardware gods");
         setStatus("idle");
+        setShowMeme(false);
         return;
       }
 
-      const device = await adapter.requestDevice();
+      // Uncomment below to actually crash the GPU
+      // const device = await adapter.requestDevice();
 
-      const shader = device.createShaderModule({
-        code: `
-					@group(0) @binding(0) var<storage, read_write> data: array<u32>;
-					
-					@compute @workgroup_size(256)
-					fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-						var x = id.x;
-						for (var i = 0u; i < 4294967295u; i++) {
-							x = x * 1103515245u + 12345u;
-							for (var j = 0u; j < 4294967295u; j++) {
-								x = x ^ (x << 13u);
-								x = x ^ (x >> 17u);
-								x = x ^ (x << 5u);
-							}
-						}
-						data[id.x] = x;
-					}
-				`,
-      });
+      // const shader = device.createShaderModule({
+      //   code: `
+      // 			@group(0) @binding(0) var<storage, read_write> data: array<u32>;
+      //
+      // 			@compute @workgroup_size(256)
+      // 			fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+      // 				var x = id.x;
+      // 				for (var i = 0u; i < 4294967295u; i++) {
+      // 					x = x * 1103515245u + 12345u;
+      // 					for (var j = 0u; j < 4294967295u; j++) {
+      // 						x = x ^ (x << 13u);
+      // 						x = x ^ (x >> 17u);
+      // 						x = x ^ (x << 5u);
+      // 					}
+      // 				}
+      // 				data[id.x] = x;
+      // 			}
+      // 		`,
+      // });
 
-      const buffer = device.createBuffer({
-        size: 1024 * 1024 * 4,
-        usage: GPUBufferUsage.STORAGE,
-      });
+      // const buffer = device.createBuffer({
+      //   size: 1024 * 1024 * 4,
+      //   usage: GPUBufferUsage.STORAGE,
+      // });
 
-      const pipeline = device.createComputePipeline({
-        layout: "auto",
-        compute: { module: shader, entryPoint: "main" },
-      });
+      // const pipeline = device.createComputePipeline({
+      //   layout: "auto",
+      //   compute: { module: shader, entryPoint: "main" },
+      // });
 
-      const bindGroup = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer } }],
-      });
+      // const bindGroup = device.createBindGroup({
+      //   layout: pipeline.getBindGroupLayout(0),
+      //   entries: [{ binding: 0, resource: { buffer } }],
+      // });
 
-      const encoder = device.createCommandEncoder();
-      const pass = encoder.beginComputePass();
-      pass.setPipeline(pipeline);
-      pass.setBindGroup(0, bindGroup);
-      pass.dispatchWorkgroups(65535, 65535, 1);
-      pass.end();
+      // const encoder = device.createCommandEncoder();
+      // const pass = encoder.beginComputePass();
+      // pass.setPipeline(pipeline);
+      // pass.setBindGroup(0, bindGroup);
+      // pass.dispatchWorkgroups(65535, 65535, 1);
+      // pass.end();
 
-      device.queue.submit([encoder.finish()]);
+      // device.queue.submit([encoder.finish()]);
 
+      // For testing - just show the meme without crashing
+      console.log("GPU crash would happen here... but it's commented out");
       setStatus("rip");
-      console.log("RIP your GPU");
     } catch (error) {
       console.error("Failed to crash:", error);
       alert(`Crash failed: ${error}`);
       setStatus("idle");
+      setShowMeme(false);
     }
   }
 
@@ -194,6 +211,32 @@ export function CrashProjectCard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* To Be Continued Meme Overlay */}
+      {showMeme && (
+        <div className="fixed inset-0 z-[200] bg-white flex items-end justify-end overflow-hidden">
+          <img
+            src="/to-be-continued-arrow.png"
+            alt="To Be Continued"
+            className="w-1/2 max-w-2xl"
+            style={{
+              animation: "slideInFromRight 1s ease-out forwards",
+            }}
+          />
+          <style>{`
+            @keyframes slideInFromRight {
+              from {
+                transform: translateX(100%);
+                opacity: 0;
+              }
+              to {
+                transform: translateX(0);
+                opacity: 1;
+              }
+            }
+          `}</style>
         </div>
       )}
     </>
