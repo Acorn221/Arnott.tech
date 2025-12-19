@@ -63,7 +63,9 @@ export interface SlotMachineContextValue {
   indicatorMaterialsRef: React.MutableRefObject<THREE.MeshPhysicalMaterial[]>;
   faceplateMaterialRef: React.MutableRefObject<AnimatedFaceplateMaterial | null>;
   /** Face objects for each reel: reelIndex -> (faceIndex -> Object3D) */
-  reelFaceObjectsRef: React.MutableRefObject<Map<number, Map<number, THREE.Object3D>>>;
+  reelFaceObjectsRef: React.MutableRefObject<
+    Map<number, Map<number, THREE.Object3D>>
+  >;
 
   // Buttons
   shareButtonRef: React.MutableRefObject<THREE.Object3D | null>;
@@ -89,7 +91,10 @@ export interface SlotMachineContextValue {
   setDisplayPlate: (plate: DynamicDisplayPlate) => void;
   setIndicatorMaterials: (materials: THREE.MeshPhysicalMaterial[]) => void;
   setFaceplateMaterial: (material: AnimatedFaceplateMaterial) => void;
-  setReelFaceObjects: (reelIndex: number, faceObjects: Map<number, THREE.Object3D>) => void;
+  setReelFaceObjects: (
+    reelIndex: number,
+    faceObjects: Map<number, THREE.Object3D>,
+  ) => void;
   setShareButton: (button: THREE.Object3D | null) => void;
   setShareButtonMaterial: (material: ShareButtonMaterial) => void;
   setSpinButton: (button: THREE.Object3D | null) => void;
@@ -117,7 +122,9 @@ const secureRandom = (): number => {
 // Context
 // ============================================================================
 
-export const SlotMachineContext = createContext<SlotMachineContextValue | null>(null);
+export const SlotMachineContext = createContext<SlotMachineContextValue | null>(
+  null,
+);
 
 export const useSlotMachine = (): SlotMachineContextValue => {
   const context = useContext(SlotMachineContext);
@@ -150,7 +157,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   const indicatorMaterialsRef = useRef<THREE.MeshPhysicalMaterial[]>([]);
   const faceplateMaterialRef = useRef<AnimatedFaceplateMaterial | null>(null);
   const reelManagersRef = useRef<ReelTextureManager[] | null>(null);
-  const reelFaceObjectsRef = useRef<Map<number, Map<number, THREE.Object3D>>>(new Map());
+  const reelFaceObjectsRef = useRef<Map<number, Map<number, THREE.Object3D>>>(
+    new Map(),
+  );
 
   // Button refs
   const shareButtonRef = useRef<THREE.Object3D | null>(null);
@@ -168,7 +177,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
   // State
   const isSpinningRef = useRef(false);
-  const stopTimers = useRef<NodeJS.Timeout[]>([]);
+  const stopTimers = useRef<number[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastResult, setLastResult] = useState<SpinResult | null>(null);
 
@@ -234,9 +243,12 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     shareButtonRef.current = button;
   }, []);
 
-  const setShareButtonMaterial = useCallback((material: ShareButtonMaterial) => {
-    shareButtonMaterialRef.current = material;
-  }, []);
+  const setShareButtonMaterial = useCallback(
+    (material: ShareButtonMaterial) => {
+      shareButtonMaterialRef.current = material;
+    },
+    [],
+  );
 
   const setSpinButton = useCallback((button: THREE.Object3D | null) => {
     spinButtonRef.current = button;
@@ -268,7 +280,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
     for (let reelIndex = 0; reelIndex < 3; reelIndex++) {
       const faceObjects = reelFaceObjectsRef.current.get(reelIndex);
-      
+
       let faceIndex: number;
       if (faceObjects && faceObjects.size > 0) {
         // Use position-based detection (reliable)
@@ -277,7 +289,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
         // Fallback - shouldn't happen if model is set up correctly
         faceIndex = 0;
       }
-      
+
       const tech = managers[reelIndex].currentTechs[faceIndex];
       results.push(tech);
     }
@@ -317,7 +329,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     if (!lastResult) return;
 
     const { backend, frontend, database, score, message } = lastResult;
-    const text = `🎰 Tech Stack Slot Machine Result!\n\n` +
+    const text =
+      `🎰 Tech Stack Slot Machine Result!\n\n` +
       `Backend: ${backend.name}\n` +
       `Frontend: ${frontend.name}\n` +
       `Database: ${database.name}\n\n` +
@@ -326,8 +339,11 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       `Try your luck at: ${window.location.href}`;
 
     // Only use navigator.share on mobile devices
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+
     if (isMobile && navigator.share) {
       // Capture screenshot and convert to file for sharing
       const dataUrl = captureScreenshot?.();
@@ -336,14 +352,16 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
           // Convert data URL to blob
           const response = await fetch(dataUrl);
           const blob = await response.blob();
-          const file = new File([blob], `tech-stack-${score.score}.png`, { type: "image/png" });
-          
+          const file = new File([blob], `tech-stack-${score.score}.png`, {
+            type: "image/png",
+          });
+
           const shareData = {
             title: "Tech Stack Slot Machine",
             text,
             files: [file],
           };
-          
+
           // Check if we can share with files
           if (navigator.canShare(shareData)) {
             await navigator.share(shareData);
@@ -353,7 +371,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
           // Fall through to text-only share
         }
       }
-      
+
       // Fallback to text-only share
       void navigator.share({
         title: "Tech Stack Slot Machine",
