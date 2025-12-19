@@ -34,6 +34,7 @@ declare module "*.svg" {
 }
 
 /// <reference types="vite/client" />
+/// <reference types="@webgpu/types" />
 
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string;
