@@ -6,6 +6,7 @@ import ReactGA from "react-ga4";
 import { useEffect, useState } from "react";
 import Text from "@/misc/Text";
 import TechStackSlotMachine from "../TechStackSlotMachine";
+import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
 
 const txt = Text.home.projects;
 
@@ -44,7 +45,10 @@ const Projects = () => {
   });
 
   // Render a single project card
-  const renderProjectCard = (project: (typeof filteredProjects)[0], i: number) => (
+  const renderProjectCard = (
+    project: (typeof filteredProjects)[0],
+    i: number,
+  ) => (
     <div className="flex flex-col bg-zinc-800/75 rounded-2xl" key={i}>
       {project.photo && (
         <XyzTransition appear xyz="fade in-out delay-8">
@@ -97,25 +101,37 @@ const Projects = () => {
 
   // Slot machine - no background, just the 3D element
   const SlotMachineCard = () => (
-    <TechStackSlotMachine key="slot-machine" className="w-full h-full min-h-[400px]" />
+    <TechStackSlotMachine
+      key="slot-machine"
+      className="w-full h-full min-h-[400px]"
+    />
   );
+
+  // Crash button card
+  const CrashCard = () => <CrashProjectCard key="crash-button" />;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {filteredProjects.map((project, i) => {
-        // Insert slot machine as 2nd item (after index 0)
+        // Insert slot machine and crash card before DeathMail (index 1)
         if (i === 1) {
           return (
             <>
               <SlotMachineCard />
+              <CrashCard />
               {renderProjectCard(project, i)}
             </>
           );
         }
         return renderProjectCard(project, i);
       })}
-      {/* If only 1 project, still show slot machine */}
-      {filteredProjects.length === 1 && <SlotMachineCard />}
+      {/* If only 1 project, still show slot machine and crash card */}
+      {filteredProjects.length === 1 && (
+        <>
+          <SlotMachineCard />
+          <CrashCard />
+        </>
+      )}
     </div>
   );
 };
