@@ -22,7 +22,12 @@ export type textType = {
           url: string;
         };
         links?: {
-          type: "github" | "chrome-web-store" | "firefox-web-store" | "hosted";
+          type:
+            | "github"
+            | "chrome-web-store"
+            | "firefox-web-store"
+            | "hosted"
+            | "paper";
           url: string;
         }[];
         photo?: string;
@@ -120,6 +125,10 @@ const Text: textType = {
             {
               type: "chrome-web-store",
               url: "https://chromewebstore.google.com/detail/cubeauthn/koncigmbjmoapojihipbpfnmgkhmdlfl",
+            },
+            {
+              type: "paper",
+              url: "https://ieeexplore.ieee.org/document/11280260",
             },
           ],
         },

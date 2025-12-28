@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Text from "@/misc/Text";
 import TechStackSlotMachine from "../TechStackSlotMachine";
 import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
+import { GiArchiveResearch } from "react-icons/gi";
 
 const txt = Text.home.projects;
 
@@ -80,6 +81,9 @@ const Projects = () => {
               break;
             case "hosted":
               content = <BiLinkExternal className={iconStyles} />;
+              break;
+            case "paper":
+              content = <GiArchiveResearch className={iconStyles} />;
               break;
             default:
               return link.type;
