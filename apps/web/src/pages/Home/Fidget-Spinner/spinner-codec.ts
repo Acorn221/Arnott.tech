@@ -167,8 +167,8 @@ export const spinnerStateComputer: StateComputer<SpinnerEvent, SpinnerState> = {
 
 /**
  * ConflictResolver for spinner events.
- * Grab/drag always wins (active user interaction takes priority).
- * Release uses timestamp comparison.
+ * Grab always wins (active user stopping the spinner).
+ * For drag/release, higher velocity wins.
  */
 export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
   shouldReplace(
@@ -176,18 +176,33 @@ export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
     incoming: SpinnerEvent,
     _timeOffset: number
   ): boolean {
-    // Grab/drag events always win - active user interaction takes priority
-    if (incoming.type === "grab" || incoming.type === "drag") {
-      return true;
+    if (!current) return true;
+
+    // Grab always wins - user is actively stopping the spinner
+    if (incoming.type === "grab") return true;
+
+    // If current is a grab, only a newer grab or release can replace it
+    if (current.type === "grab") {
+      return incoming.type === "release" || incoming.timestamp > current.timestamp;
     }
 
-    // For release events, use timestamp comparison
-    // Also accept if current is a drag (user released)
-    if (!current || current.type === "drag" || incoming.timestamp > current.timestamp) {
-      return true;
-    }
+    // For drag/release events, compare velocity - higher wins
+    const incomingVel = Math.abs(incoming.velocity);
+    const currentVel = Math.abs(
+      current.type === "release"
+        ? computeStateFromRelease(current, performance.now()).velocity
+        : current.velocity
+    );
 
-    return false;
+    // Significantly higher velocity wins (20% threshold to avoid oscillation)
+    if (incomingVel > currentVel * 1.2) return true;
+    if (currentVel > incomingVel * 1.2) return false;
+
+    // Similar velocity - prefer release over drag (more stable)
+    if (incoming.type === "release" && current.type === "drag") return true;
+
+    // Fallback to timestamp
+    return incoming.timestamp > current.timestamp;
   },
 
   adjustTimestamp(event: SpinnerEvent, timeOffset: number): SpinnerEvent {

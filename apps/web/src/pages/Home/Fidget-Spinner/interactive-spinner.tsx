@@ -55,6 +55,8 @@ const InteractiveSpinner = ({
   const lastDragTime = useRef(0);
   const lastRotation = useRef(0);
   const accumulatedRotation = useRef(0);
+  const lastDragEmitTime = useRef(0);
+  const DRAG_EMIT_INTERVAL = 100; // 10 events/sec max
   const [isXray, setIsXray] = useState(false);
 
   const getMouseAngle = (event: ThreeEvent<PointerEvent>): number => {
@@ -235,9 +237,13 @@ const InteractiveSpinner = ({
       lastRotation.current = currentRotation;
     }
 
-    // Sync drag state to network once per frame (batched, not per-pointer-event)
+    // Sync drag state to network with throttling to avoid flooding
     if (isDragging.current && isSynced) {
-      onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
+      const now = performance.now();
+      if (now - lastDragEmitTime.current >= DRAG_EMIT_INTERVAL) {
+        onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
+        lastDragEmitTime.current = now;
+      }
     }
   });
 

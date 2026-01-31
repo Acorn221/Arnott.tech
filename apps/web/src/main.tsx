@@ -5,9 +5,10 @@ import { TRPCProvider } from "@/lib/TRPCProvider";
 import "@/index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+  // StrictMode disabled - causes WebSocket reconnect loops in dev
+  // <React.StrictMode>
     <TRPCProvider>
       <App />
     </TRPCProvider>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 );

@@ -3,8 +3,23 @@ import { useRef, useCallback, useEffect, useState } from "react";
 // Use VITE_API_URL in production, empty string (relative) in dev
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
-const POLL_INTERVAL_FAST = 500;
-const POLL_INTERVAL_SLOW = 2500;
+// Derive WebSocket URL from API base
+function getWsUrl(): string {
+  if (API_BASE) {
+    // Production: convert https:// to wss://
+    return API_BASE.replace(/^http/, "ws");
+  }
+  // Dev: connect directly to worker (Vite proxy doesn't handle WS well)
+  if (import.meta.env.DEV) {
+    return "ws://localhost:8787";
+  }
+  // Fallback: use current host
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.host}`;
+}
+
+const WS_BASE = getWsUrl();
+
 const DEFAULT_MAX_RECONNECT_ATTEMPTS = 5;
 const DEFAULT_BACKOFF = {
   initial: 1000,
@@ -33,14 +48,18 @@ interface Signal {
   candidate?: RTCIceCandidateInit;
 }
 
-interface JoinResponse {
-  peerId?: string;
-  peers?: string[];
+interface WelcomeMessage {
+  type: "welcome";
+  peerId: string;
+  peers: string[];
 }
 
-interface PollResponse {
-  signals?: Signal[];
+interface PeerMessage {
+  type: "peer-joined" | "peer-left";
+  peerId: string;
 }
+
+type ServerMessage = WelcomeMessage | PeerMessage | Signal;
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
@@ -97,55 +116,20 @@ export function useWebRTCRoom(
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
 
   const myPeerIdRef = useRef<string | null>(null);
-  const pollIntervalRef = useRef<number | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
-  const expectedPeersRef = useRef<Set<string>>(new Set());
-  const currentPollIntervalRef = useRef<number>(POLL_INTERVAL_FAST);
-  const pollSignalsRef = useRef<(() => Promise<void>) | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
-  const isVisibleRef = useRef(true);
   const intentionalDisconnectRef = useRef(false);
   const isJoiningRef = useRef(false);
   const optionsRef = useRef(options);
   optionsRef.current = options;
-
-  const adjustPollInterval = useCallback(() => {
-    const pollSignalsFn = pollSignalsRef.current;
-    if (!pollSignalsFn || !pollIntervalRef.current) return;
-
-    const connections = peerConnectionsRef.current;
-    const expectedPeers = expectedPeersRef.current;
-
-    // Check if all expected peers are connected
-    const allConnected = expectedPeers.size === 0 ||
-      Array.from(expectedPeers).every(peerId => {
-        const conn = connections.get(peerId);
-        return conn?.connected;
-      });
-
-    const desiredInterval = allConnected ? POLL_INTERVAL_SLOW : POLL_INTERVAL_FAST;
-
-    // Only restart interval if it changed
-    if (desiredInterval !== currentPollIntervalRef.current) {
-      currentPollIntervalRef.current = desiredInterval;
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = window.setInterval(() => {
-        // Only poll when tab is visible
-        if (isVisibleRef.current) {
-          void pollSignalsFn();
-        }
-      }, desiredInterval);
-    }
-  }, []);
 
   const updatePeerCount = useCallback(() => {
     const connectedCount = Array.from(peerConnectionsRef.current.values()).filter(
       (p) => p.connected
     ).length;
     setPeerCount(connectedCount);
-    // Adjust polling speed based on connection state
-    adjustPollInterval();
-  }, [adjustPollInterval]);
+  }, []);
 
   // Helper to update connection state and notify callback
   const updateConnectionState = useCallback((newState: ConnectionState) => {
@@ -163,21 +147,12 @@ export function useWebRTCRoom(
     return Math.min(initial * Math.pow(multiplier, attempt), max);
   }, [reconnectBackoff]);
 
-  const sendSignal = useCallback(
-    async <T,>(endpoint: string, data: Record<string, unknown>): Promise<T | null> => {
-      try {
-        const res = await fetch(`${API_BASE}/api/signal/${endpoint}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        return (await res.json()) as T;
-      } catch {
-        return null;
-      }
-    },
-    []
-  );
+  // Send signal via WebSocket
+  const sendSignal = useCallback((type: string, to: string, payload: Record<string, unknown>) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type, to, ...payload }));
+    }
+  }, []);
 
   const processPendingCandidates = useCallback(async (peerConn: PeerConnection) => {
     if (peerConn.pendingCandidates.length > 0) {
@@ -207,9 +182,7 @@ export function useWebRTCRoom(
 
       pc.onicecandidate = (event) => {
         if (event.candidate) {
-          void sendSignal("ice", {
-            from: localPeerId,
-            to: remotePeerId,
+          sendSignal("ice", remotePeerId, {
             candidate: event.candidate.toJSON(),
           });
         }
@@ -306,11 +279,7 @@ export function useWebRTCRoom(
       try {
         const offer = await peerConn.connection.createOffer();
         await peerConn.connection.setLocalDescription(offer);
-        await sendSignal("offer", {
-          from: localPeerId,
-          to: remotePeerId,
-          sdp: offer.sdp,
-        });
+        sendSignal("offer", remotePeerId, { sdp: offer.sdp });
       } catch {
         // Connection failed
       }
@@ -325,11 +294,6 @@ export function useWebRTCRoom(
       let peerConn = peerConnectionsRef.current.get(from);
 
       if (type === "offer") {
-        // New peer joining - track them and speed up polling
-        if (!expectedPeersRef.current.has(from)) {
-          expectedPeersRef.current.add(from);
-          adjustPollInterval();
-        }
         if (!peerConn) {
           peerConn = createPeerConnection(localPeerId, from, false);
         }
@@ -341,11 +305,7 @@ export function useWebRTCRoom(
 
           const answer = await peerConn.connection.createAnswer();
           await peerConn.connection.setLocalDescription(answer);
-          await sendSignal("answer", {
-            from: localPeerId,
-            to: from,
-            sdp: answer.sdp,
-          });
+          sendSignal("answer", from, { sdp: answer.sdp });
         } catch {
           // Offer handling failed
         }
@@ -373,31 +333,26 @@ export function useWebRTCRoom(
         // Ignore ICE candidates for unknown peers (likely stale)
       }
     },
-    [createPeerConnection, sendSignal, processPendingCandidates, adjustPollInterval]
+    [createPeerConnection, sendSignal, processPendingCandidates]
   );
 
-  const pollSignals = useCallback(async () => {
-    const peerId = myPeerIdRef.current;
-    if (!peerId) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/signal/poll/${peerId}`);
-      const data = (await res.json()) as PollResponse;
-
-      if (data.signals && data.signals.length > 0) {
-        for (const signal of data.signals) {
-          await handleSignal(peerId, signal);
-        }
+  const handlePeerLeft = useCallback((peerId: string) => {
+    const peerConn = peerConnectionsRef.current.get(peerId);
+    if (peerConn) {
+      peerConn.dataChannel?.close();
+      peerConn.connection.close();
+      peerConnectionsRef.current.delete(peerId);
+      if (peerConn.connected) {
+        updatePeerCount();
+        optionsRef.current.onPeerDisconnect?.(peerId);
       }
-    } catch {
-      // Polling error, ignore
     }
-  }, [handleSignal]);
+  }, [updatePeerCount]);
 
   const cleanup = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
 
     if (reconnectTimeoutRef.current) {
@@ -410,11 +365,36 @@ export function useWebRTCRoom(
       peerConn.connection.close();
     }
     peerConnectionsRef.current.clear();
-    expectedPeersRef.current.clear();
-    currentPollIntervalRef.current = POLL_INTERVAL_FAST;
-    pollSignalsRef.current = null;
     setPeerCount(0);
   }, []);
+
+  // Attempt to reconnect with exponential backoff
+  const attemptReconnect = useCallback(() => {
+    if (intentionalDisconnectRef.current) {
+      return;
+    }
+
+    if (!navigator.onLine) {
+      // Wait for online event to trigger reconnect
+      return;
+    }
+
+    setReconnectAttempt((current) => {
+      if (current >= maxReconnectAttempts) {
+        updateConnectionState('disconnected');
+        return current;
+      }
+
+      updateConnectionState('reconnecting');
+      const delay = getBackoffDelay(current);
+
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        void join();
+      }, delay);
+
+      return current + 1;
+    });
+  }, [maxReconnectAttempts, getBackoffDelay, updateConnectionState]);
 
   const join = useCallback(async () => {
     // Prevent concurrent join operations
@@ -436,90 +416,90 @@ export function useWebRTCRoom(
       intentionalDisconnectRef.current = false;
       updateConnectionState('connecting');
 
-      const result = await sendSignal<JoinResponse>("join", { roomId });
-      if (!result?.peerId) {
-        updateConnectionState('disconnected');
-        return;
-      }
+      // Connect via WebSocket
+      const ws = new WebSocket(`${WS_BASE}/api/signal/ws?roomId=${encodeURIComponent(roomId)}`);
+      wsRef.current = ws;
 
-      const peerId = result.peerId;
-      myPeerIdRef.current = peerId;
-      setMyPeerId(peerId);
-      setIsConnected(true);
-      setReconnectAttempt(0);
-      updateConnectionState('connected');
+      ws.onopen = () => {
+        console.log("[WS] WebSocket connected, waiting for welcome");
+      };
 
-      // Track expected peers for adaptive polling (exclude self if server includes it)
-      const otherPeers = (result.peers || []).filter(p => p !== peerId);
-      expectedPeersRef.current = new Set(otherPeers);
-      currentPollIntervalRef.current = POLL_INTERVAL_FAST;
-
-      if (otherPeers.length > 0) {
-        for (const remotePeerId of otherPeers) {
-          await new Promise((r) => setTimeout(r, 100));
-          await initiateConnection(peerId, remotePeerId);
+      ws.onmessage = async (event) => {
+        let data: ServerMessage;
+        try {
+          data = JSON.parse(event.data as string) as ServerMessage;
+        } catch (e) {
+          console.error("[WS] Failed to parse message:", e);
+          return;
         }
-      }
 
-      // Store pollSignals ref for adaptive polling
-      pollSignalsRef.current = pollSignals;
+        console.log("[WS] Received:", data.type);
 
-      pollIntervalRef.current = window.setInterval(() => {
-        if (isVisibleRef.current) {
-          void pollSignals();
+        if (data.type === "welcome") {
+          const { peerId, peers } = data as WelcomeMessage;
+          console.log(`[WS] Welcome! I am ${peerId}, ${peers.length} existing peers`);
+          myPeerIdRef.current = peerId;
+          setMyPeerId(peerId);
+          setIsConnected(true);
+          setReconnectAttempt(0);
+          updateConnectionState('connected');
+
+          // Initiate connections to existing peers
+          for (const remotePeerId of peers) {
+            await initiateConnection(peerId, remotePeerId);
+          }
+        } else if (data.type === "peer-joined") {
+          // New peer joined - they will initiate the connection to us
+        } else if (data.type === "peer-left") {
+          handlePeerLeft((data as PeerMessage).peerId);
+        } else if (data.type === "offer" || data.type === "answer" || data.type === "ice") {
+          const peerId = myPeerIdRef.current;
+          if (peerId) {
+            await handleSignal(peerId, data as Signal);
+          }
         }
-      }, POLL_INTERVAL_FAST);
+      };
+
+      ws.onclose = (event) => {
+        console.log(`[WS] Close: code=${event.code}, reason=${event.reason}, clean=${event.wasClean}`);
+
+        // Only handle if this is still the current WebSocket
+        // (prevents stale closures from clobbering new connections)
+        if (wsRef.current !== ws) {
+          console.log("[WS] Ignoring close from stale WebSocket");
+          return;
+        }
+
+        wsRef.current = null;
+        setIsConnected(false);
+
+        if (!intentionalDisconnectRef.current) {
+          updateConnectionState('disconnected');
+          if (autoReconnect) {
+            console.log("[WS] Will attempt reconnect...");
+            attemptReconnect();
+          }
+        }
+      };
+
+      ws.onerror = (event) => {
+        console.error("[WS] Error:", event);
+      };
     } finally {
       isJoiningRef.current = false;
     }
-  }, [roomId, sendSignal, initiateConnection, pollSignals, updateConnectionState, cleanup]);
+  }, [roomId, initiateConnection, handleSignal, handlePeerLeft, updateConnectionState, cleanup, autoReconnect, attemptReconnect]);
 
   const leave = useCallback(async () => {
     intentionalDisconnectRef.current = true;
     cleanup();
-
-    const peerId = myPeerIdRef.current;
-    if (peerId) {
-      await sendSignal("leave", { roomId, peerId });
-    }
 
     myPeerIdRef.current = null;
     setMyPeerId(null);
     setIsConnected(false);
     setReconnectAttempt(0);
     updateConnectionState('disconnected');
-  }, [roomId, sendSignal, cleanup, updateConnectionState]);
-
-  // Attempt to reconnect with exponential backoff
-  const attemptReconnect = useCallback(async () => {
-    if (intentionalDisconnectRef.current) {
-      return;
-    }
-
-    if (!navigator.onLine) {
-      // Wait for online event to trigger reconnect
-      return;
-    }
-
-    setReconnectAttempt((current) => {
-      if (current >= maxReconnectAttempts) {
-        updateConnectionState('disconnected');
-        return current;
-      }
-
-      updateConnectionState('reconnecting');
-      const delay = getBackoffDelay(current);
-
-      reconnectTimeoutRef.current = window.setTimeout(() => {
-        void join().catch(() => {
-          // If join fails, attempt again
-          void attemptReconnect();
-        });
-      }, delay);
-
-      return current + 1;
-    });
-  }, [maxReconnectAttempts, getBackoffDelay, updateConnectionState, join]);
+  }, [cleanup, updateConnectionState]);
 
   // Manual reconnect trigger
   const reconnect = useCallback(async () => {
@@ -572,7 +552,7 @@ export function useWebRTCRoom(
     );
 
     if (allDisconnected && peerCount === 0) {
-      void attemptReconnect();
+      attemptReconnect();
     }
   }, [autoReconnect, isConnected, peerCount, attemptReconnect]);
 
@@ -581,7 +561,7 @@ export function useWebRTCRoom(
     const handleOnline = () => {
       if (autoReconnect && connectionState === 'disconnected' && !intentionalDisconnectRef.current) {
         setReconnectAttempt(0);
-        void attemptReconnect();
+        attemptReconnect();
       }
     };
 
@@ -602,25 +582,6 @@ export function useWebRTCRoom(
     };
   }, [autoReconnect, connectionState, attemptReconnect]);
 
-  // Visibility-aware polling
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      isVisibleRef.current = document.visibilityState === 'visible';
-
-      if (isVisibleRef.current && isConnected) {
-        // Resume polling immediately when visible
-        void pollSignals();
-        // Reset to fast polling to catch up
-        adjustPollInterval();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isConnected, pollSignals, adjustPollInterval]);
-
   // Autoconnect on mount
   useEffect(() => {
     if (autoConnect) {
@@ -636,25 +597,6 @@ export function useWebRTCRoom(
     // Only run on mount/unmount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Handle page unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      const peerId = myPeerIdRef.current;
-      if (peerId) {
-        navigator.sendBeacon(
-          `${API_BASE}/api/signal/leave`,
-          JSON.stringify({ roomId, peerId })
-        );
-      }
-      cleanup();
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [roomId, cleanup]);
 
   // Cleanup on unmount
   useEffect(() => {

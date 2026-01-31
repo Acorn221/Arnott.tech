@@ -1,8 +1,12 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter, type TRPCContext } from "@arnott/api";
 
+// Export Durable Object class for Cloudflare
+export { SignalingRoom } from "./SignalingRoom";
+
 interface Env {
   SPINNER_KV: KVNamespace;
+  SIGNALING_ROOM: DurableObjectNamespace;
   ASSETS?: Fetcher; // Only available in production
 }
 
@@ -258,7 +262,14 @@ export default {
   ): Promise<Response> {
     const url = new URL(request.url);
 
-    // Handle signaling API
+    // Handle WebSocket signaling via Durable Object
+    if (url.pathname === "/api/signal/ws") {
+      const roomId = url.searchParams.get("roomId") || "default";
+      const id = env.SIGNALING_ROOM.idFromName(roomId);
+      return env.SIGNALING_ROOM.get(id).fetch(request);
+    }
+
+    // Handle legacy polling signaling API (kept for fallback)
     if (url.pathname.startsWith("/api/signal")) {
       return handleSignaling(request, env, url.pathname);
     }

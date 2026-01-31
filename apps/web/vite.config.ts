@@ -17,6 +17,7 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8787",
         changeOrigin: true,
+        ws: true, // Enable WebSocket proxying
       },
     },
   },
