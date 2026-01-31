@@ -8,6 +8,7 @@ import StandardLayout from "@/layout/StandardLayout";
 import RickRoll from "@/misc/RickRoll";
 import { LighterfuelUninstall } from "./pages/Projects/LighterFuel/uninstall";
 import Dev from "@/pages/Dev";
+import WebRTCTest from "@/pages/Dev/webrtc-test";
 
 const App = () => (
   <Router>
@@ -18,6 +19,7 @@ const App = () => (
         element={<LighterfuelUninstall />}
       />
       <Route path="/dev" element={<Dev />} />
+      <Route path="/dev/webrtc" element={<WebRTCTest />} />
       <Route element={<StandardLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="J4a-website/" element={<Home />} />
