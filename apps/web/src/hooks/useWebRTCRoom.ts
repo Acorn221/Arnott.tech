@@ -1,0 +1,399 @@
+import { useRef, useCallback, useEffect, useState } from "react";
+
+const POLL_INTERVAL = 500;
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+];
+
+interface PeerConnection {
+  peerId: string;
+  connection: RTCPeerConnection;
+  dataChannel: RTCDataChannel | null;
+  connected: boolean;
+  remoteDescriptionSet: boolean;
+  pendingCandidates: RTCIceCandidateInit[];
+}
+
+interface Signal {
+  type: string;
+  from: string;
+  sdp?: string;
+  candidate?: RTCIceCandidateInit;
+}
+
+interface JoinResponse {
+  peerId?: string;
+  peers?: string[];
+}
+
+interface PollResponse {
+  signals?: Signal[];
+}
+
+export interface UseWebRTCRoomOptions {
+  roomId?: string;
+  onMessage?: (peerId: string, data: unknown) => void;
+  onPeerConnect?: (peerId: string) => void;
+  onPeerDisconnect?: (peerId: string) => void;
+}
+
+export interface UseWebRTCRoomReturn {
+  join: () => Promise<void>;
+  leave: () => Promise<void>;
+  broadcast: (data: unknown) => void;
+  sendTo: (peerId: string, data: unknown) => void;
+  isConnected: boolean;
+  peerCount: number;
+  peerId: string | null;
+}
+
+export function useWebRTCRoom(
+  options: UseWebRTCRoomOptions = {}
+): UseWebRTCRoomReturn {
+  const { roomId = "default", onMessage, onPeerConnect, onPeerDisconnect } = options;
+
+  const [myPeerId, setMyPeerId] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [peerCount, setPeerCount] = useState(0);
+
+  const myPeerIdRef = useRef<string | null>(null);
+  const pollIntervalRef = useRef<number | null>(null);
+  const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  const updatePeerCount = useCallback(() => {
+    const connectedCount = Array.from(peerConnectionsRef.current.values()).filter(
+      (p) => p.connected
+    ).length;
+    setPeerCount(connectedCount);
+  }, []);
+
+  const sendSignal = useCallback(
+    async <T,>(endpoint: string, data: Record<string, unknown>): Promise<T | null> => {
+      try {
+        const res = await fetch(`/api/signal/${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        return (await res.json()) as T;
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
+  const processPendingCandidates = useCallback(async (peerConn: PeerConnection) => {
+    if (peerConn.pendingCandidates.length > 0) {
+      for (const candidate of peerConn.pendingCandidates) {
+        try {
+          await peerConn.connection.addIceCandidate(candidate);
+        } catch {
+          // Ignore candidate errors
+        }
+      }
+      peerConn.pendingCandidates = [];
+    }
+  }, []);
+
+  const createPeerConnection = useCallback(
+    (localPeerId: string, remotePeerId: string, isInitiator: boolean): PeerConnection => {
+      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+      const peerConn: PeerConnection = {
+        peerId: remotePeerId,
+        connection: pc,
+        dataChannel: null,
+        connected: false,
+        remoteDescriptionSet: false,
+        pendingCandidates: [],
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          void sendSignal("ice", {
+            from: localPeerId,
+            to: remotePeerId,
+            candidate: event.candidate.toJSON(),
+          });
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+          if (!peerConn.connected) {
+            peerConn.connected = true;
+            updatePeerCount();
+            optionsRef.current.onPeerConnect?.(remotePeerId);
+          }
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "connected") {
+          if (!peerConn.connected) {
+            peerConn.connected = true;
+            updatePeerCount();
+            optionsRef.current.onPeerConnect?.(remotePeerId);
+          }
+        } else if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+          if (peerConn.connected) {
+            peerConn.connected = false;
+            updatePeerCount();
+            optionsRef.current.onPeerDisconnect?.(remotePeerId);
+          }
+        }
+      };
+
+      const setupDataChannel = (channel: RTCDataChannel) => {
+        channel.onopen = () => {
+          peerConn.dataChannel = channel;
+          if (!peerConn.connected) {
+            peerConn.connected = true;
+            updatePeerCount();
+            optionsRef.current.onPeerConnect?.(remotePeerId);
+          }
+        };
+
+        channel.onclose = () => {
+          if (peerConn.connected) {
+            peerConn.connected = false;
+            updatePeerCount();
+            optionsRef.current.onPeerDisconnect?.(remotePeerId);
+          }
+        };
+
+        channel.onmessage = (event: MessageEvent<string | ArrayBuffer>) => {
+          // Binary data passed through directly
+          if (event.data instanceof ArrayBuffer) {
+            optionsRef.current.onMessage?.(remotePeerId, event.data);
+            return;
+          }
+          try {
+            const data = JSON.parse(event.data) as unknown;
+            optionsRef.current.onMessage?.(remotePeerId, data);
+          } catch {
+            optionsRef.current.onMessage?.(remotePeerId, event.data);
+          }
+        };
+      };
+
+      if (isInitiator) {
+        // Use unreliable, unordered delivery for real-time streaming (UDP-like)
+        const dataChannel = pc.createDataChannel("data", {
+          ordered: false,
+          maxRetransmits: 0,
+        });
+        setupDataChannel(dataChannel);
+        peerConn.dataChannel = dataChannel;
+      } else {
+        pc.ondatachannel = (event) => {
+          setupDataChannel(event.channel);
+        };
+      }
+
+      peerConnectionsRef.current.set(remotePeerId, peerConn);
+      return peerConn;
+    },
+    [sendSignal, updatePeerCount]
+  );
+
+  const initiateConnection = useCallback(
+    async (localPeerId: string, remotePeerId: string) => {
+      const peerConn = createPeerConnection(localPeerId, remotePeerId, true);
+
+      try {
+        const offer = await peerConn.connection.createOffer();
+        await peerConn.connection.setLocalDescription(offer);
+        await sendSignal("offer", {
+          from: localPeerId,
+          to: remotePeerId,
+          sdp: offer.sdp,
+        });
+      } catch {
+        // Connection failed
+      }
+    },
+    [createPeerConnection, sendSignal]
+  );
+
+  const handleSignal = useCallback(
+    async (localPeerId: string, signal: Signal) => {
+      const { type, from, sdp, candidate } = signal;
+
+      let peerConn = peerConnectionsRef.current.get(from);
+
+      if (type === "offer") {
+        if (!peerConn) {
+          peerConn = createPeerConnection(localPeerId, from, false);
+        }
+
+        try {
+          await peerConn.connection.setRemoteDescription({ type: "offer", sdp });
+          peerConn.remoteDescriptionSet = true;
+          await processPendingCandidates(peerConn);
+
+          const answer = await peerConn.connection.createAnswer();
+          await peerConn.connection.setLocalDescription(answer);
+          await sendSignal("answer", {
+            from: localPeerId,
+            to: from,
+            sdp: answer.sdp,
+          });
+        } catch {
+          // Offer handling failed
+        }
+      } else if (type === "answer") {
+        if (peerConn) {
+          try {
+            await peerConn.connection.setRemoteDescription({ type: "answer", sdp });
+            peerConn.remoteDescriptionSet = true;
+            await processPendingCandidates(peerConn);
+          } catch {
+            // Answer handling failed
+          }
+        }
+      } else if (type === "ice" && candidate) {
+        if (peerConn?.remoteDescriptionSet) {
+          try {
+            await peerConn.connection.addIceCandidate(candidate);
+          } catch {
+            // ICE candidate failed
+          }
+        } else if (peerConn) {
+          peerConn.pendingCandidates.push(candidate);
+        } else {
+          peerConn = createPeerConnection(localPeerId, from, false);
+          peerConn.pendingCandidates.push(candidate);
+        }
+      }
+    },
+    [createPeerConnection, sendSignal, processPendingCandidates]
+  );
+
+  const pollSignals = useCallback(async () => {
+    const peerId = myPeerIdRef.current;
+    if (!peerId) return;
+
+    try {
+      const res = await fetch(`/api/signal/poll/${peerId}`);
+      const data = (await res.json()) as PollResponse;
+
+      if (data.signals && data.signals.length > 0) {
+        for (const signal of data.signals) {
+          await handleSignal(peerId, signal);
+        }
+      }
+    } catch {
+      // Polling error, ignore
+    }
+  }, [handleSignal]);
+
+  const cleanup = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+
+    for (const [, peerConn] of peerConnectionsRef.current) {
+      peerConn.dataChannel?.close();
+      peerConn.connection.close();
+    }
+    peerConnectionsRef.current.clear();
+    setPeerCount(0);
+  }, []);
+
+  const join = useCallback(async () => {
+    const result = await sendSignal<JoinResponse>("join", { roomId });
+    if (!result?.peerId) return;
+
+    const peerId = result.peerId;
+    myPeerIdRef.current = peerId;
+    setMyPeerId(peerId);
+    setIsConnected(true);
+
+    if (result.peers && result.peers.length > 0) {
+      for (const remotePeerId of result.peers) {
+        await new Promise((r) => setTimeout(r, 100));
+        await initiateConnection(peerId, remotePeerId);
+      }
+    }
+
+    pollIntervalRef.current = window.setInterval(() => {
+      void pollSignals();
+    }, POLL_INTERVAL);
+  }, [roomId, sendSignal, initiateConnection, pollSignals]);
+
+  const leave = useCallback(async () => {
+    cleanup();
+
+    const peerId = myPeerIdRef.current;
+    if (peerId) {
+      await sendSignal("leave", { roomId, peerId });
+    }
+
+    myPeerIdRef.current = null;
+    setMyPeerId(null);
+    setIsConnected(false);
+  }, [roomId, sendSignal, cleanup]);
+
+  const broadcast = useCallback((data: unknown) => {
+    for (const [, peerConn] of peerConnectionsRef.current) {
+      if (peerConn.dataChannel?.readyState === "open") {
+        // Binary for ArrayBuffer, JSON for objects
+        if (data instanceof ArrayBuffer) {
+          peerConn.dataChannel.send(data);
+        } else {
+          peerConn.dataChannel.send(JSON.stringify(data));
+        }
+      }
+    }
+  }, []);
+
+  const sendTo = useCallback((peerId: string, data: unknown) => {
+    const peerConn = peerConnectionsRef.current.get(peerId);
+    if (peerConn?.dataChannel?.readyState === "open") {
+      peerConn.dataChannel.send(JSON.stringify(data));
+    }
+  }, []);
+
+  // Handle page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const peerId = myPeerIdRef.current;
+      if (peerId) {
+        navigator.sendBeacon(
+          "/api/signal/leave",
+          JSON.stringify({ roomId, peerId })
+        );
+      }
+      cleanup();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [roomId, cleanup]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
+
+  return {
+    join,
+    leave,
+    broadcast,
+    sendTo,
+    isConnected,
+    peerCount,
+    peerId: myPeerId,
+  };
+}

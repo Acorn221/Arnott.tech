@@ -1,5 +1,4 @@
 import {
-  type FC,
   useRef,
   useEffect,
   useState,
@@ -14,26 +13,37 @@ import {
   useFrame,
 } from "@react-three/fiber";
 import SpinnerModel from "./spinner-model";
-import { useSpinnerSync } from "@/hooks/useSpinnerSync";
-import type { SpinnerState } from "@arnott/shared";
+import type { SpinnerState } from "@/hooks/useSpinnerCRDT";
 
-type InteractiveSpinnerProps = ThreeElements["group"] & {
+export type InteractiveSpinnerProps = ThreeElements["group"] & {
   setSpinCount: Dispatch<SetStateAction<number>>;
   onLoad?: () => void;
-  enableSync?: boolean;
+  /** When synced, this function computes current state from CRDT */
+  computeState?: (now: number) => SpinnerState;
+  /** Called when user grabs the spinner */
+  onGrab?: (rotation: number) => void;
+  /** Called when user drags the spinner */
+  onDrag?: (rotation: number, velocity: number) => void;
+  /** Called when user releases the spinner */
+  onRelease?: (rotation: number, velocity: number) => void;
+  /** Whether we're synced with remote peers */
+  isSynced?: boolean;
 };
 
 const FULL_ROTATION = Math.PI * 2;
 const MAX_ANGULAR_VELOCITY = 100;
 const FRICTION_BASE = 0.999;
-const SYNC_THROTTLE_MS = 50; // Throttle sync updates to 20fps
 
-const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
+const InteractiveSpinner = ({
   setSpinCount,
   onLoad: _onLoad,
-  enableSync = false,
+  computeState,
+  onGrab,
+  onDrag,
+  onRelease,
+  isSynced = false,
   ...props
-}) => {
+}: InteractiveSpinnerProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const isDragging = useRef(false);
   const hasInitializedDrag = useRef(false);
@@ -42,43 +52,7 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
   const lastDragTime = useRef(0);
   const lastRotation = useRef(0);
   const accumulatedRotation = useRef(0);
-  const lastSyncTime = useRef(0);
   const [isXray, setIsXray] = useState(false);
-  const [spinCountValue, setSpinCountValue] = useState(0);
-
-  // Sync spinner state across clients
-  const { isConnected, sendState, remoteState, connectedUsers } =
-    useSpinnerSync({
-      enabled: enableSync,
-      onStateUpdate: useCallback((state: SpinnerState) => {
-        // Apply remote state when someone else is controlling
-        if (
-          state.isDragging &&
-          state.draggingUserId &&
-          !isDragging.current &&
-          groupRef.current
-        ) {
-          groupRef.current.rotation.y = state.rotation;
-          angularVelocity.current = state.angularVelocity;
-        }
-      }, []),
-    });
-
-  // Sync local state to other clients (throttled)
-  const syncState = useCallback(() => {
-    if (!enableSync || !isConnected) return;
-
-    const now = Date.now();
-    if (now - lastSyncTime.current < SYNC_THROTTLE_MS) return;
-    lastSyncTime.current = now;
-
-    sendState({
-      rotation: groupRef.current?.rotation.y ?? 0,
-      angularVelocity: angularVelocity.current,
-      isDragging: isDragging.current,
-      spinCount: spinCountValue,
-    });
-  }, [enableSync, isConnected, sendState, spinCountValue]);
 
   const getMouseAngle = (event: ThreeEvent<PointerEvent>): number => {
     if (!groupRef.current || !event.target) return 0;
@@ -99,11 +73,6 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
 
-    // If someone else is dragging, don't allow local dragging
-    if (enableSync && remoteState?.isDragging && remoteState.draggingUserId) {
-      return;
-    }
-
     if (e.buttons > 0) {
       isDragging.current = true;
       hasInitializedDrag.current = true;
@@ -111,7 +80,11 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
       lastDragTime.current = performance.now();
       document.body.style.cursor = "grabbing";
       angularVelocity.current = 0;
-      syncState();
+
+      // Emit grab event for CRDT
+      if (groupRef.current && isSynced) {
+        onGrab?.(groupRef.current.rotation.y);
+      }
     }
   };
 
@@ -145,30 +118,42 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
       angularVelocity.current = THREE.MathUtils.clamp(
         boostedVelocity,
         -MAX_ANGULAR_VELOCITY,
-        MAX_ANGULAR_VELOCITY,
+        MAX_ANGULAR_VELOCITY
       );
     }
 
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
     lastDragTime.current = currentTime;
-    syncState();
-  };
 
-  const resetCursor = () => {
-    document.body.style.cursor = "";
-    isDragging.current = false;
-    hasInitializedDrag.current = false;
-    syncState();
-  };
-
-  const handlePointerUp = () => {
-    if (hasInitializedDrag.current) {
-      document.body.style.cursor = "grab";
-      isDragging.current = false;
-      hasInitializedDrag.current = false;
-      syncState();
+    // Emit drag event for CRDT sync
+    if (isSynced) {
+      onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
     }
   };
+
+  const emitRelease = useCallback(() => {
+    if (groupRef.current && isSynced) {
+      onRelease?.(groupRef.current.rotation.y, angularVelocity.current);
+    }
+  }, [isSynced, onRelease]);
+
+  const resetCursor = useCallback(() => {
+    document.body.style.cursor = "";
+    if (isDragging.current || hasInitializedDrag.current) {
+      emitRelease();
+    }
+    isDragging.current = false;
+    hasInitializedDrag.current = false;
+  }, [emitRelease]);
+
+  const handlePointerUp = useCallback(() => {
+    if (hasInitializedDrag.current) {
+      document.body.style.cursor = "grab";
+      emitRelease();
+      isDragging.current = false;
+      hasInitializedDrag.current = false;
+    }
+  }, [emitRelease]);
 
   useEffect(() => {
     if (groupRef.current) {
@@ -198,23 +183,34 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
       window.removeEventListener("mouseup", handleWindowMouseUp);
       window.removeEventListener("mouseleave", resetCursor);
     };
-  }, []);
+  }, [resetCursor]);
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     if (!groupRef.current) return;
 
-    // Apply remote state when not dragging locally and someone else has control
-    if (
-      enableSync &&
-      !isDragging.current &&
-      remoteState?.isDragging &&
-      remoteState.draggingUserId
-    ) {
-      groupRef.current.rotation.y = remoteState.rotation;
-      angularVelocity.current = remoteState.angularVelocity;
+    // When synced and not dragging, use CRDT state
+    if (isSynced && !isDragging.current && computeState) {
+      const state = computeState(performance.now());
+      groupRef.current.rotation.y = state.rotation;
+      angularVelocity.current = state.velocity;
+
+      // Track rotation for spin count
+      const currentRotation = state.rotation;
+      const deltaRotation = currentRotation - lastRotation.current;
+      accumulatedRotation.current += deltaRotation;
+
+      if (Math.abs(accumulatedRotation.current) >= FULL_ROTATION) {
+        const completeRotations = Math.floor(
+          Math.abs(accumulatedRotation.current) / FULL_ROTATION
+        );
+        setSpinCount((prev) => prev + completeRotations);
+        accumulatedRotation.current %= FULL_ROTATION;
+      }
+      lastRotation.current = currentRotation;
       return;
     }
 
+    // Local physics when not synced or dragging
     if (!isDragging.current && angularVelocity.current !== 0) {
       const speed = Math.abs(angularVelocity.current);
       const frictionFactor = Math.max(FRICTION_BASE - speed * 0.0001, 0.995);
@@ -224,25 +220,22 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
         angularVelocity.current = 0;
       }
 
+      // Use fixed timestep for consistency
+      const delta = 1 / 60;
       groupRef.current.rotation.y -= angularVelocity.current * delta;
+
       const currentRotation = groupRef.current.rotation.y;
       const deltaRotation = currentRotation - lastRotation.current;
       accumulatedRotation.current += deltaRotation;
 
       if (Math.abs(accumulatedRotation.current) >= FULL_ROTATION) {
         const completeRotations = Math.floor(
-          Math.abs(accumulatedRotation.current) / FULL_ROTATION,
+          Math.abs(accumulatedRotation.current) / FULL_ROTATION
         );
         setSpinCount((prev) => prev + completeRotations);
-        setSpinCountValue((prev) => prev + completeRotations);
         accumulatedRotation.current %= FULL_ROTATION;
       }
       lastRotation.current = currentRotation;
-
-      // Sync velocity decay to other clients periodically
-      if (angularVelocity.current !== 0) {
-        syncState();
-      }
     }
   });
 
@@ -255,13 +248,10 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
       onPointerUp={handlePointerUp}
     >
       <SpinnerModel isXray={isXray} />
-      {enableSync && isConnected && connectedUsers > 1 && (
-        <mesh position={[0, 0.5, 0]}>
-          {/* Visual indicator that sync is active - can be styled later */}
-        </mesh>
-      )}
     </group>
   );
 };
+
+InteractiveSpinner.displayName = "InteractiveSpinner";
 
 export default InteractiveSpinner;
