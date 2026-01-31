@@ -1,6 +1,7 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 
-const POLL_INTERVAL = 500;
+const POLL_INTERVAL_FAST = 500;
+const POLL_INTERVAL_SLOW = 2500;
 const ICE_SERVERS = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
@@ -61,15 +62,46 @@ export function useWebRTCRoom(
   const myPeerIdRef = useRef<string | null>(null);
   const pollIntervalRef = useRef<number | null>(null);
   const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
+  const expectedPeersRef = useRef<Set<string>>(new Set());
+  const currentPollIntervalRef = useRef<number>(POLL_INTERVAL_FAST);
+  const pollSignalsRef = useRef<(() => Promise<void>) | null>(null);
   const optionsRef = useRef(options);
   optionsRef.current = options;
+
+  const adjustPollInterval = useCallback(() => {
+    const pollSignalsFn = pollSignalsRef.current;
+    if (!pollSignalsFn || !pollIntervalRef.current) return;
+
+    const connections = peerConnectionsRef.current;
+    const expectedPeers = expectedPeersRef.current;
+
+    // Check if all expected peers are connected
+    const allConnected = expectedPeers.size === 0 ||
+      Array.from(expectedPeers).every(peerId => {
+        const conn = connections.get(peerId);
+        return conn?.connected;
+      });
+
+    const desiredInterval = allConnected ? POLL_INTERVAL_SLOW : POLL_INTERVAL_FAST;
+
+    // Only restart interval if it changed
+    if (desiredInterval !== currentPollIntervalRef.current) {
+      currentPollIntervalRef.current = desiredInterval;
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = window.setInterval(() => {
+        void pollSignalsFn();
+      }, desiredInterval);
+    }
+  }, []);
 
   const updatePeerCount = useCallback(() => {
     const connectedCount = Array.from(peerConnectionsRef.current.values()).filter(
       (p) => p.connected
     ).length;
     setPeerCount(connectedCount);
-  }, []);
+    // Adjust polling speed based on connection state
+    adjustPollInterval();
+  }, [adjustPollInterval]);
 
   const sendSignal = useCallback(
     async <T,>(endpoint: string, data: Record<string, unknown>): Promise<T | null> => {
@@ -228,6 +260,11 @@ export function useWebRTCRoom(
       let peerConn = peerConnectionsRef.current.get(from);
 
       if (type === "offer") {
+        // New peer joining - track them and speed up polling
+        if (!expectedPeersRef.current.has(from)) {
+          expectedPeersRef.current.add(from);
+          adjustPollInterval();
+        }
         if (!peerConn) {
           peerConn = createPeerConnection(localPeerId, from, false);
         }
@@ -272,7 +309,7 @@ export function useWebRTCRoom(
         }
       }
     },
-    [createPeerConnection, sendSignal, processPendingCandidates]
+    [createPeerConnection, sendSignal, processPendingCandidates, adjustPollInterval]
   );
 
   const pollSignals = useCallback(async () => {
@@ -304,6 +341,9 @@ export function useWebRTCRoom(
       peerConn.connection.close();
     }
     peerConnectionsRef.current.clear();
+    expectedPeersRef.current.clear();
+    currentPollIntervalRef.current = POLL_INTERVAL_FAST;
+    pollSignalsRef.current = null;
     setPeerCount(0);
   }, []);
 
@@ -316,6 +356,10 @@ export function useWebRTCRoom(
     setMyPeerId(peerId);
     setIsConnected(true);
 
+    // Track expected peers for adaptive polling
+    expectedPeersRef.current = new Set(result.peers || []);
+    currentPollIntervalRef.current = POLL_INTERVAL_FAST;
+
     if (result.peers && result.peers.length > 0) {
       for (const remotePeerId of result.peers) {
         await new Promise((r) => setTimeout(r, 100));
@@ -323,9 +367,12 @@ export function useWebRTCRoom(
       }
     }
 
+    // Store pollSignals ref for adaptive polling
+    pollSignalsRef.current = pollSignals;
+
     pollIntervalRef.current = window.setInterval(() => {
       void pollSignals();
-    }, POLL_INTERVAL);
+    }, POLL_INTERVAL_FAST);
   }, [roomId, sendSignal, initiateConnection, pollSignals]);
 
   const leave = useCallback(async () => {

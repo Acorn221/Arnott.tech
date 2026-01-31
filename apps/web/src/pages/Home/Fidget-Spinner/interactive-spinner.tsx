@@ -124,11 +124,6 @@ const InteractiveSpinner = ({
 
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
     lastDragTime.current = currentTime;
-
-    // Emit drag event for CRDT sync
-    if (isSynced) {
-      onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
-    }
   };
 
   const emitRelease = useCallback(() => {
@@ -236,6 +231,11 @@ const InteractiveSpinner = ({
         accumulatedRotation.current %= FULL_ROTATION;
       }
       lastRotation.current = currentRotation;
+    }
+
+    // Sync drag state to network once per frame (batched, not per-pointer-event)
+    if (isDragging.current && isSynced) {
+      onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
     }
   });
 

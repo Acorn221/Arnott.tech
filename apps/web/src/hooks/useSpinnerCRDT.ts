@@ -14,26 +14,25 @@ const MSG_RELEASE = 2;
 const encodeBuffer = new ArrayBuffer(25);
 const encodeView = new DataView(encodeBuffer);
 
-/** Encode spinner event to binary - zero allocation for drag events */
+/** Encode spinner event to binary - zero allocation, returns full buffer */
 export function encodeSpinnerEvent(event: SpinnerEvent): ArrayBuffer {
   if (event.type === "grab") {
     encodeView.setUint8(0, MSG_GRAB);
     encodeView.setFloat64(1, event.timestamp, true);
     encodeView.setFloat64(9, event.rotation, true);
-    return encodeBuffer.slice(0, 17);
+    // Bytes 17-24 unused for grab, but we send full buffer to avoid allocation
   } else if (event.type === "drag") {
     encodeView.setUint8(0, MSG_DRAG);
     encodeView.setFloat64(1, event.timestamp, true);
     encodeView.setFloat64(9, event.rotation, true);
     encodeView.setFloat64(17, event.velocity, true);
-    return encodeBuffer.slice(0, 25);
   } else {
     encodeView.setUint8(0, MSG_RELEASE);
     encodeView.setFloat64(1, event.timestamp, true);
     encodeView.setFloat64(9, event.rotation, true);
     encodeView.setFloat64(17, event.velocity, true);
-    return encodeBuffer.slice(0, 25);
   }
+  return encodeBuffer;
 }
 
 /** Decode binary to spinner event */
