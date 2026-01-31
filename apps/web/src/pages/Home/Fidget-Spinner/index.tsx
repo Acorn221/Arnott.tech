@@ -56,7 +56,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   } | null>(null);
 
   // Handle incoming CRDT messages
-  const handleMessage = useCallback((_peerId: string, data: unknown) => {
+  const handleMessage = useCallback((peerId: string, data: unknown) => {
     // Binary spinner events (fast path)
     if (data instanceof ArrayBuffer) {
       const event = decodeSpinnerEvent(data);
@@ -140,10 +140,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       onPeerConnect: handlePeerConnect,
     });
 
-  // Store webrtc methods in ref
-  useEffect(() => {
-    webrtcRef.current = { sendTo, broadcast };
-  }, [sendTo, broadcast]);
+  // Store webrtc methods in ref (sync, not useEffect, to avoid race condition)
+  webrtcRef.current = { sendTo, broadcast };
 
   // Track connection time to distinguish existing clients from newly joining ones
   useEffect(() => {

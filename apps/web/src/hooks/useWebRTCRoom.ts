@@ -256,6 +256,7 @@ export function useWebRTCRoom(
         peerConn.dataChannel = dataChannel;
       } else {
         pc.ondatachannel = (event) => {
+          peerConn.dataChannel = event.channel;
           setupDataChannel(event.channel);
         };
       }
