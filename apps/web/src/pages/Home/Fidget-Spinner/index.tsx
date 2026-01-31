@@ -4,11 +4,12 @@ import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
 import { useWebRTCRoom } from "@/hooks/useWebRTCRoom";
 import {
-  useSpinnerCRDT,
   encodeSpinnerEvent,
   decodeSpinnerEvent,
+  spinnerStateComputer,
+  spinnerConflictResolver,
   type SpinnerEvent,
-} from "@/hooks/useSpinnerCRDT";
+} from "./spinner-codec";
 
 // JSON message types (binary used for spinner events)
 type SpinnerMessage =
@@ -21,13 +22,11 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   const [spinCount, setSpinCount] = useState(0);
   const timeOffsetsRef = useRef<Map<string, number>>(new Map());
 
-  // Create CRDT hook first (no dependencies on WebRTC)
-  const crdtRef = useRef<{
-    applyRemoteEvent: (event: SpinnerEvent) => void;
-    getCurrentEvent: () => SpinnerEvent | null;
-    setTimeOffset: (offset: number) => void;
-  } | null>(null);
+  // Current CRDT event
+  const currentEventRef = useRef<SpinnerEvent | null>(null);
+  const timeOffsetRef = useRef(0);
 
+  // Create refs for WebRTC methods to avoid circular deps
   const webrtcRef = useRef<{
     sendTo: (peerId: string, data: unknown) => void;
     broadcast: (data: unknown) => void;
@@ -39,7 +38,13 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     if (data instanceof ArrayBuffer) {
       const event = decodeSpinnerEvent(data);
       if (event) {
-        crdtRef.current?.applyRemoteEvent(event);
+        // Apply time offset
+        const offset = timeOffsetsRef.current.get(peerId) ?? 0;
+        const adjustedEvent = spinnerConflictResolver.adjustTimestamp(event, offset);
+
+        if (spinnerConflictResolver.shouldReplace(currentEventRef.current, adjustedEvent, offset)) {
+          currentEventRef.current = adjustedEvent;
+        }
       }
       return;
     }
@@ -48,29 +53,31 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     const msg = data as SpinnerMessage;
 
     if (msg.type === "time-sync") {
-      // offset converts remote timestamps to local time: localTime = remoteTime + offset
-      // If remote clock is ahead, offset is negative
       const offset = performance.now() - msg.localTime;
       timeOffsetsRef.current.set(peerId, offset);
-      crdtRef.current?.setTimeOffset(offset);
+      // Use average offset
+      const offsets = Array.from(timeOffsetsRef.current.values());
+      timeOffsetRef.current = offsets.reduce((a, b) => a + b, 0) / offsets.length;
       return;
     }
 
     if (msg.type === "sync" && msg.event) {
-      crdtRef.current?.applyRemoteEvent(msg.event);
+      const offset = timeOffsetsRef.current.get(peerId) ?? 0;
+      const adjustedEvent = spinnerConflictResolver.adjustTimestamp(msg.event, offset);
+      if (spinnerConflictResolver.shouldReplace(currentEventRef.current, adjustedEvent, offset)) {
+        currentEventRef.current = adjustedEvent;
+      }
     }
   }, []);
 
-  // Handle new peer connections - exchange time sync and current state
+  // Handle new peer connections
   const handlePeerConnect = useCallback((peerId: string) => {
-    // Send our current time for synchronization
     webrtcRef.current?.sendTo(peerId, {
       type: "time-sync",
       localTime: performance.now(),
     } as SpinnerMessage);
 
-    // Send current CRDT state if we have one
-    const currentEvent = crdtRef.current?.getCurrentEvent();
+    const currentEvent = currentEventRef.current;
     if (currentEvent) {
       webrtcRef.current?.sendTo(peerId, {
         type: "sync",
@@ -93,21 +100,58 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Emit CRDT events to all peers (binary encoded)
   const handleEventEmit = useCallback(
     (event: SpinnerEvent) => {
-      if (!isConnected) return;
-      broadcast(encodeSpinnerEvent(event));
+      currentEventRef.current = event;
+      if (isConnected) {
+        broadcast(encodeSpinnerEvent(event));
+      }
     },
     [isConnected, broadcast]
   );
 
-  const { computeState, getCurrentEvent, grab, drag, release, applyRemoteEvent, setTimeOffset } =
-    useSpinnerCRDT({
-      onEventEmit: handleEventEmit,
-    });
+  // Compute state from current event
+  const computeState = useCallback((now: number) => {
+    const event = currentEventRef.current;
+    if (!event) {
+      return spinnerStateComputer.initialState();
+    }
+    return spinnerStateComputer.compute(event, now);
+  }, []);
 
-  // Store CRDT methods in ref
-  useEffect(() => {
-    crdtRef.current = { applyRemoteEvent, getCurrentEvent, setTimeOffset };
-  }, [applyRemoteEvent, getCurrentEvent, setTimeOffset]);
+  // CRDT action methods
+  const grab = useCallback(
+    (rotation: number) => {
+      handleEventEmit({
+        type: "grab",
+        timestamp: performance.now(),
+        rotation,
+      });
+    },
+    [handleEventEmit]
+  );
+
+  const drag = useCallback(
+    (rotation: number, velocity: number) => {
+      handleEventEmit({
+        type: "drag",
+        timestamp: performance.now(),
+        rotation,
+        velocity,
+      });
+    },
+    [handleEventEmit]
+  );
+
+  const release = useCallback(
+    (rotation: number, velocity: number) => {
+      handleEventEmit({
+        type: "release",
+        timestamp: performance.now(),
+        rotation,
+        velocity,
+      });
+    },
+    [handleEventEmit]
+  );
 
   const toggleRoom = useCallback(() => {
     if (isConnected) {
@@ -117,7 +161,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
   }, [isConnected, join, leave]);
 
-  // Whether we have synced state (connected and either have an event or peers have sent one)
+  // isSynced = connected to room
   const isSynced = isConnected;
 
   return (
@@ -168,11 +212,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
         gl={{ antialias: true }}
       >
         <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
-
-        {/* Base ambient light */}
         <ambientLight intensity={0.2} />
-
-        {/* Locks the camera where we want it */}
         <OrbitControls
           enableZoom={false}
           enablePan={false}
@@ -180,8 +220,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
           minPolarAngle={Math.PI / 4}
           maxPolarAngle={Math.PI / 4}
         />
-
-        {/* Scene content */}
         <Suspense fallback={null}>
           <InteractiveSpinner
             position={[0, 0, 0]}

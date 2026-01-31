@@ -13,7 +13,14 @@ import {
   useFrame,
 } from "@react-three/fiber";
 import SpinnerModel from "./spinner-model";
-import type { SpinnerState } from "@/hooks/useSpinnerCRDT";
+import type { SpinnerState } from "./spinner-codec";
+import {
+  FRICTION_BASE,
+  FIXED_DT,
+  VELOCITY_THRESHOLD,
+  MAX_ANGULAR_VELOCITY,
+  FULL_ROTATION,
+} from "@/lib/physics";
 
 export type InteractiveSpinnerProps = ThreeElements["group"] & {
   setSpinCount: Dispatch<SetStateAction<number>>;
@@ -29,10 +36,6 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
   /** Whether we're synced with remote peers */
   isSynced?: boolean;
 };
-
-const FULL_ROTATION = Math.PI * 2;
-const MAX_ANGULAR_VELOCITY = 100;
-const FRICTION_BASE = 0.999;
 
 const InteractiveSpinner = ({
   setSpinCount,
@@ -211,13 +214,12 @@ const InteractiveSpinner = ({
       const frictionFactor = Math.max(FRICTION_BASE - speed * 0.0001, 0.995);
       angularVelocity.current *= frictionFactor;
 
-      if (Math.abs(angularVelocity.current) < 0.05) {
+      if (Math.abs(angularVelocity.current) < VELOCITY_THRESHOLD) {
         angularVelocity.current = 0;
       }
 
       // Use fixed timestep for consistency
-      const delta = 1 / 60;
-      groupRef.current.rotation.y -= angularVelocity.current * delta;
+      groupRef.current.rotation.y -= angularVelocity.current * FIXED_DT;
 
       const currentRotation = groupRef.current.rotation.y;
       const deltaRotation = currentRotation - lastRotation.current;
