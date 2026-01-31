@@ -1,0 +1,7 @@
+{
+  "extends": "@arnott/typescript-config/worker.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["src"]
+}

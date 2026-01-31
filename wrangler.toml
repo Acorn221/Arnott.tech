@@ -1,0 +1,20 @@
+name = "j4a-portfolio"
+compatibility_date = "2025-01-31"
+compatibility_flags = ["nodejs_compat"]
+
+main = "packages/worker/src/index.ts"
+assets = { directory = "apps/web/dist" }
+
+[[durable_objects.bindings]]
+name = "SPINNER_ROOM"
+class_name = "SpinnerRoom"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SpinnerRoom"]
+
+# D1 binding (commented out for later)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "j4a-db"
+# database_id = "xxx"

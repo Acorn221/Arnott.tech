@@ -1,0 +1,12 @@
+{
+  "extends": "@arnott/typescript-config/react.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["@webgpu/types"]
+  },
+  "include": ["src", "index.d.ts"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

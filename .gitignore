@@ -1,3 +1,14 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+dist-ssr
+*.local
+
+# Turbo
+.turbo
+
 # Logs
 logs
 *.log
@@ -6,11 +17,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
 
 # Editor directories and files
 .vscode/*
@@ -22,7 +28,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-src/pages/Home/Carousel/Slides/TestSlideScaling/index.tsx
 
-
+# Environment
 .env
+.env.local
+.env.*.local
+.dev.vars
+
+# Cloudflare
+.wrangler
+
+# Example files
+example

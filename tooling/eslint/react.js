@@ -4,7 +4,7 @@ import reactHooksPlugin from "eslint-plugin-react-hooks";
 
 export default tseslint.config(
   {
-    ignores: ["dist", "node_modules", "t3"],
+    ignores: ["dist", "node_modules", ".turbo"],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -41,9 +41,8 @@ export default tseslint.config(
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
       "react-hooks/exhaustive-deps": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
     },
   },
   {
