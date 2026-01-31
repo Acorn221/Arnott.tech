@@ -1,8 +1,6 @@
 import type {
-  SyncCodec,
   StateComputer,
   ConflictResolver,
-  SyncRegistration,
 } from "@/lib/sync";
 import {
   FRICTION_BASE,
@@ -134,16 +132,6 @@ export function computeStateFromRelease(
 }
 
 /**
- * SyncCodec for spinner events.
- */
-export const spinnerCodec: SyncCodec<SpinnerEvent> = {
-  componentType: "spinner",
-  typeId: 1,
-  encode: encodeSpinnerEvent,
-  decode: decodeSpinnerEvent,
-};
-
-/**
  * StateComputer for spinner state.
  */
 export const spinnerStateComputer: StateComputer<SpinnerEvent, SpinnerState> = {
@@ -186,13 +174,4 @@ export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
       timestamp: event.timestamp + timeOffset,
     };
   },
-};
-
-/**
- * Complete registration for spinner sync.
- */
-export const spinnerRegistration: SyncRegistration<SpinnerEvent, SpinnerState> = {
-  codec: spinnerCodec,
-  stateComputer: spinnerStateComputer,
-  conflictResolver: spinnerConflictResolver,
 };

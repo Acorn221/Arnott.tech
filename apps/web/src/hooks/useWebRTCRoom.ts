@@ -103,9 +103,6 @@ export function useWebRTCRoom(
     autoReconnect = false,
     maxReconnectAttempts = DEFAULT_MAX_RECONNECT_ATTEMPTS,
     reconnectBackoff = DEFAULT_BACKOFF,
-    onMessage,
-    onPeerConnect,
-    onPeerDisconnect,
     onConnectionStateChange,
   } = options;
 
@@ -121,6 +118,10 @@ export function useWebRTCRoom(
   const reconnectTimeoutRef = useRef<number | null>(null);
   const intentionalDisconnectRef = useRef(false);
   const isJoiningRef = useRef(false);
+  // Track when we started connecting to peers (to avoid premature reconnects)
+  const peerConnectionStartTimeRef = useRef<number | null>(null);
+  // Store options in ref to access latest values in event handlers
+  // without adding them to dependency arrays (which would cause reconnects)
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
@@ -168,7 +169,7 @@ export function useWebRTCRoom(
   }, []);
 
   const createPeerConnection = useCallback(
-    (localPeerId: string, remotePeerId: string, isInitiator: boolean): PeerConnection => {
+    (remotePeerId: string, isInitiator: boolean): PeerConnection => {
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
       const peerConn: PeerConnection = {
@@ -264,12 +265,12 @@ export function useWebRTCRoom(
   );
 
   const initiateConnection = useCallback(
-    async (localPeerId: string, remotePeerId: string) => {
+    async (remotePeerId: string) => {
       if (peerConnectionsRef.current.has(remotePeerId)) {
         return;
       }
 
-      const peerConn = createPeerConnection(localPeerId, remotePeerId, true);
+      const peerConn = createPeerConnection(remotePeerId, true);
 
       try {
         const offer = await peerConn.connection.createOffer();
@@ -283,14 +284,14 @@ export function useWebRTCRoom(
   );
 
   const handleSignal = useCallback(
-    async (localPeerId: string, signal: Signal) => {
+    async (signal: Signal) => {
       const { type, from, sdp, candidate } = signal;
 
       let peerConn = peerConnectionsRef.current.get(from);
 
       if (type === "offer") {
         if (!peerConn) {
-          peerConn = createPeerConnection(localPeerId, from, false);
+          peerConn = createPeerConnection(from, false);
         }
 
         try {
@@ -437,7 +438,7 @@ export function useWebRTCRoom(
           if (peers.length > 0) {
             peerConnectionStartTimeRef.current = Date.now();
             for (const remotePeerId of peers) {
-              await initiateConnection(peerId, remotePeerId);
+              await initiateConnection(remotePeerId);
             }
           }
         } else if (data.type === "peer-joined") {
@@ -445,9 +446,8 @@ export function useWebRTCRoom(
         } else if (data.type === "peer-left") {
           handlePeerLeft((data as PeerMessage).peerId);
         } else if (data.type === "offer" || data.type === "answer" || data.type === "ice") {
-          const peerId = myPeerIdRef.current;
-          if (peerId) {
-            await handleSignal(peerId, data as Signal);
+          if (myPeerIdRef.current) {
+            await handleSignal(data);
           }
         }
       };
@@ -502,13 +502,12 @@ export function useWebRTCRoom(
 
   const broadcast = useCallback((data: unknown) => {
     for (const [, peerConn] of peerConnectionsRef.current) {
-      if (peerConn.dataChannel?.readyState !== "open") {
-        continue;
-      }
-      if (data instanceof ArrayBuffer) {
-        peerConn.dataChannel.send(data);
-      } else {
-        peerConn.dataChannel.send(JSON.stringify(data));
+      if (peerConn.dataChannel?.readyState === "open") {
+        if (data instanceof ArrayBuffer) {
+          peerConn.dataChannel.send(data);
+        } else {
+          peerConn.dataChannel.send(JSON.stringify(data));
+        }
       }
     }
   }, []);
@@ -519,9 +518,6 @@ export function useWebRTCRoom(
       peerConn.dataChannel.send(JSON.stringify(data));
     }
   }, []);
-
-  // Track when we started connecting to peers (to avoid premature reconnects)
-  const peerConnectionStartTimeRef = useRef<number | null>(null);
 
   // Check if all peers disconnected and trigger reconnect
   useEffect(() => {
@@ -588,8 +584,6 @@ export function useWebRTCRoom(
         void leave();
       }
     };
-    // Only run on mount/unmount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Cleanup on unmount

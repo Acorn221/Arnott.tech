@@ -24,7 +24,6 @@ import {
 
 export type InteractiveSpinnerProps = ThreeElements["group"] & {
   setSpinCount: Dispatch<SetStateAction<number>>;
-  onLoad?: () => void;
   /** When synced, this function computes current state from CRDT */
   computeState?: (now: number) => SpinnerState;
   /** Called when user grabs the spinner */
@@ -39,7 +38,6 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
 
 const InteractiveSpinner = ({
   setSpinCount,
-  onLoad: _onLoad,
   computeState,
   onGrab,
   onDrag,
