@@ -46,6 +46,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
   const timeOffsetRef = useRef(0);
+  // Track when we connected to avoid sending stale state on rejoin
+  const connectionTimeRef = useRef<number>(0);
 
   // Create refs for WebRTC methods to avoid circular deps
   const webrtcRef = useRef<{
@@ -117,8 +119,11 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       localTime: performance.now(),
     } as SpinnerMessage);
 
+    // Only send state if we've been connected for a bit (we're the existing client)
+    // This prevents newly joining clients from overwriting good state with stale data
+    const timeSinceConnect = Date.now() - connectionTimeRef.current;
     const currentEvent = currentEventRef.current;
-    if (currentEvent) {
+    if (currentEvent && timeSinceConnect > 2000) {
       webrtcRef.current?.sendTo(peerId, {
         type: "sync",
         event: currentEvent,
@@ -139,6 +144,13 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   useEffect(() => {
     webrtcRef.current = { sendTo, broadcast };
   }, [sendTo, broadcast]);
+
+  // Track connection time to distinguish existing clients from newly joining ones
+  useEffect(() => {
+    if (connectionState === "connected") {
+      connectionTimeRef.current = Date.now();
+    }
+  }, [connectionState]);
 
   // Handle local tab messages (via BroadcastChannel)
   const handleLocalTabMessage = useCallback((data: LocalTabMessage) => {
