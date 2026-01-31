@@ -48,7 +48,9 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     const msg = data as SpinnerMessage;
 
     if (msg.type === "time-sync") {
-      const offset = msg.localTime - performance.now();
+      // offset converts remote timestamps to local time: localTime = remoteTime + offset
+      // If remote clock is ahead, offset is negative
+      const offset = performance.now() - msg.localTime;
       timeOffsetsRef.current.set(peerId, offset);
       crdtRef.current?.setTimeOffset(offset);
       return;

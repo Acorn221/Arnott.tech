@@ -14,25 +14,26 @@ const MSG_RELEASE = 2;
 const encodeBuffer = new ArrayBuffer(25);
 const encodeView = new DataView(encodeBuffer);
 
-/** Encode spinner event to binary - zero allocation, returns full buffer */
+/** Encode spinner event to binary - uses slice() to return a copy for safe async sending */
 export function encodeSpinnerEvent(event: SpinnerEvent): ArrayBuffer {
   if (event.type === "grab") {
     encodeView.setUint8(0, MSG_GRAB);
     encodeView.setFloat64(1, event.timestamp, true);
     encodeView.setFloat64(9, event.rotation, true);
-    // Bytes 17-24 unused for grab, but we send full buffer to avoid allocation
+    return encodeBuffer.slice(0, 17);
   } else if (event.type === "drag") {
     encodeView.setUint8(0, MSG_DRAG);
     encodeView.setFloat64(1, event.timestamp, true);
     encodeView.setFloat64(9, event.rotation, true);
     encodeView.setFloat64(17, event.velocity, true);
+    return encodeBuffer.slice(0, 25);
   } else {
     encodeView.setUint8(0, MSG_RELEASE);
     encodeView.setFloat64(1, event.timestamp, true);
     encodeView.setFloat64(9, event.rotation, true);
     encodeView.setFloat64(17, event.velocity, true);
+    return encodeBuffer.slice(0, 25);
   }
-  return encodeBuffer;
 }
 
 /** Decode binary to spinner event */
@@ -109,11 +110,8 @@ function computeStateFromRelease(
   event: { rotation: number; velocity: number; timestamp: number },
   now: number
 ): SpinnerState {
-  const elapsed = (now - event.timestamp) / 1000;
-
-  if (elapsed <= 0) {
-    return { rotation: event.rotation, velocity: event.velocity };
-  }
+  // Clamp elapsed to 0 if timestamp is slightly in the future (network jitter)
+  const elapsed = Math.max(0, (now - event.timestamp) / 1000);
 
   let velocity = event.velocity;
   let rotation = event.rotation;
@@ -231,8 +229,16 @@ export function useSpinnerCRDT(
 
     const current = currentEventRef.current;
 
-    // Latest timestamp wins (CRDT last-writer-wins semantics)
-    if (!current || adjustedEvent.timestamp > current.timestamp) {
+    // Grab/drag events always win - active user interaction takes priority
+    // This avoids issues with imprecise time sync causing events to be rejected
+    if (event.type === "grab" || event.type === "drag") {
+      currentEventRef.current = adjustedEvent;
+      return;
+    }
+
+    // For release events, use timestamp comparison (needed for physics simulation)
+    // But also accept if current is a drag (user released)
+    if (!current || current.type === "drag" || adjustedEvent.timestamp > current.timestamp) {
       currentEventRef.current = adjustedEvent;
     }
   }, []);

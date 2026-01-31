@@ -390,13 +390,15 @@ export function useWebRTCRoom(
 
   const broadcast = useCallback((data: unknown) => {
     for (const [, peerConn] of peerConnectionsRef.current) {
-      if (peerConn.dataChannel?.readyState === "open") {
-        // Binary for ArrayBuffer, JSON for objects
-        if (data instanceof ArrayBuffer) {
-          peerConn.dataChannel.send(data);
-        } else {
-          peerConn.dataChannel.send(JSON.stringify(data));
-        }
+      if (peerConn.dataChannel?.readyState !== "open") {
+        continue;
+      }
+      const channel = peerConn.dataChannel;
+      // Binary for ArrayBuffer, JSON for objects
+      if (data instanceof ArrayBuffer) {
+        channel.send(data);
+      } else {
+        channel.send(JSON.stringify(data));
       }
     }
   }, []);
