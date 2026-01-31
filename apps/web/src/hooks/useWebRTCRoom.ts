@@ -1,5 +1,8 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 
+// Use VITE_API_URL in production, empty string (relative) in dev
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const POLL_INTERVAL_FAST = 500;
 const POLL_INTERVAL_SLOW = 2500;
 const DEFAULT_MAX_RECONNECT_ATTEMPTS = 5;
@@ -163,7 +166,7 @@ export function useWebRTCRoom(
   const sendSignal = useCallback(
     async <T,>(endpoint: string, data: Record<string, unknown>): Promise<T | null> => {
       try {
-        const res = await fetch(`/api/signal/${endpoint}`, {
+        const res = await fetch(`${API_BASE}/api/signal/${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -378,7 +381,7 @@ export function useWebRTCRoom(
     if (!peerId) return;
 
     try {
-      const res = await fetch(`/api/signal/poll/${peerId}`);
+      const res = await fetch(`${API_BASE}/api/signal/poll/${peerId}`);
       const data = (await res.json()) as PollResponse;
 
       if (data.signals && data.signals.length > 0) {
@@ -640,7 +643,7 @@ export function useWebRTCRoom(
       const peerId = myPeerIdRef.current;
       if (peerId) {
         navigator.sendBeacon(
-          "/api/signal/leave",
+          `${API_BASE}/api/signal/leave`,
           JSON.stringify({ roomId, peerId })
         );
       }
