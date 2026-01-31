@@ -188,24 +188,20 @@ export function useWebRTCRoom(
         }
       };
 
+      // Connection success is handled by channel.onopen to ensure data channel is ready
+      // These handlers only deal with disconnection
       pc.oniceconnectionstatechange = () => {
-        if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
-          if (!peerConn.connected) {
-            peerConn.connected = true;
+        if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+          if (peerConn.connected) {
+            peerConn.connected = false;
             updatePeerCount();
-            optionsRef.current.onPeerConnect?.(remotePeerId);
+            optionsRef.current.onPeerDisconnect?.(remotePeerId);
           }
         }
       };
 
       pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "connected") {
-          if (!peerConn.connected) {
-            peerConn.connected = true;
-            updatePeerCount();
-            optionsRef.current.onPeerConnect?.(remotePeerId);
-          }
-        } else if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+        if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
           if (peerConn.connected) {
             peerConn.connected = false;
             updatePeerCount();

@@ -6,7 +6,6 @@ import {
   useState,
   useCallback,
   useRef,
-  useEffect,
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
@@ -46,8 +45,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
   const timeOffsetRef = useRef(0);
-  // Track when we connected to avoid sending stale state on rejoin
-  const connectionTimeRef = useRef<number>(0);
 
   // Create refs for WebRTC methods to avoid circular deps
   const webrtcRef = useRef<{
@@ -112,18 +109,17 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
   }, []);
 
-  // Handle new peer connections
+  // Handle new peer connections - exchange time sync and current state
   const handlePeerConnect = useCallback((peerId: string) => {
+    // Send time sync for timestamp alignment
     webrtcRef.current?.sendTo(peerId, {
       type: "time-sync",
       localTime: performance.now(),
     } as SpinnerMessage);
 
-    // Only send state if we've been connected for a bit (we're the existing client)
-    // This prevents newly joining clients from overwriting good state with stale data
-    const timeSinceConnect = Date.now() - connectionTimeRef.current;
+    // Send current state if we have any - conflict resolver will pick the winner
     const currentEvent = currentEventRef.current;
-    if (currentEvent && timeSinceConnect > 2000) {
+    if (currentEvent) {
       webrtcRef.current?.sendTo(peerId, {
         type: "sync",
         event: currentEvent,
@@ -135,20 +131,13 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     useWebRTCRoom({
       roomId: "spinner",
       autoConnect: true,
-      autoReconnect: false, // Disabled to avoid reconnection race conditions
+      autoReconnect: true,
       onMessage: handleMessage,
       onPeerConnect: handlePeerConnect,
     });
 
   // Store webrtc methods in ref (sync, not useEffect, to avoid race condition)
   webrtcRef.current = { sendTo, broadcast };
-
-  // Track connection time to distinguish existing clients from newly joining ones
-  useEffect(() => {
-    if (connectionState === "connected") {
-      connectionTimeRef.current = Date.now();
-    }
-  }, [connectionState]);
 
   // Handle local tab messages (via BroadcastChannel)
   const handleLocalTabMessage = useCallback((data: LocalTabMessage) => {
@@ -182,11 +171,11 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       localBroadcast({ event, sourceTabId: TAB_ID });
 
       // 2. Broadcast to WebRTC peers (cross-device)
-      if (isConnected) {
+      if (isConnected && peerCount > 0) {
         broadcast(encodeSpinnerEvent(event));
       }
     },
-    [isConnected, broadcast, localBroadcast],
+    [isConnected, peerCount, broadcast, localBroadcast],
   );
 
   // Compute state from current event
