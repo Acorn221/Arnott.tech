@@ -5,13 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 main = "packages/worker/src/index.ts"
 assets = { directory = "apps/web/dist" }
 
-# KV namespace for WebRTC signaling
-# Create with: npx wrangler kv:namespace create SPINNER_KV
-# Then update the id below with the output
-[[kv_namespaces]]
-binding = "SPINNER_KV"
-id = "c8b1800ac3094330a8c06714ea4d91dc"
-
 # Durable Object for WebSocket signaling
 [[durable_objects.bindings]]
 name = "SIGNALING_ROOM"
