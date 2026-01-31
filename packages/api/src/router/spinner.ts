@@ -31,7 +31,7 @@ export const spinnerRouter = router({
       z.object({
         roomId: z.string().optional().default("default"),
         spinCount: z.number().int().positive(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       // In production, this would update D1 or Durable Object storage

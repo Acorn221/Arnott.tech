@@ -88,4 +88,3 @@ export const createMaterials = (): MaterialMap => ({
       clearcoatRoughness: 0.2,
     }),
 });
-

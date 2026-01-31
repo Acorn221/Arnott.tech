@@ -1,5 +1,5 @@
-import { type FC, useRef, useCallback, Suspense, useEffect } from "react";
-import * as THREE from "three";
+import { type FC, useRef, useCallback, Suspense } from "react";
+import type * as THREE from "three";
 import { type Group } from "three";
 import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
@@ -30,7 +30,6 @@ const FACE_ALIGNMENT_OFFSET = Math.PI / 8;
 // Share button animation
 const SHARE_BUTTON_PRESS_DEPTH = 0.0006; // Deeper press for more satisfying click
 const SHARE_BUTTON_PRESS_DURATION = 0.08; // Snappier press
-const SHARE_BUTTON_RELEASE_DURATION = 0.15; // Slightly slower release with bounce
 
 const SPINNER_NAMES = [
   "slot-spinner-1",
@@ -106,46 +105,54 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     useSlotMachineHandle({ onTrigger: handleTrigger });
 
   // Check if object is either share button (walk up parent chain)
-  const isShareButton = useCallback((object: THREE.Object3D | null): "left" | "right" | null => {
-    let current: THREE.Object3D | null = object;
-    while (current) {
-      const name = current.name.toLowerCase();
-      if (name === "button-1-body" || name.includes("button-1")) return "left";
-      if (name === "button-2-body" || name.includes("button-2")) return "right";
-      current = current.parent;
-    }
-    return null;
-  }, []);
+  const isShareButton = useCallback(
+    (object: THREE.Object3D | null): "left" | "right" | null => {
+      let current: THREE.Object3D | null = object;
+      while (current) {
+        const name = current.name.toLowerCase();
+        if (name === "button-1-body" || name.includes("button-1"))
+          return "left";
+        if (name === "button-2-body" || name.includes("button-2"))
+          return "right";
+        current = current.parent;
+      }
+      return null;
+    },
+    [],
+  );
 
   // Share button click handler (works for both buttons)
-  const handleShareButtonClick = useCallback((which: "left" | "right") => {
-    if (!lastResult) return;
-    
-    soundManager.playButtonClick();
-    if (which === "left") {
-      isSpinButtonPressed.current = true;
-      spinButtonPressProgress.current = 0;
-    } else {
-      isShareButtonPressed.current = true;
-      shareButtonPressProgress.current = 0;
-    }
-    
-    setTimeout(() => {
-      shareResult();
-    }, 120);
-  }, [lastResult, shareResult]);
+  const handleShareButtonClick = useCallback(
+    (which: "left" | "right") => {
+      if (!lastResult) return;
+
+      soundManager.playButtonClick();
+      if (which === "left") {
+        isSpinButtonPressed.current = true;
+        spinButtonPressProgress.current = 0;
+      } else {
+        isShareButtonPressed.current = true;
+        shareButtonPressProgress.current = 0;
+      }
+
+      setTimeout(() => {
+        void shareResult();
+      }, 120);
+    },
+    [lastResult, shareResult],
+  );
 
   // Combined pointer down handler
   const combinedPointerDown = useCallback(
     (event: { object: THREE.Object3D; stopPropagation: () => void }) => {
       const buttonType = isShareButton(event.object);
-      
+
       if (buttonType && lastResult) {
         handleShareButtonClick(buttonType);
         event.stopPropagation();
         return;
       }
-      
+
       handlePointerDown(event);
     },
     [isShareButton, lastResult, handleShareButtonClick, handlePointerDown],
@@ -155,7 +162,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   const combinedPointerOver = useCallback(
     (event: { object: THREE.Object3D }) => {
       const buttonType = isShareButton(event.object);
-      
+
       // Show pointer cursor for buttons when there's a result to share
       if (buttonType) {
         if (lastResult) {
@@ -163,7 +170,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         }
         return; // Don't pass to handle hover
       }
-      
+
       handlePointerOver(event);
     },
     [isShareButton, lastResult, gl, handlePointerOver],
@@ -310,7 +317,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     buttonGlowTime.current += delta;
     const rgbTime = buttonGlowTime.current;
     const hasResult = lastResult !== null;
-    
+
     // LEFT SHARE BUTTON - RGB cycle
     const spinButton = spinButtonRef.current;
     const spinButtonMaterial = spinButtonMaterialRef.current;
@@ -318,7 +325,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (spinButtonBaseZ.current === null) {
         spinButtonBaseZ.current = spinButton.position.z;
       }
-      
+
       if (hasResult && !isSpinButtonPressed.current) {
         // RGB rainbow cycle (toned down)
         const hue = (rgbTime * 0.3) % 1;
@@ -331,7 +338,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         spinButtonMaterial.material.emissiveIntensity = 0;
         spinButtonMaterial.material.color.set("#1a1a1a");
       }
-      
+
       // Press animation
       if (isSpinButtonPressed.current) {
         spinButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
@@ -343,12 +350,13 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           const press = Math.min(spinButtonPressProgress.current, 1);
           const release = Math.max(0, spinButtonPressProgress.current - 1) * 2;
           const depth = press * (1 - release);
-          spinButton.position.z = spinButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+          spinButton.position.z =
+            spinButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
           spinButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }
     }
-    
+
     // RIGHT SHARE BUTTON - RGB cycle offset by 0.5 (opposite colors)
     const shareButton = shareButtonRef.current;
     const shareButtonMaterial = shareButtonMaterialRef.current;
@@ -356,7 +364,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (shareButtonBaseZ.current === null) {
         shareButtonBaseZ.current = shareButton.position.z;
       }
-      
+
       if (hasResult && !isShareButtonPressed.current) {
         // RGB rainbow cycle - offset by 0.5 for opposite colors (toned down)
         const hue = (rgbTime * 0.3 + 0.5) % 1;
@@ -369,7 +377,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         shareButtonMaterial.material.emissiveIntensity = 0;
         shareButtonMaterial.material.color.set("#1a1a1a");
       }
-      
+
       // Press animation
       if (isShareButtonPressed.current) {
         shareButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
@@ -381,7 +389,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           const press = Math.min(shareButtonPressProgress.current, 1);
           const release = Math.max(0, shareButtonPressProgress.current - 1) * 2;
           const depth = press * (1 - release);
-          shareButton.position.z = shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+          shareButton.position.z =
+            shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
           shareButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }

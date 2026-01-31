@@ -31,7 +31,7 @@ export const createSpinnerPivots = (
       if (reelFaces[reelNum]) {
         // Get the "occurrence_of_" parent which is the actual positioned object
         const positionedParent = object.parent;
-        if (positionedParent && positionedParent.name.includes("occurrence")) {
+        if (positionedParent?.name.includes("occurrence")) {
           reelFaces[reelNum].push(positionedParent);
         } else {
           reelFaces[reelNum].push(object);
@@ -39,7 +39,6 @@ export const createSpinnerPivots = (
       }
     }
   });
-
 
   // Create a pivot for each reel
   Object.entries(reelFaces).forEach(([reelNum, faces]) => {

@@ -43,7 +43,10 @@ class RetroSoundManager {
       // Volume envelope
       const vol = this.volume * volumeMultiplier;
       gainNode.gain.setValueAtTime(vol, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        ctx.currentTime + duration,
+      );
 
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
@@ -83,12 +86,12 @@ class RetroSoundManager {
   playWin(): void {
     // Classic Mario 1-UP / power-up sound
     const notes = [
-      { freq: 330, delay: 0 },     // E4
-      { freq: 392, delay: 60 },    // G4
-      { freq: 523, delay: 120 },   // C5
-      { freq: 659, delay: 180 },   // E5
-      { freq: 784, delay: 240 },   // G5
-      { freq: 1047, delay: 300 },  // C6
+      { freq: 330, delay: 0 }, // E4
+      { freq: 392, delay: 60 }, // G4
+      { freq: 523, delay: 120 }, // C5
+      { freq: 659, delay: 180 }, // E5
+      { freq: 784, delay: 240 }, // G5
+      { freq: 1047, delay: 300 }, // C6
     ];
     notes.forEach(({ freq, delay }) => {
       setTimeout(() => this.playTone(freq, 0.1, "square", 0.45), delay);
@@ -97,12 +100,12 @@ class RetroSoundManager {
 
   /** Lose sound - Mario death style */
   playLose(): void {
-    // Descending "wah wah wah wahhh" 
+    // Descending "wah wah wah wahhh"
     const notes = [
-      { freq: 494, delay: 0 },     // B4
-      { freq: 466, delay: 150 },   // Bb4
-      { freq: 440, delay: 300 },   // A4
-      { freq: 415, delay: 450 },   // Ab4
+      { freq: 494, delay: 0 }, // B4
+      { freq: 466, delay: 150 }, // Bb4
+      { freq: 440, delay: 300 }, // A4
+      { freq: 415, delay: 450 }, // Ab4
     ];
     notes.forEach(({ freq, delay }) => {
       setTimeout(() => this.playTone(freq, 0.2, "square", 0.4), delay);

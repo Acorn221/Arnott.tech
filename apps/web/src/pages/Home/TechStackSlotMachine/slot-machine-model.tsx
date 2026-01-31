@@ -107,7 +107,10 @@ const SlotMachineModel: FC = () => {
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
 
-      const materialKey = object.material.name as GltfMaterialKey;
+      const material = (
+        Array.isArray(object.material) ? object.material[0] : object.material
+      ) as THREE.Material | undefined;
+      const materialKey = material?.name as GltfMaterialKey;
       const partName = getPartName(object);
 
       object.userData.materialKey = materialKey;
@@ -143,16 +146,24 @@ const SlotMachineModel: FC = () => {
     });
 
     hasInitializedMaterials.current = true;
-  }, [scene, setKnobMaterial, setDisplayPlate, setIndicatorMaterials, setSpinButtonMaterial, setShareButtonMaterial, setFaceplateMaterial]);
+  }, [
+    scene,
+    setKnobMaterial,
+    setDisplayPlate,
+    setIndicatorMaterials,
+    setSpinButtonMaterial,
+    setShareButtonMaterial,
+    setFaceplateMaterial,
+  ]);
 
   // Apply dynamic reel textures when initialized
   useEffect(() => {
     if (!isInitialized || !reelManagersRef.current) return;
 
     const managers = reelManagersRef.current;
-    
+
     // Collect face objects for each reel (for position-based detection)
-    const reelFaces: Map<number, Map<number, THREE.Object3D>> = new Map();
+    const reelFaces = new Map<number, Map<number, THREE.Object3D>>();
 
     // Simple approach: assign materials based on face number directly
     scene.traverse((object) => {
@@ -163,8 +174,8 @@ const SlotMachineModel: FC = () => {
       const faceNum = parseInt(match[2], 10) - 1; // 0-indexed (face-1 -> 0)
       const manager = managers[reelIndex];
 
-      if (!manager || !manager.faces[faceNum]) return;
-      
+      if (!manager?.faces[faceNum]) return;
+
       // Store reference to face object for position detection
       if (!reelFaces.has(reelIndex)) {
         reelFaces.set(reelIndex, new Map());
@@ -180,12 +191,11 @@ const SlotMachineModel: FC = () => {
         }
       });
     });
-    
+
     // Store face object refs in context
     reelFaces.forEach((faces, reelIndex) => {
       setReelFaceObjects(reelIndex, faces);
     });
-
   }, [scene, isInitialized, reelManagersRef, setReelFaceObjects]);
 
   // Create handle pivot and add larger hit area for mobile
@@ -223,7 +233,7 @@ const SlotMachineModel: FC = () => {
         hitMesh.name = "handle-hitarea";
         handleKnob.add(hitMesh);
       }
-      
+
       handlePivotRef.current = pivot;
       setHandlePivot(pivot);
     }
@@ -240,12 +250,12 @@ const SlotMachineModel: FC = () => {
         shareButton = obj;
       }
     });
-    
+
     // Add invisible hit areas for easier mobile tapping
     const addHitArea = (button: THREE.Object3D, name: string) => {
       // Check if hit area already exists
       if (button.getObjectByName(`${name}-hitarea`)) return;
-      
+
       const hitGeometry = new THREE.SphereGeometry(0.018, 8, 8); // ~4x button size - good for mobile
       const hitMaterial = new THREE.MeshBasicMaterial({
         transparent: true,
@@ -256,7 +266,7 @@ const SlotMachineModel: FC = () => {
       hitMesh.name = `${name}-hitarea`;
       button.add(hitMesh);
     };
-    
+
     if (spinButton) {
       addHitArea(spinButton, "button-1");
       setSpinButton(spinButton);

@@ -25,13 +25,21 @@ const MAX_RECONNECT_ATTEMPTS = 5;
  * Hook for syncing spinner state across clients via WebSocket
  */
 export function useSpinnerSync(
-  options: UseSpinnerSyncOptions = {}
+  options: UseSpinnerSyncOptions = {},
 ): UseSpinnerSyncReturn {
-  const { roomId = "default", enabled = true, onStateUpdate, onUserJoin, onUserLeave } = options;
+  const {
+    roomId = "default",
+    enabled = true,
+    onStateUpdate,
+    onUserJoin,
+    onUserLeave,
+  } = options;
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const userIdRef = useRef<string | null>(null);
 
   const [isConnected, setIsConnected] = useState(false);
@@ -52,7 +60,7 @@ export function useSpinnerSync(
 
     ws.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data) as SpinnerMessage;
+        const message = JSON.parse(event.data as string) as SpinnerMessage;
 
         switch (message.type) {
           case "state":
@@ -83,13 +91,10 @@ export function useSpinnerSync(
       wsRef.current = null;
 
       // Attempt to reconnect
-      if (
-        enabled &&
-        reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS
-      ) {
+      if (enabled && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts.current++;
         console.log(
-          `[SpinnerSync] Reconnecting in ${RECONNECT_DELAY}ms (attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS})`
+          `[SpinnerSync] Reconnecting in ${RECONNECT_DELAY}ms (attempt ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS})`,
         );
         reconnectTimeout.current = setTimeout(connect, RECONNECT_DELAY);
       }

@@ -30,7 +30,7 @@ export function CrashProjectCard() {
     // Play the "to be continued" sound
     const audio = new Audio("/to-be-continued.mp3");
     audioRef.current = audio;
-    audio.play();
+    void audio.play();
 
     // Wait 3.8 seconds before executing the crash
     await new Promise((resolve) => setTimeout(resolve, 3800));
@@ -105,7 +105,9 @@ export function CrashProjectCard() {
       setStatus("rip");
     } catch (error) {
       console.error("Failed to crash:", error);
-      alert(`Crash failed: ${error}`);
+      alert(
+        `Crash failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       setStatus("idle");
       setShowMeme(false);
     }

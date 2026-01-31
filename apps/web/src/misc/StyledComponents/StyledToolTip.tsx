@@ -8,7 +8,7 @@ import type { FC } from "react";
 const StyledToolTip: FC<TooltipProps> = styled(
   ({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
-  )
+  ),
 )(() => ({
   [`& .${tooltipClasses.tooltip}`]: {
     fontSize: "1.2rem",

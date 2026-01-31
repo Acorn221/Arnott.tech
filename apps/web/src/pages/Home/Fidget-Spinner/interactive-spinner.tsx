@@ -47,21 +47,22 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
   const [spinCountValue, setSpinCountValue] = useState(0);
 
   // Sync spinner state across clients
-  const { isConnected, sendState, remoteState, connectedUsers } = useSpinnerSync({
-    enabled: enableSync,
-    onStateUpdate: useCallback((state: SpinnerState) => {
-      // Apply remote state when someone else is controlling
-      if (
-        state.isDragging &&
-        state.draggingUserId &&
-        !isDragging.current &&
-        groupRef.current
-      ) {
-        groupRef.current.rotation.y = state.rotation;
-        angularVelocity.current = state.angularVelocity;
-      }
-    }, []),
-  });
+  const { isConnected, sendState, remoteState, connectedUsers } =
+    useSpinnerSync({
+      enabled: enableSync,
+      onStateUpdate: useCallback((state: SpinnerState) => {
+        // Apply remote state when someone else is controlling
+        if (
+          state.isDragging &&
+          state.draggingUserId &&
+          !isDragging.current &&
+          groupRef.current
+        ) {
+          groupRef.current.rotation.y = state.rotation;
+          angularVelocity.current = state.angularVelocity;
+        }
+      }, []),
+    });
 
   // Sync local state to other clients (throttled)
   const syncState = useCallback(() => {
@@ -99,11 +100,7 @@ const InteractiveSpinner: FC<InteractiveSpinnerProps> = ({
     e.stopPropagation();
 
     // If someone else is dragging, don't allow local dragging
-    if (
-      enableSync &&
-      remoteState?.isDragging &&
-      remoteState.draggingUserId
-    ) {
+    if (enableSync && remoteState?.isDragging && remoteState.draggingUserId) {
       return;
     }
 

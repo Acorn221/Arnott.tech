@@ -74,7 +74,7 @@ export class SpinnerRoom implements DurableObject {
       JSON.stringify({
         type: "state",
         payload: this.currentSpinnerState,
-      } satisfies SpinnerMessage)
+      } satisfies SpinnerMessage),
     );
 
     // Notify others about the new user
@@ -83,7 +83,7 @@ export class SpinnerRoom implements DurableObject {
         type: "join",
         payload: { userId },
       },
-      server
+      server,
     );
 
     return new Response(null, {
@@ -122,14 +122,17 @@ export class SpinnerRoom implements DurableObject {
             !parsed.payload.isDragging &&
             this.currentSpinnerState.spinCount > 0
           ) {
-            await this.state.storage.put("spinnerState", this.currentSpinnerState);
+            await this.state.storage.put(
+              "spinnerState",
+              this.currentSpinnerState,
+            );
           }
           this.broadcast(
             {
               type: "sync",
               payload: this.currentSpinnerState,
             },
-            ws
+            ws,
           );
           break;
 
@@ -138,7 +141,7 @@ export class SpinnerRoom implements DurableObject {
             JSON.stringify({
               type: "state",
               payload: this.currentSpinnerState,
-            } satisfies SpinnerMessage)
+            } satisfies SpinnerMessage),
           );
           break;
       }
@@ -155,7 +158,7 @@ export class SpinnerRoom implements DurableObject {
           type: "leave",
           payload: { userId: session.userId },
         },
-        ws
+        ws,
       );
       this.sessions.delete(ws);
 

@@ -102,7 +102,7 @@ export interface SlotMachineContextValue {
   initializeReels: () => Promise<void>;
   calculateFinalResult: () => void;
   setIsSpinning: (spinning: boolean) => void;
-  shareResult: () => void;
+  shareResult: () => Promise<void>;
 }
 
 // ============================================================================

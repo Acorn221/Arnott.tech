@@ -40,7 +40,7 @@ export function createQueryClient() {
 /**
  * Get the WebSocket URL for spinner sync
  */
-export function getSpinnerWebSocketUrl(roomId: string = "default"): string {
+export function getSpinnerWebSocketUrl(roomId = "default"): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/api/spinner/${roomId}`;
 }
