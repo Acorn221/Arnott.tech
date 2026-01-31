@@ -55,7 +55,7 @@ export class SignalingRoom extends DurableObject<Env> {
     // Track session
     this.sessions.set(peerId, { ws: server, peerId });
 
-    console.log(`[DO] New connection: ${peerId}, existing peers: ${existingPeers.length}`);
+    // New peer connected
 
     // Set up message handler
     server.addEventListener("message", (event) => {
@@ -64,14 +64,12 @@ export class SignalingRoom extends DurableObject<Env> {
 
     // Set up close handler
     server.addEventListener("close", () => {
-      console.log(`[DO] WebSocket closed: ${peerId}`);
       this.sessions.delete(peerId);
       this.broadcast({ type: "peer-left", peerId }, peerId);
     });
 
     // Set up error handler
-    server.addEventListener("error", (event) => {
-      console.error(`[DO] WebSocket error for ${peerId}:`, event);
+    server.addEventListener("error", () => {
       this.sessions.delete(peerId);
     });
 

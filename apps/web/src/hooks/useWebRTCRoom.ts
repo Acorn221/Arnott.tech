@@ -233,7 +233,6 @@ export function useWebRTCRoom(
         };
 
         channel.onmessage = (event: MessageEvent<string | ArrayBuffer>) => {
-          // Binary data passed through directly
           if (event.data instanceof ArrayBuffer) {
             optionsRef.current.onMessage?.(remotePeerId, event.data);
             return;
@@ -269,7 +268,6 @@ export function useWebRTCRoom(
 
   const initiateConnection = useCallback(
     async (localPeerId: string, remotePeerId: string) => {
-      // Skip if we already have a connection to this peer
       if (peerConnectionsRef.current.has(remotePeerId)) {
         return;
       }
@@ -320,7 +318,6 @@ export function useWebRTCRoom(
           }
         }
       } else if (type === "ice" && candidate) {
-        // Only process ICE candidates for peers we already know about
         if (peerConn?.remoteDescriptionSet) {
           try {
             await peerConn.connection.addIceCandidate(candidate);
@@ -330,7 +327,6 @@ export function useWebRTCRoom(
         } else if (peerConn) {
           peerConn.pendingCandidates.push(candidate);
         }
-        // Ignore ICE candidates for unknown peers (likely stale)
       }
     },
     [createPeerConnection, sendSignal, processPendingCandidates]
@@ -421,23 +417,19 @@ export function useWebRTCRoom(
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("[WS] WebSocket connected, waiting for welcome");
+        // Connected, waiting for welcome message
       };
 
       ws.onmessage = async (event) => {
         let data: ServerMessage;
         try {
           data = JSON.parse(event.data as string) as ServerMessage;
-        } catch (e) {
-          console.error("[WS] Failed to parse message:", e);
+        } catch {
           return;
         }
 
-        console.log("[WS] Received:", data.type);
-
         if (data.type === "welcome") {
           const { peerId, peers } = data as WelcomeMessage;
-          console.log(`[WS] Welcome! I am ${peerId}, ${peers.length} existing peers`);
           myPeerIdRef.current = peerId;
           setMyPeerId(peerId);
           setIsConnected(true);
@@ -445,8 +437,11 @@ export function useWebRTCRoom(
           updateConnectionState('connected');
 
           // Initiate connections to existing peers
-          for (const remotePeerId of peers) {
-            await initiateConnection(peerId, remotePeerId);
+          if (peers.length > 0) {
+            peerConnectionStartTimeRef.current = Date.now();
+            for (const remotePeerId of peers) {
+              await initiateConnection(peerId, remotePeerId);
+            }
           }
         } else if (data.type === "peer-joined") {
           // New peer joined - they will initiate the connection to us
@@ -460,13 +455,8 @@ export function useWebRTCRoom(
         }
       };
 
-      ws.onclose = (event) => {
-        console.log(`[WS] Close: code=${event.code}, reason=${event.reason}, clean=${event.wasClean}`);
-
-        // Only handle if this is still the current WebSocket
-        // (prevents stale closures from clobbering new connections)
+      ws.onclose = () => {
         if (wsRef.current !== ws) {
-          console.log("[WS] Ignoring close from stale WebSocket");
           return;
         }
 
@@ -476,14 +466,13 @@ export function useWebRTCRoom(
         if (!intentionalDisconnectRef.current) {
           updateConnectionState('disconnected');
           if (autoReconnect) {
-            console.log("[WS] Will attempt reconnect...");
             attemptReconnect();
           }
         }
       };
 
-      ws.onerror = (event) => {
-        console.error("[WS] Error:", event);
+      ws.onerror = () => {
+        // Error handled by onclose
       };
     } finally {
       isJoiningRef.current = false;
@@ -519,12 +508,10 @@ export function useWebRTCRoom(
       if (peerConn.dataChannel?.readyState !== "open") {
         continue;
       }
-      const channel = peerConn.dataChannel;
-      // Binary for ArrayBuffer, JSON for objects
       if (data instanceof ArrayBuffer) {
-        channel.send(data);
+        peerConn.dataChannel.send(data);
       } else {
-        channel.send(JSON.stringify(data));
+        peerConn.dataChannel.send(JSON.stringify(data));
       }
     }
   }, []);
@@ -535,6 +522,9 @@ export function useWebRTCRoom(
       peerConn.dataChannel.send(JSON.stringify(data));
     }
   }, []);
+
+  // Track when we started connecting to peers (to avoid premature reconnects)
+  const peerConnectionStartTimeRef = useRef<number | null>(null);
 
   // Check if all peers disconnected and trigger reconnect
   useEffect(() => {
@@ -551,8 +541,15 @@ export function useWebRTCRoom(
       (conn) => !conn.connected
     );
 
+    // Only reconnect if enough time has passed since we started trying to connect
     if (allDisconnected && peerCount === 0) {
-      attemptReconnect();
+      const startTime = peerConnectionStartTimeRef.current;
+      const elapsed = startTime ? Date.now() - startTime : 0;
+
+      // Give WebRTC 10 seconds to establish before considering it failed
+      if (elapsed > 10000) {
+        attemptReconnect();
+      }
     }
   }, [autoReconnect, isConnected, peerCount, attemptReconnect]);
 

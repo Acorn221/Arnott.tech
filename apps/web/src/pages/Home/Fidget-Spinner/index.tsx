@@ -56,7 +56,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   } | null>(null);
 
   // Handle incoming CRDT messages
-  const handleMessage = useCallback((peerId: string, data: unknown) => {
+  const handleMessage = useCallback((_peerId: string, data: unknown) => {
     // Binary spinner events (fast path)
     if (data instanceof ArrayBuffer) {
       const event = decodeSpinnerEvent(data);
@@ -135,7 +135,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     useWebRTCRoom({
       roomId: "spinner",
       autoConnect: true,
-      autoReconnect: true,
+      autoReconnect: false, // Disabled to avoid reconnection race conditions
       onMessage: handleMessage,
       onPeerConnect: handlePeerConnect,
     });

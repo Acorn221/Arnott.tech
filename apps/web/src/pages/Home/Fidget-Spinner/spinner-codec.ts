@@ -167,8 +167,7 @@ export const spinnerStateComputer: StateComputer<SpinnerEvent, SpinnerState> = {
 
 /**
  * ConflictResolver for spinner events.
- * Grab always wins (active user stopping the spinner).
- * For drag/release, higher velocity wins.
+ * Simple: latest event always wins.
  */
 export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
   shouldReplace(
@@ -177,32 +176,8 @@ export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
     _timeOffset: number
   ): boolean {
     if (!current) return true;
-
-    // Grab always wins - user is actively stopping the spinner
-    if (incoming.type === "grab") return true;
-
-    // If current is a grab, only a newer grab or release can replace it
-    if (current.type === "grab") {
-      return incoming.type === "release" || incoming.timestamp > current.timestamp;
-    }
-
-    // For drag/release events, compare velocity - higher wins
-    const incomingVel = Math.abs(incoming.velocity);
-    const currentVel = Math.abs(
-      current.type === "release"
-        ? computeStateFromRelease(current, performance.now()).velocity
-        : current.velocity
-    );
-
-    // Significantly higher velocity wins (20% threshold to avoid oscillation)
-    if (incomingVel > currentVel * 1.2) return true;
-    if (currentVel > incomingVel * 1.2) return false;
-
-    // Similar velocity - prefer release over drag (more stable)
-    if (incoming.type === "release" && current.type === "drag") return true;
-
-    // Fallback to timestamp
-    return incoming.timestamp > current.timestamp;
+    // Latest event wins - simple and predictable
+    return incoming.timestamp >= current.timestamp;
   },
 
   adjustTimestamp(event: SpinnerEvent, timeOffset: number): SpinnerEvent {

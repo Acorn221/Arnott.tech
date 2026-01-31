@@ -56,7 +56,7 @@ const InteractiveSpinner = ({
   const lastRotation = useRef(0);
   const accumulatedRotation = useRef(0);
   const lastDragEmitTime = useRef(0);
-  const DRAG_EMIT_INTERVAL = 100; // 10 events/sec max
+  const DRAG_EMIT_INTERVAL = 16; // ~60 events/sec for smooth streaming
   const [isXray, setIsXray] = useState(false);
 
   const getMouseAngle = (event: ThreeEvent<PointerEvent>): number => {
@@ -129,6 +129,12 @@ const InteractiveSpinner = ({
 
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
     lastDragTime.current = currentTime;
+
+    // Stream drag events directly on pointer move for responsive sync
+    if (isSynced && currentTime - lastDragEmitTime.current >= DRAG_EMIT_INTERVAL) {
+      onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
+      lastDragEmitTime.current = currentTime;
+    }
   };
 
   const emitRelease = useCallback(() => {
@@ -237,14 +243,6 @@ const InteractiveSpinner = ({
       lastRotation.current = currentRotation;
     }
 
-    // Sync drag state to network with throttling to avoid flooding
-    if (isDragging.current && isSynced) {
-      const now = performance.now();
-      if (now - lastDragEmitTime.current >= DRAG_EMIT_INTERVAL) {
-        onDrag?.(groupRef.current.rotation.y, angularVelocity.current);
-        lastDragEmitTime.current = now;
-      }
-    }
   });
 
   return (
