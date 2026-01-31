@@ -1,8 +1,17 @@
 import { Canvas } from "@react-three/fiber";
-import { type FC, type InputHTMLAttributes, Suspense, useState, useCallback, useRef, useEffect } from "react";
+import {
+  type FC,
+  type InputHTMLAttributes,
+  Suspense,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
 import { useWebRTCRoom } from "@/hooks/useWebRTCRoom";
+import { useBroadcastChannel } from "@/lib/sync/useBroadcastChannel";
 import {
   encodeSpinnerEvent,
   decodeSpinnerEvent,
@@ -15,6 +24,18 @@ import {
 type SpinnerMessage =
   | { type: "sync"; event: SpinnerEvent }
   | { type: "time-sync"; localTime: number };
+
+// BroadcastChannel message type for local tab sync
+interface LocalTabMessage {
+  event: SpinnerEvent;
+  sourceTabId: string;
+}
+
+// Generate unique tab ID
+const TAB_ID = `tab-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+// Disable inter-tab sync in dev for easier testing
+const ENABLE_LOCAL_TAB_SYNC = !(import.meta.env.VITE_PUBLIC_DEV == "true");
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
@@ -40,9 +61,18 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       if (event) {
         // Apply time offset
         const offset = timeOffsetsRef.current.get(peerId) ?? 0;
-        const adjustedEvent = spinnerConflictResolver.adjustTimestamp(event, offset);
+        const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
+          event,
+          offset,
+        );
 
-        if (spinnerConflictResolver.shouldReplace(currentEventRef.current, adjustedEvent, offset)) {
+        if (
+          spinnerConflictResolver.shouldReplace(
+            currentEventRef.current,
+            adjustedEvent,
+            offset,
+          )
+        ) {
           currentEventRef.current = adjustedEvent;
         }
       }
@@ -57,14 +87,24 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       timeOffsetsRef.current.set(peerId, offset);
       // Use average offset
       const offsets = Array.from(timeOffsetsRef.current.values());
-      timeOffsetRef.current = offsets.reduce((a, b) => a + b, 0) / offsets.length;
+      timeOffsetRef.current =
+        offsets.reduce((a, b) => a + b, 0) / offsets.length;
       return;
     }
 
     if (msg.type === "sync" && msg.event) {
       const offset = timeOffsetsRef.current.get(peerId) ?? 0;
-      const adjustedEvent = spinnerConflictResolver.adjustTimestamp(msg.event, offset);
-      if (spinnerConflictResolver.shouldReplace(currentEventRef.current, adjustedEvent, offset)) {
+      const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
+        msg.event,
+        offset,
+      );
+      if (
+        spinnerConflictResolver.shouldReplace(
+          currentEventRef.current,
+          adjustedEvent,
+          offset,
+        )
+      ) {
         currentEventRef.current = adjustedEvent;
       }
     }
@@ -86,26 +126,57 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
   }, []);
 
-  const { join, leave, broadcast, sendTo, isConnected, peerCount } = useWebRTCRoom({
-    roomId: "spinner",
-    onMessage: handleMessage,
-    onPeerConnect: handlePeerConnect,
-  });
+  const { broadcast, sendTo, isConnected, peerCount, connectionState } =
+    useWebRTCRoom({
+      roomId: "spinner",
+      autoConnect: true,
+      autoReconnect: true,
+      onMessage: handleMessage,
+      onPeerConnect: handlePeerConnect,
+    });
 
   // Store webrtc methods in ref
   useEffect(() => {
     webrtcRef.current = { sendTo, broadcast };
   }, [sendTo, broadcast]);
 
-  // Emit CRDT events to all peers (binary encoded)
+  // Handle local tab messages (via BroadcastChannel)
+  const handleLocalTabMessage = useCallback((data: LocalTabMessage) => {
+    // Ignore messages from self
+    if (data.sourceTabId === TAB_ID) {
+      return;
+    }
+
+    const event = data.event;
+    // No time offset needed for same-device tabs
+    if (
+      spinnerConflictResolver.shouldReplace(currentEventRef.current, event, 0)
+    ) {
+      currentEventRef.current = event;
+    }
+  }, []);
+
+  // BroadcastChannel for instant same-browser tab sync
+  const { broadcast: localBroadcast } = useBroadcastChannel<LocalTabMessage>({
+    channelName: "spinner-sync",
+    onMessage: handleLocalTabMessage,
+    enabled: ENABLE_LOCAL_TAB_SYNC,
+  });
+
+  // Emit CRDT events to all peers (binary encoded) and local tabs
   const handleEventEmit = useCallback(
     (event: SpinnerEvent) => {
       currentEventRef.current = event;
+
+      // 1. Broadcast to other tabs (instant, ~1ms)
+      localBroadcast({ event, sourceTabId: TAB_ID });
+
+      // 2. Broadcast to WebRTC peers (cross-device)
       if (isConnected) {
         broadcast(encodeSpinnerEvent(event));
       }
     },
-    [isConnected, broadcast]
+    [isConnected, broadcast, localBroadcast],
   );
 
   // Compute state from current event
@@ -126,7 +197,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
         rotation,
       });
     },
-    [handleEventEmit]
+    [handleEventEmit],
   );
 
   const drag = useCallback(
@@ -138,7 +209,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
         velocity,
       });
     },
-    [handleEventEmit]
+    [handleEventEmit],
   );
 
   const release = useCallback(
@@ -150,56 +221,23 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
         velocity,
       });
     },
-    [handleEventEmit]
+    [handleEventEmit],
   );
 
-  const toggleRoom = useCallback(() => {
-    if (isConnected) {
-      void leave();
-    } else {
-      void join();
-    }
-  }, [isConnected, join, leave]);
-
   // isSynced = connected to room
-  const isSynced = isConnected;
+  const isSynced = connectionState === "connected";
 
   return (
     <div {...props}>
       <div className="flex w-full justify-center align-middle gap-4 items-center">
-        <div className="m-auto flex items-center gap-3">
+        <div className="m-auto flex items-center gap-4">
           <span>Spins: {spinCount}</span>
-          <button
-            onClick={toggleRoom}
-            className={`relative flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
-              isConnected
-                ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/30"
-            }`}
-            title={isConnected ? `Connected (${peerCount} peers)` : "Join room"}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            {isConnected && peerCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-xs bg-green-500 text-white rounded-full">
-                {peerCount}
-              </span>
-            )}
-          </button>
+          {peerCount > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              {peerCount + 1} online
+            </span>
+          )}
         </div>
       </div>
       <Canvas

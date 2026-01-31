@@ -40,6 +40,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string;
   readonly VITE_PUBLIC_GTAG_ID: string;
   readonly VITE_PUBLIC_SECRET_API_KEY: string;
+  readonly VITE_PUBLIC_DEV: string;
   // more env variables...
 }
 

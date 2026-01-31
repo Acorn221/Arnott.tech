@@ -15,3 +15,8 @@ export type {
 export { SyncProvider, type SyncProviderProps } from "./SyncProvider";
 export { useSync, useSyncOptional } from "./useSync";
 export { useSyncedState } from "./useSyncedState";
+export {
+  useBroadcastChannel,
+  type UseBroadcastChannelOptions,
+  type UseBroadcastChannelReturn,
+} from "./useBroadcastChannel";
