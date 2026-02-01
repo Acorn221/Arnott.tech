@@ -101,7 +101,7 @@ export function computeStateFromRelease(
   event: { rotation: number; velocity: number; timestamp: number },
   now: number
 ): SpinnerState {
-  // Clamp elapsed to 0 if timestamp is slightly in the future (network jitter)
+  // Clamp elapsed to 0 if timestamp is in the future (network jitter, clock skew)
   const elapsed = Math.max(0, (now - event.timestamp) / 1000);
 
   let velocity = event.velocity;
@@ -169,9 +169,19 @@ export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
   },
 
   adjustTimestamp(event: SpinnerEvent, timeOffset: number): SpinnerEvent {
+    const now = performance.now();
+    let adjustedTimestamp = event.timestamp + timeOffset;
+
+    // If adjusted timestamp is in the future (clock skew, time sync incomplete),
+    // clamp to now so physics simulation starts immediately.
+    // This sacrifices some determinism for better UX.
+    if (adjustedTimestamp > now) {
+      adjustedTimestamp = now;
+    }
+
     return {
       ...event,
-      timestamp: event.timestamp + timeOffset,
+      timestamp: adjustedTimestamp,
     };
   },
 };

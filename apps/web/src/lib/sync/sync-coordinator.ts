@@ -373,21 +373,29 @@ export class SyncCoordinator {
     if (!result) return;
 
     // Update registry with new offset
-    this.registry.setTimeOffset(peerId, result.offset);
+    if (result.offset !== 0 || result.isNewPeer) {
+      this.registry.setTimeOffset(peerId, result.offset);
+    }
 
-    // Respond if needed (bidirectional sync)
-    if (result.shouldRespond) {
-      this.sendTimeSync(peerId);
+    // Send response if needed (for RTT-based sync)
+    if (result.responseMessage) {
+      this.sendTo(peerId, result.responseMessage);
+      log.debug("Time sync response sent", { peerId });
+
+      // Also send our own request if this is a new peer (for bidirectional sync)
+      if (result.isNewPeer) {
+        this.sendTimeSync(peerId);
+      }
     }
   }
 
   /**
-   * Send time-sync to a peer.
+   * Send time-sync request to a peer.
    */
   private sendTimeSync(peerId: string): void {
-    const data = this.timeSync.createSyncMessage();
+    const data = this.timeSync.createSyncRequest(peerId);
     this.sendTo(peerId, data);
-    log.debug("Time sync sent", { peerId });
+    log.debug("Time sync request sent", { peerId });
   }
 
   // --- Peer discovery ---
