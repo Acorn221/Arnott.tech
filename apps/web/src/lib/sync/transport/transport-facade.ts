@@ -1,30 +1,13 @@
 /**
  * TransportFacade - Unified sync transport API.
  *
- * Automatically selects the best transport strategy:
- * 1. SharedWorker (preferred) - Single connection, zero encoding overhead
- * 2. FallbackCoordinator - BroadcastChannel + simple leader election
- *
- * Provides consistent API regardless of underlying transport.
+ * Uses FallbackCoordinator with leader election for WebRTC P2P support.
+ * (SharedWorker was removed because RTCPeerConnection isn't available in workers)
  */
 
 import { createLogger } from "@arnott/logger";
-import { WorkerTransport } from "./worker-transport";
 import { FallbackCoordinator } from "./fallback-coordinator";
 import type { TransportState, SyncMessage } from "./types";
-
-/** Common interface for our transports */
-interface SyncTransport {
-  readonly state: TransportState;
-  readonly isSupported: boolean;
-  connect(roomId: string): Promise<void>;
-  disconnect(): Promise<void>;
-  broadcast(data: ArrayBuffer | string): void;
-  onMessage: ((message: SyncMessage) => void) | null;
-  onStateChange: ((state: TransportState) => void) | null;
-  onPeerConnect: ((peerId: string) => void) | null;
-  onPeerDisconnect: ((peerId: string) => void) | null;
-}
 
 const log = createLogger("sync:facade");
 
@@ -61,16 +44,14 @@ function getMessageId(data: unknown): string | null {
   return null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface TransportFacadeOptions {
-  /** Force a specific transport (for testing) */
-  forceTransport?: "worker" | "fallback";
+  // Reserved for future options
 }
 
 export class TransportFacade {
-  private transport: SyncTransport;
-  private workerTransport: WorkerTransport | null = null;
+  private transport: FallbackCoordinator;
   private messageDedup = new MessageCache();
-  private usingWorker: boolean;
 
   // Callbacks
   onMessage: ((message: SyncMessage) => void) | null = null;
@@ -78,23 +59,10 @@ export class TransportFacade {
   onPeerConnect: ((peerId: string) => void) | null = null;
   onPeerDisconnect: ((peerId: string) => void) | null = null;
 
-  constructor(options: TransportFacadeOptions = {}) {
-    // Determine which transport to use
-    const workerTransport = new WorkerTransport();
-    const shouldUseWorker =
-      options.forceTransport === "worker" ||
-      (options.forceTransport !== "fallback" && workerTransport.isSupported);
-
-    if (shouldUseWorker) {
-      this.transport = workerTransport;
-      this.workerTransport = workerTransport;
-      this.usingWorker = true;
-      log.info("Using SharedWorker transport");
-    } else {
-      this.transport = new FallbackCoordinator();
-      this.usingWorker = false;
-      log.info("Using fallback coordinator");
-    }
+  constructor(_options: TransportFacadeOptions = {}) {
+    // Use FallbackCoordinator with leader election (supports WebRTC)
+    this.transport = new FallbackCoordinator();
+    log.info("Using leader election transport (WebRTC enabled)");
 
     // Wire up callbacks with deduplication
     this.transport.onMessage = (msg) => this.handleMessage(msg);
@@ -120,12 +88,13 @@ export class TransportFacade {
     return this.transport.state === "connected";
   }
 
-  get isUsingWorker(): boolean {
-    return this.usingWorker;
+  /** Whether this tab is the leader (owns remote connections) */
+  get isLeader(): boolean {
+    return this.transport.isLeader;
   }
 
   async connect(roomId: string): Promise<void> {
-    log.info("Connecting", { roomId, usingWorker: this.usingWorker });
+    log.info("Connecting", { roomId });
     return this.transport.connect(roomId);
   }
 
@@ -140,15 +109,11 @@ export class TransportFacade {
   }
 
   sendTo(peerId: string, data: ArrayBuffer | string): void {
-    if (this.workerTransport) {
-      this.workerTransport.sendTo(peerId, data);
-    }
+    this.transport.sendTo(peerId, data);
   }
 
   setTimeOffset(peerId: string, offset: number): void {
-    if (this.workerTransport) {
-      this.workerTransport.setTimeOffset(peerId, offset);
-    }
+    this.transport.setTimeOffset(peerId, offset);
   }
 
   private handleMessage(msg: SyncMessage): void {

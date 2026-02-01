@@ -6,7 +6,6 @@ export {
   TransportFacade,
   BroadcastTransport,
   SignalingTransport,
-  WorkerTransport,
   FallbackCoordinator,
   type Transport,
   type TransportState,
@@ -16,9 +15,6 @@ export {
   type MessageSource,
   type PeerInfo,
   type SignalingTransportOptions,
-  type TabToWorkerMessage,
-  type WorkerToTabMessage,
-  type WorkerState,
 } from "./transport";
 
 // Hooks

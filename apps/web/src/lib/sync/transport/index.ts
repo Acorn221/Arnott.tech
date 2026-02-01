@@ -4,17 +4,10 @@ export type {
   TransportState,
   TransportType,
   TransportConfig,
-  TransportManagerOptions,
   SyncMessage,
   MessageSource,
   PeerInfo,
 } from "./types";
-
-export type {
-  TabToWorkerMessage,
-  WorkerToTabMessage,
-  WorkerState,
-} from "./worker-types";
 
 // Main facade (use this)
 export {
@@ -28,5 +21,4 @@ export {
   SignalingTransport,
   type SignalingTransportOptions,
 } from "./signaling-transport";
-export { WorkerTransport } from "./worker-transport";
 export { FallbackCoordinator } from "./fallback-coordinator";

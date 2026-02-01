@@ -324,19 +324,33 @@ export class SignalingTransport implements Transport {
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        rtcLog.debug("ICE candidate", {
+          peerId: peer.id,
+          type: event.candidate.type,
+          protocol: event.candidate.protocol,
+          address: event.candidate.address,
+        });
         this.sendSignal("ice", peer.id, {
           candidate: event.candidate.toJSON(),
         });
+      } else {
+        rtcLog.debug("ICE gathering complete", { peerId: peer.id });
       }
     };
 
+    pc.onicegatheringstatechange = () => {
+      rtcLog.debug("ICE gathering state", { peerId: peer.id, state: pc.iceGatheringState });
+    };
+
     pc.oniceconnectionstatechange = () => {
+      rtcLog.info("ICE connection state", { peerId: peer.id, state: pc.iceConnectionState });
       if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
         peer.rtcConnected = false;
       }
     };
 
     pc.onconnectionstatechange = () => {
+      rtcLog.info("Connection state", { peerId: peer.id, state: pc.connectionState });
       if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
         peer.rtcConnected = false;
       }
@@ -399,6 +413,7 @@ export class SignalingTransport implements Transport {
 
   private async handleSignal(signal: SignalMessage): Promise<void> {
     const { type, from, sdp, candidate } = signal;
+    rtcLog.debug("Received signal", { type, from });
 
     let peer = this.peers.get(from);
     if (!peer) {

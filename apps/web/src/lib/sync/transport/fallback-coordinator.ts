@@ -31,7 +31,7 @@ export class FallbackCoordinator implements Transport {
 
   private tabId: string;
   private tabTimestamp: number;
-  private isLeader = false;
+  private _isLeader = false;
   private leaderTabId: string | null = null;
   private heartbeatTimer: number | null = null;
   private leaderTimeout: number | null = null;
@@ -59,6 +59,10 @@ export class FallbackCoordinator implements Transport {
     return this.broadcastTransport.isSupported;
   }
 
+  get isLeader(): boolean {
+    return this._isLeader;
+  }
+
   async connect(roomId: string): Promise<void> {
     if (this._state === "connected" && this.roomId === roomId) {
       return;
@@ -84,7 +88,7 @@ export class FallbackCoordinator implements Transport {
       if (!hasLeader) {
         await this.becomeLeader();
       } else {
-        this.isLeader = false;
+        this._isLeader = false;
         this.startLeaderWatchdog();
         log.info("Became follower (local sync only)", { leaderId: this.leaderTabId });
       }
@@ -119,7 +123,7 @@ export class FallbackCoordinator implements Transport {
       this.signaling = null;
     }
 
-    this.isLeader = false;
+    this._isLeader = false;
     this.leaderTabId = null;
     this.roomId = null;
     this.setState("disconnected");
@@ -132,15 +136,22 @@ export class FallbackCoordinator implements Transport {
     }
 
     // Only leader sends to remote
-    if (this.isLeader && this.signaling?.state === "connected") {
+    if (this._isLeader && this.signaling?.state === "connected") {
       this.signaling.broadcast(data);
     }
   }
 
   sendTo(peerId: string, data: ArrayBuffer | string): void {
     // Only works for leader
-    if (this.isLeader) {
+    if (this._isLeader) {
       this.signaling?.sendTo(peerId, data);
+    }
+  }
+
+  setTimeOffset(peerId: string, offset: number): void {
+    // Only works for leader
+    if (this._isLeader) {
+      this.signaling?.setPeerTimeOffset(peerId, offset);
     }
   }
 
@@ -181,7 +192,7 @@ export class FallbackCoordinator implements Transport {
    * Become the leader and connect signaling
    */
   private async becomeLeader(): Promise<void> {
-    this.isLeader = true;
+    this._isLeader = true;
     this.leaderTabId = this.tabId;
 
     log.info("Became leader, connecting signaling");
@@ -257,19 +268,19 @@ export class FallbackCoordinator implements Transport {
    */
   private handleLeaderMessage(msg: HeartbeatMessage): void {
     if (msg.type === "heartbeat") {
-      if (!this.isLeader) {
+      if (!this._isLeader) {
         this.leaderTabId = msg.tabId;
         this.resetLeaderTimeout();
       }
     } else if (msg.type === "claim") {
       // Someone claimed leadership
-      if (this.isLeader && this.shouldYieldTo(msg.tabId, msg.timestamp)) {
+      if (this._isLeader && this.shouldYieldTo(msg.tabId, msg.timestamp)) {
         // They have priority, yield
         log.info("Yielding leadership", { newLeader: msg.tabId });
         void this.yieldLeadership();
         this.leaderTabId = msg.tabId;
         this.startLeaderWatchdog();
-      } else if (!this.isLeader) {
+      } else if (!this._isLeader) {
         this.leaderTabId = msg.tabId;
         this.resetLeaderTimeout();
       }
@@ -292,7 +303,7 @@ export class FallbackCoordinator implements Transport {
    * Give up leadership
    */
   private async yieldLeadership(): Promise<void> {
-    this.isLeader = false;
+    this._isLeader = false;
 
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);

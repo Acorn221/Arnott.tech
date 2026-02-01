@@ -2,12 +2,12 @@
  * useSyncRoom - Main hook for real-time sync.
  *
  * Provides a unified interface for syncing state across:
- * - Local tabs (via SharedWorker or BroadcastChannel)
+ * - Local tabs (via BroadcastChannel)
  * - Remote peers (WebRTC P2P, low latency)
  * - Fallback relay (WebSocket, when P2P fails)
  *
- * Uses SharedWorker when available for zero-overhead binary transfer.
- * Falls back to BroadcastChannel + simple leader election when not.
+ * Uses leader election - one tab owns WebSocket/WebRTC connections,
+ * other tabs sync locally via BroadcastChannel.
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
@@ -44,8 +44,8 @@ export interface UseSyncRoomReturn {
   isConnected: boolean;
   /** Current connection state */
   connectionState: TransportState;
-  /** Whether using SharedWorker (vs fallback) */
-  isUsingWorker: boolean;
+  /** Whether this tab is the leader (owns remote connections) */
+  isLeader: boolean;
   /** Set time offset for a specific peer */
   setTimeOffset: (peerId: string, offset: number) => void;
 }
@@ -155,7 +155,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
     sendTo,
     isConnected,
     connectionState,
-    isUsingWorker: facadeRef.current?.isUsingWorker ?? false,
+    isLeader: facadeRef.current?.isLeader ?? false,
     setTimeOffset,
   };
 }

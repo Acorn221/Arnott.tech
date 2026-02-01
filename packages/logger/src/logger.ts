@@ -9,11 +9,25 @@ export function createLogger(namespace: string): Logger {
   ) => {
     if (!shouldLog(namespace, level)) return;
 
+    // Extract stack trace from error objects for better debugging
+    let processedData = data;
+    if (data && typeof data === "object" && "error" in data) {
+      const dataObj = data as Record<string, unknown>;
+      const err = dataObj.error;
+      if (err instanceof Error) {
+        processedData = {
+          ...dataObj,
+          error: err.message,
+          stack: err.stack,
+        };
+      }
+    }
+
     const entry: LogEntry = {
       level,
       namespace,
       message,
-      data,
+      data: processedData,
       timestamp: Date.now(),
     };
 
