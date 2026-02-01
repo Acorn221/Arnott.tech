@@ -6,6 +6,7 @@ import {
   useState,
   useCallback,
   useRef,
+  useEffect,
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
@@ -16,41 +17,45 @@ import {
   spinnerStateComputer,
   spinnerConflictResolver,
   type SpinnerEvent,
+  type SpinnerState,
 } from "./spinner-codec";
 
-// JSON message types (sync event for initial state sharing)
-interface SyncJsonMessage {
-  type: "sync";
-  event: SpinnerEvent;
+// Test instrumentation
+declare global {
+  interface Window {
+    __spinner_state__?: SpinnerState;
+    __spinner_event__?: SpinnerEvent | null;
+    __spinner_get_state__?: () => SpinnerState;
+  }
 }
 
-// Welcome spin velocity (radians/second) - a gentle spin to say hello
+/** Welcome spin velocity (radians/second) */
 const WELCOME_SPIN_VELOCITY = 8;
+/** Minimum time between welcome spins (ms) */
+const WELCOME_SPIN_DEBOUNCE_MS = 5000;
+/** Velocity threshold - don't trigger welcome spin if already moving faster */
+const WELCOME_SPIN_VELOCITY_THRESHOLD = 2;
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   const [spinCount, setSpinCount] = useState(0);
 
-  // Current CRDT event
+  // Current CRDT event (source of truth for spinner state)
   const currentEventRef = useRef<SpinnerEvent | null>(null);
 
-  // Track current rotation for welcome spins
-  const currentRotationRef = useRef(0);
-
-  // Ref for broadcast function to avoid circular dependency
+  // Ref for broadcast function (avoids circular dependency with useSyncRoom)
   const broadcastRef = useRef<((data: ArrayBuffer) => void) | null>(null);
 
-  // Debounce welcome spins - only one per 5 seconds
+  // Debounce welcome spins
   const lastWelcomeSpinRef = useRef(0);
-  const WELCOME_SPIN_DEBOUNCE_MS = 5000;
 
-  // Handle incoming messages from any transport
-  // Time-sync is handled automatically by SyncCoordinator
-  const handleMessage = useCallback((data: ArrayBuffer, peerId: string, timeOffset: number) => {
-    // Try to decode as spinner event (binary)
-    const event = decodeSpinnerEvent(data);
-    if (event) {
+  // Handle incoming spinner events from peers
+  const handleMessage = useCallback(
+    (_data: ArrayBuffer, _peerId: string, timeOffset: number) => {
+      const event = decodeSpinnerEvent(_data);
+      if (!event) return;
+
       const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
         event,
         timeOffset,
@@ -65,79 +70,40 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       ) {
         currentEventRef.current = adjustedEvent;
       }
-      return;
-    }
-
-    // Try to decode as JSON sync message
-    try {
-      const text = new TextDecoder().decode(data);
-      const jsonMsg = JSON.parse(text) as SyncJsonMessage;
-
-      if (jsonMsg.type === "sync" && jsonMsg.event) {
-        const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
-          jsonMsg.event,
-          timeOffset,
-        );
-        if (
-          spinnerConflictResolver.shouldReplace(
-            currentEventRef.current,
-            adjustedEvent,
-            timeOffset,
-          )
-        ) {
-          currentEventRef.current = adjustedEvent;
-        }
-      }
-    } catch {
-      // Not JSON, ignore
-    }
-  }, []);
-
-  // Welcome spin when a new peer joins
-  const handlePeerJoin = useCallback(
-    (peerId: string, isLocal: boolean) => {
-      console.log("[Spinner] New peer joined!", { peerId, isLocal });
-
-      // Only trigger welcome spin for remote peers (not local tabs)
-      if (isLocal) {
-        return;
-      }
-
-      // Debounce - only one welcome spin per 5 seconds
-      const now = performance.now();
-      if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) {
-        console.log("[Spinner] Welcome spin debounced");
-        return;
-      }
-
-      // Get current state
-      const currentState = currentEventRef.current
-        ? spinnerStateComputer.compute(currentEventRef.current, now)
-        : spinnerStateComputer.initialState();
-
-      // Only trigger welcome spin if spinner is nearly stopped
-      if (Math.abs(currentState.velocity) > 2) {
-        console.log("[Spinner] Spinner already moving, skipping welcome spin");
-        return;
-      }
-
-      lastWelcomeSpinRef.current = now;
-
-      // Trigger a welcome spin!
-      const welcomeEvent: SpinnerEvent = {
-        type: "release",
-        timestamp: now,
-        rotation: currentState.rotation,
-        velocity: WELCOME_SPIN_VELOCITY,
-      };
-
-      currentEventRef.current = welcomeEvent;
-
-      // Broadcast the welcome spin to all peers
-      broadcastRef.current?.(encodeSpinnerEvent(welcomeEvent));
     },
     [],
   );
+
+  // Trigger a welcome spin when a remote peer joins
+  const handlePeerJoin = useCallback((_peerId: string, isLocal: boolean) => {
+    // Only trigger for remote peers (not local tabs)
+    if (isLocal) return;
+
+    // Debounce to prevent spam
+    const now = performance.now();
+    if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
+
+    // Get current spinner state
+    const currentState = currentEventRef.current
+      ? spinnerStateComputer.compute(currentEventRef.current, now)
+      : spinnerStateComputer.initialState();
+
+    // Only spin if nearly stopped
+    if (Math.abs(currentState.velocity) > WELCOME_SPIN_VELOCITY_THRESHOLD) return;
+
+    lastWelcomeSpinRef.current = now;
+
+    // Create and broadcast welcome spin event
+    const welcomeEvent: SpinnerEvent = {
+      type: "release",
+      timestamp: now,
+      rotation: currentState.rotation,
+      velocity: WELCOME_SPIN_VELOCITY,
+    };
+
+    currentEventRef.current = welcomeEvent;
+    broadcastRef.current?.(encodeSpinnerEvent(welcomeEvent));
+  }, []);
 
   const {
     broadcast,
@@ -211,11 +177,26 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     [handleEventEmit],
   );
 
-  // isSynced = connected to room
   const isSynced = connectionState === "connected";
 
-  // Debug logging
-  console.log("[Spinner] State:", { isConnected, connectionState, isSynced });
+  // Test instrumentation - expose spinner state for E2E tests
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.__spinner_get_state__ = () => {
+        const event = currentEventRef.current;
+        if (!event) return spinnerStateComputer.initialState();
+        return spinnerStateComputer.compute(event, performance.now());
+      };
+      window.__spinner_event__ = currentEventRef.current;
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        delete window.__spinner_state__;
+        delete window.__spinner_event__;
+        delete window.__spinner_get_state__;
+      }
+    };
+  }, []);
 
   return (
     <div {...props}>
