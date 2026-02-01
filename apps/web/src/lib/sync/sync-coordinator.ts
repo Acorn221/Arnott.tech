@@ -2,76 +2,37 @@
  * SyncCoordinator - Orchestrates sync transport layer.
  *
  * Responsibilities:
- * - Message deduplication (single place)
- * - Automatic time-sync handling
+ * - Message deduplication
  * - Routes messages to best transport
- * - Manages PeerRegistry
- * - Leader election for signaling connection
- * - Relay between local and remote routes
+ * - Delegates peer state to PeerRegistry
+ * - Delegates time sync to TimeSyncManager
+ * - Delegates leadership to LeaderElection
+ *
+ * Key design rules:
+ * 1. ONE-WAY callback flow: transports → coordinator → app
+ * 2. No callbacks going backwards (coordinator never calls transport callbacks)
+ * 3. All state in delegated components (registry, timeSync, leader)
+ * 4. Coordinator only orchestrates, doesn't track duplicate state
  */
 
 import { createLogger } from "@arnott/logger";
 import { PeerRegistry, type Peer } from "./peer-registry";
+import { TimeSyncManager } from "./time-sync-manager";
 import { LeaderElection } from "./leader-election";
-import { BroadcastRoute } from "./transport/broadcast-route";
-import { SignalingRoute } from "./transport/signaling-route";
-import type { Route, RouteType, RouteState } from "./transport/route";
+import { BroadcastTransport } from "./transports/broadcast";
+import type { ITransport } from "./interfaces/transport";
+import type { TransportType, TransportState, TransportConfig } from "./interfaces/types";
 
 const log = createLogger("sync:coordinator");
 
-/** Time-sync message format (JSON) */
-interface TimeSyncMessage {
-  type: "time-sync";
-  localTime: number;
-}
-
-/** Announce message for peer discovery */
-interface AnnounceMessage {
-  type: "announce";
-  peerId: string;
-}
-
-/** Coordinator state */
+/** Coordinator connection state */
 export type CoordinatorState = "disconnected" | "connecting" | "connected" | "reconnecting";
 
-/** Simple LRU cache for message deduplication */
-class MessageCache {
-  private cache = new Map<string, number>();
-  private readonly maxSize: number;
-
-  constructor(maxSize = 1000) {
-    this.maxSize = maxSize;
-  }
-
-  has(key: string): boolean {
-    return this.cache.has(key);
-  }
-
-  set(key: string, timestamp: number): void {
-    if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) this.cache.delete(firstKey);
-    }
-    this.cache.set(key, timestamp);
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-}
-
-/** Generate message ID for deduplication (first 16 bytes) */
-function getMessageId(data: ArrayBuffer): string {
-  const view = new Uint8Array(data.slice(0, 16));
-  return Array.from(view)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
+/** Options for SyncCoordinator */
 export interface SyncCoordinatorOptions {
   /** Enable BroadcastChannel for local tabs (default: true) */
   enableBroadcast?: boolean;
-  /** Enable WebRTC for P2P (default: true) */
+  /** Enable WebRTC for P2P (default: false for now) */
   enableWebRTC?: boolean;
   /** Auto-reconnect on disconnect (default: true) */
   autoReconnect?: boolean;
@@ -84,47 +45,44 @@ export interface SyncCoordinatorOptions {
  * ```ts
  * const coordinator = new SyncCoordinator();
  * coordinator.onMessage = (data, peerId, timeOffset) => { ... };
- * coordinator.onPeerJoin = (peerId) => { ... };
  * await coordinator.connect("spinner");
  * coordinator.broadcast(encodedData);
  * ```
  */
 export class SyncCoordinator {
+  // --- Delegated components ---
   private registry = new PeerRegistry();
-  private leaderElection: LeaderElection | null = null;
-  private broadcastRoute: BroadcastRoute | null = null;
-  private signalingRoute: SignalingRoute | null = null;
-  private messageDedup = new MessageCache();
+  private timeSync = new TimeSyncManager();
+  private leader: LeaderElection | null = null;
 
+  // --- Transports ---
+  private transports = new Map<TransportType, ITransport>();
+  private broadcastTransport: BroadcastTransport | null = null;
+
+  // --- Message deduplication ---
+  private seenMessages = new Set<string>();
+  private readonly maxSeenMessages = 1000;
+
+  // --- State ---
   private _state: CoordinatorState = "disconnected";
   private roomId: string | null = null;
   private options: Required<SyncCoordinatorOptions>;
 
-  // --- Callbacks ---
+  // --- App callbacks ---
   /** Message received (data, peerId, timeOffset) */
   onMessage: ((data: ArrayBuffer, peerId: string, timeOffset: number) => void) | null = null;
-  /** Peer joined */
-  onPeerJoin: ((peerId: string) => void) | null = null;
-  /** Peer left */
-  onPeerLeave: ((peerId: string) => void) | null = null;
   /** State changed */
   onStateChange: ((state: CoordinatorState) => void) | null = null;
 
   constructor(options: SyncCoordinatorOptions = {}) {
     this.options = {
       enableBroadcast: options.enableBroadcast ?? true,
-      enableWebRTC: options.enableWebRTC ?? true,
+      enableWebRTC: options.enableWebRTC ?? false, // Disabled for now
       autoReconnect: options.autoReconnect ?? true,
     };
-
-    // Wire up registry events
-    // Defer onPeerJoin to next microtask so time-sync is sent first
-    // (sendTimeSync is called in wireRoute immediately after addRoute)
-    this.registry.onPeerJoin = (peer) => {
-      queueMicrotask(() => this.onPeerJoin?.(peer.id));
-    };
-    this.registry.onPeerLeave = (peerId) => this.onPeerLeave?.(peerId);
   }
+
+  // --- Public getters ---
 
   get state(): CoordinatorState {
     return this._state;
@@ -134,15 +92,23 @@ export class SyncCoordinator {
     return this._state === "connected";
   }
 
-  /** Whether this tab is the leader (owns signaling connection) */
   get isLeader(): boolean {
-    return this.leaderElection?.isLeader ?? false;
+    return this.leader?.isLeader ?? false;
   }
 
-  /** Get count of known peers */
   get peerCount(): number {
     return this.registry.size;
   }
+
+  get peers(): Peer[] {
+    return this.registry.getAllPeers();
+  }
+
+  getLocalId(): string {
+    return this.broadcastTransport?.getLocalId() ?? "";
+  }
+
+  // --- Connection lifecycle ---
 
   /**
    * Connect to a sync room.
@@ -156,40 +122,30 @@ export class SyncCoordinator {
     this.setState("connecting");
 
     try {
-      // 1. Set up broadcast route for local tab sync
+      // Set up broadcast transport for local tab sync
       if (this.options.enableBroadcast) {
-        this.broadcastRoute = new BroadcastRoute();
-        this.wireRoute(this.broadcastRoute);
-        await this.broadcastRoute.connect(roomId);
+        this.broadcastTransport = new BroadcastTransport();
+        this.wireTransport(this.broadcastTransport);
+        await this.broadcastTransport.connect({ roomId });
+        this.transports.set("broadcast", this.broadcastTransport);
       }
 
       // Connected for local tab sync immediately
-      // (leader election determines WHO connects to signaling, but local sync works now)
       this.setState("connected");
 
-      // Announce ourselves so other tabs know we exist and can send their state
-      this.broadcastAnnounce();
-
-      // 2. Start leader election (async - doesn't block connected state)
-      const tabId = this.broadcastRoute?.getLocalId() ?? `tab-${Date.now()}`;
-      this.leaderElection = new LeaderElection({ roomId, tabId });
-
-      this.leaderElection.onBecomeLeader = () => {
-        log.debug("Became leader, connecting signaling");
-        void this.connectSignaling();
+      // Start leader election (for future remote sync)
+      const tabId = this.broadcastTransport?.getLocalId() ?? `tab-${Date.now()}`;
+      this.leader = new LeaderElection({ roomId, tabId });
+      this.leader.onBecomeLeader = () => {
+        log.debug("Became leader");
+        // Future: connect signaling for remote sync
       };
-
-      this.leaderElection.onBecomeFollower = (leaderId) => {
+      this.leader.onBecomeFollower = (leaderId) => {
         log.debug("Became follower", { leaderId });
-        void this.disconnectSignaling();
+        // Future: disconnect signaling
       };
+      void this.leader.start();
 
-      this.leaderElection.onLeaderLost = () => {
-        log.debug("Leader lost, will attempt takeover");
-      };
-
-      // Don't await - let leader election happen in background
-      void this.leaderElection.start();
     } catch (err) {
       log.error("Failed to connect", { error: err });
       this.setState("disconnected");
@@ -201,21 +157,23 @@ export class SyncCoordinator {
    * Disconnect from the room.
    */
   async disconnect(): Promise<void> {
-    this.leaderElection?.stop();
-    this.leaderElection = null;
+    this.leader?.stop();
+    this.leader = null;
 
-    await this.disconnectSignaling();
-
-    if (this.broadcastRoute) {
-      await this.broadcastRoute.disconnect();
-      this.broadcastRoute = null;
+    for (const transport of this.transports.values()) {
+      await transport.disconnect();
     }
+    this.transports.clear();
+    this.broadcastTransport = null;
 
     this.registry.clear();
-    this.messageDedup.clear();
+    this.timeSync.clear();
+    this.seenMessages.clear();
     this.roomId = null;
     this.setState("disconnected");
   }
+
+  // --- Sending messages ---
 
   /**
    * Broadcast data to all peers.
@@ -226,17 +184,14 @@ export class SyncCoordinator {
     }
 
     // Mark as seen to prevent receiving our own message
-    const msgId = getMessageId(data);
-    this.messageDedup.set(msgId, performance.now());
+    const msgId = this.getMessageId(data);
+    this.addSeenMessage(msgId);
 
-    // Send via broadcast route (local tabs)
-    if (this.broadcastRoute?.state === "connected") {
-      this.broadcastRoute.send("all", data);
-    }
-
-    // Leader also sends via signaling (remote peers)
-    if (this.isLeader && this.signalingRoute?.state === "connected") {
-      this.signalingRoute.send("all", data);
+    // Send via all connected transports
+    for (const transport of this.transports.values()) {
+      if (transport.state === "connected") {
+        transport.broadcast(data);
+      }
     }
   }
 
@@ -254,200 +209,95 @@ export class SyncCoordinator {
       return;
     }
 
-    // Check if peer is reachable via broadcast (local tab)
-    if (peer.isLocal && this.broadcastRoute?.state === "connected") {
-      // BroadcastChannel doesn't support targeted send, but we can
-      // include target in message envelope if needed
-      this.broadcastRoute.send(peerId, data);
+    // Get best transport to reach this peer
+    const transportType = this.registry.getBestTransport(peerId);
+    if (!transportType) {
+      log.debug("sendTo: no transport for peer", { peerId });
       return;
     }
 
-    // Remote peer - only leader can send
-    if (this.isLeader && this.signalingRoute?.state === "connected") {
-      this.signalingRoute.send(peerId, data);
+    const transport = this.transports.get(transportType);
+    if (transport?.state === "connected") {
+      transport.send(peerId, data);
     }
   }
 
-  /**
-   * Connect the signaling route (leader only).
-   */
-  private async connectSignaling(): Promise<void> {
-    if (this.signalingRoute) return;
-    if (!this.roomId) return;
-
-    this.signalingRoute = new SignalingRoute({
-      enableWebRTC: this.options.enableWebRTC,
-      autoReconnect: this.options.autoReconnect,
-    });
-
-    this.wireRoute(this.signalingRoute);
-
-    this.signalingRoute.onStateChange = (state) => {
-      if (state === "disconnected" && this._state === "connected") {
-        this.setState("reconnecting");
-      } else if (state === "connected" && this._state === "reconnecting") {
-        this.setState("connected");
-      }
-    };
-
-    await this.signalingRoute.connect(this.roomId);
-  }
+  // --- Transport wiring ---
 
   /**
-   * Disconnect the signaling route.
+   * Wire a transport's callbacks to coordinator.
    */
-  private async disconnectSignaling(): Promise<void> {
-    if (this.signalingRoute) {
-      await this.signalingRoute.disconnect();
-      this.signalingRoute = null;
-    }
-  }
+  private wireTransport(transport: ITransport): void {
+    const transportType = transport.type;
 
-  /**
-   * Wire a route's callbacks.
-   */
-  private wireRoute(route: Route): void {
-    const routeType = route.type;
-    const isLocal = routeType === "broadcast";
-
-    route.onRawMessage = (peerId, data) => {
-      this.handleRawMessage(routeType, peerId, data, isLocal);
+    transport.onReceive = (peerId, data) => {
+      this.handleReceive(transportType, peerId, data);
     };
 
-    route.onPeerDiscovered = (peerId, peerIsLocal) => {
-      this.registry.addRoute(peerId, routeType, peerIsLocal);
-
-      // Send time-sync to new peers
-      // Local tabs need time-sync too because each has different performance.now() origin
-      // (e.g., if Tab A has been open 5 minutes and Tab B just refreshed)
-      this.sendTimeSync(peerId);
+    transport.onPeerReachable = (peerId, isLocal) => {
+      this.handlePeerReachable(transportType, peerId, isLocal);
     };
 
-    route.onPeerLost = (peerId) => {
-      this.registry.removeRoute(peerId, routeType);
+    transport.onPeerUnreachable = (peerId) => {
+      this.handlePeerUnreachable(transportType, peerId);
+    };
+
+    transport.onStateChange = (state) => {
+      this.handleTransportStateChange(transportType, state);
     };
   }
 
-  /**
-   * Handle incoming message from any route.
-   */
-  private handleRawMessage(
-    routeType: RouteType,
-    peerId: string,
-    data: ArrayBuffer,
-    isLocal: boolean
-  ): void {
-    log.debug("handleRawMessage", { routeType, peerId, isLocal, dataLength: data.byteLength });
+  // --- Incoming message handling ---
 
-    // Deduplication - same message may arrive via multiple paths
-    const msgId = getMessageId(data);
-    if (this.messageDedup.has(msgId)) {
+  /**
+   * Handle data received from a transport.
+   */
+  private handleReceive(transportType: TransportType, peerId: string, data: ArrayBuffer): void {
+    log.debug("handleReceive", { transportType, peerId, dataLength: data.byteLength });
+
+    // Deduplication
+    const msgId = this.getMessageId(data);
+    if (this.seenMessages.has(msgId)) {
       log.debug("Message deduplicated", { msgId });
       return;
     }
-    this.messageDedup.set(msgId, performance.now());
+    this.addSeenMessage(msgId);
 
-    // Update peer registry
+    // Update peer last seen
     this.registry.touch(peerId);
 
-    // Check if this is an internal message (time-sync or announce)
-    if (this.isInternalMessage(data)) {
-      this.handleInternalMessage(peerId, data);
-      return; // Don't pass internal messages to app
+    // Check if this is a time-sync message
+    if (this.timeSync.isTimeSyncMessage(data)) {
+      this.handleTimeSyncMessage(peerId, data);
+      return; // Don't pass time-sync to app
     }
 
-    // If we receive a message from a peer with no time offset established,
-    // send time-sync immediately to establish clock sync
-    // (applies to both local and remote peers - each tab has different performance.now() origin)
-    const offset = this.registry.getTimeOffset(peerId);
-    if (offset === 0) {
-      log.debug("No time offset for peer, sending time-sync", { peerId });
+    // If peer has no time offset, send time-sync
+    if (!this.timeSync.isReady(peerId)) {
+      log.debug("Peer needs time-sync", { peerId });
       this.sendTimeSync(peerId);
     }
 
-    // Relay if needed
-    this.relayIfNeeded(routeType, peerId, data);
+    // Relay to other transports if needed (future: for remote sync)
+    // this.relayIfNeeded(transportType, peerId, data);
 
     // Notify app
-    const timeOffset = this.registry.getTimeOffset(peerId);
-    log.debug("Notifying app", { peerId, timeOffset, hasCallback: !!this.onMessage });
+    const timeOffset = this.timeSync.getOffset(peerId);
     this.onMessage?.(data, peerId, timeOffset);
   }
 
   /**
-   * Check if data is an internal message (time-sync or announce).
+   * Handle time-sync message.
    */
-  private isInternalMessage(data: ArrayBuffer): boolean {
-    if (data.byteLength > 100) return false;
+  private handleTimeSyncMessage(peerId: string, data: ArrayBuffer): void {
+    const result = this.timeSync.handleMessage(peerId, data);
+    if (!result) return;
 
-    try {
-      const text = new TextDecoder().decode(data);
-      const msg = JSON.parse(text);
-      return msg?.type === "time-sync" || msg?.type === "announce";
-    } catch {
-      return false;
-    }
-  }
+    // Update registry with new offset
+    this.registry.setTimeOffset(peerId, result.offset);
 
-  /**
-   * Handle internal messages (time-sync, announce).
-   */
-  private handleInternalMessage(peerId: string, data: ArrayBuffer): void {
-    try {
-      const text = new TextDecoder().decode(data);
-      const msg = JSON.parse(text);
-
-      if (msg.type === "time-sync") {
-        this.handleTimeSyncMessage(peerId, msg as TimeSyncMessage);
-      } else if (msg.type === "announce") {
-        this.handleAnnounce(peerId);
-      }
-    } catch (err) {
-      log.debug("Failed to parse internal message", { error: err });
-    }
-  }
-
-  /**
-   * Handle announce message - a new peer has joined.
-   */
-  private handleAnnounce(peerId: string): void {
-    log.debug("Peer announced", { peerId });
-    // The peer is already discovered via onPeerDiscovered
-    // This just ensures onPeerJoin is called so app can send state
-  }
-
-  /**
-   * Broadcast announce to let other tabs know we exist.
-   */
-  private broadcastAnnounce(): void {
-    if (!this.broadcastRoute || this.broadcastRoute.state !== "connected") {
-      return;
-    }
-
-    const myId = this.broadcastRoute.getLocalId();
-    const msg: AnnounceMessage = {
-      type: "announce",
-      peerId: myId,
-    };
-
-    const data = new TextEncoder().encode(JSON.stringify(msg));
-    this.broadcastRoute.send("all", data.buffer as ArrayBuffer);
-    log.debug("Broadcast announce", { peerId: myId });
-  }
-
-  /**
-   * Handle time-sync message (already parsed).
-   */
-  private handleTimeSyncMessage(peerId: string, msg: TimeSyncMessage): void {
-    const oldOffset = this.registry.getTimeOffset(peerId);
-    const offset = performance.now() - msg.localTime;
-    this.registry.setTimeOffset(peerId, offset);
-    log.debug("Time sync received", { peerId, offset });
-
-    // Respond with our own time-sync if we haven't sent one yet
-    // (detected by their offset for us being 0, meaning we need to send ours)
-    // All tabs need to do bidirectional time-sync for local tab communication
-    if (oldOffset === 0) {
+    // Respond if needed (bidirectional sync)
+    if (result.shouldRespond) {
       this.sendTimeSync(peerId);
     }
   }
@@ -456,43 +306,88 @@ export class SyncCoordinator {
    * Send time-sync to a peer.
    */
   private sendTimeSync(peerId: string): void {
-    const msg: TimeSyncMessage = {
-      type: "time-sync",
-      localTime: performance.now(),
-    };
-
-    const data = new TextEncoder().encode(JSON.stringify(msg));
-    this.sendTo(peerId, data.buffer as ArrayBuffer);
+    const data = this.timeSync.createSyncMessage();
+    this.sendTo(peerId, data);
     log.debug("Time sync sent", { peerId });
   }
 
-  /**
-   * Relay message between routes if needed.
-   */
-  private relayIfNeeded(sourceRoute: RouteType, peerId: string, data: ArrayBuffer): void {
-    // Only leader relays
-    if (!this.isLeader) return;
+  // --- Peer discovery ---
 
-    if (sourceRoute === "broadcast") {
-      // Local → Remote: relay to signaling
-      if (this.signalingRoute?.state === "connected") {
-        log.debug("Relaying local→remote", { from: peerId });
-        this.signalingRoute.send("all", data);
-      }
-    } else {
-      // Remote → Local: relay to broadcast
-      if (this.broadcastRoute?.state === "connected") {
-        log.debug("Relaying remote→local", { from: peerId });
-        this.broadcastRoute.send("all", data);
+  /**
+   * Handle peer becoming reachable via a transport.
+   */
+  private handlePeerReachable(transportType: TransportType, peerId: string, isLocal: boolean): void {
+    const result = this.registry.addTransport(peerId, transportType, isLocal);
+
+    if (result.isNewPeer) {
+      log.debug("New peer discovered", { peerId, transportType, isLocal });
+      // Send time-sync to new peer
+      this.sendTimeSync(peerId);
+    }
+  }
+
+  /**
+   * Handle peer no longer reachable via a transport.
+   */
+  private handlePeerUnreachable(transportType: TransportType, peerId: string): void {
+    const result = this.registry.removeTransport(peerId, transportType);
+
+    if (result.peerRemoved) {
+      log.debug("Peer removed", { peerId });
+      this.timeSync.removePeer(peerId);
+    }
+  }
+
+  // --- Transport state changes ---
+
+  /**
+   * Handle transport state change.
+   */
+  private handleTransportStateChange(transportType: TransportType, state: TransportState): void {
+    log.debug("Transport state changed", { transportType, state });
+
+    // Update coordinator state based on transport states
+    // For now, we're connected if broadcast is connected
+    if (transportType === "broadcast") {
+      if (state === "connected" && this._state === "connecting") {
+        this.setState("connected");
+      } else if (state === "disconnected" && this._state === "connected") {
+        this.setState("reconnecting");
       }
     }
   }
 
+  // --- State management ---
+
   private setState(state: CoordinatorState): void {
     if (this._state !== state) {
-      log.debug("State change", { from: this._state, to: state, hasCallback: !!this.onStateChange });
+      log.debug("State change", { from: this._state, to: state });
       this._state = state;
       this.onStateChange?.(state);
     }
+  }
+
+  // --- Message ID for deduplication ---
+
+  /**
+   * Generate message ID from first 16 bytes.
+   */
+  private getMessageId(data: ArrayBuffer): string {
+    const view = new Uint8Array(data.slice(0, 16));
+    return Array.from(view)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  /**
+   * Add message ID to seen set with LRU eviction.
+   */
+  private addSeenMessage(msgId: string): void {
+    if (this.seenMessages.size >= this.maxSeenMessages) {
+      // Remove oldest (first) entry
+      const first = this.seenMessages.values().next().value;
+      if (first) this.seenMessages.delete(first);
+    }
+    this.seenMessages.add(msgId);
   }
 }

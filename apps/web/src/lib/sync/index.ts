@@ -1,22 +1,34 @@
 // Core types
 export type { StateComputer, ConflictResolver } from "./types";
 
+// Interfaces
+export type {
+  TransportType,
+  TransportState,
+  TransportConfig,
+  Peer,
+} from "./interfaces/types";
+export type { ITransport } from "./interfaces/transport";
+export { TRANSPORT_PRIORITY, getBestTransport } from "./interfaces/types";
+
 // Coordinator
-export { SyncCoordinator, type CoordinatorState, type SyncCoordinatorOptions } from "./sync-coordinator";
-export { PeerRegistry, type Peer } from "./peer-registry";
+export {
+  SyncCoordinator,
+  type CoordinatorState,
+  type SyncCoordinatorOptions,
+} from "./sync-coordinator";
+
+// Registry
+export { PeerRegistry, type AddTransportResult, type RemoveTransportResult } from "./peer-registry";
+
+// Time Sync
+export { TimeSyncManager, type TimeSyncMessage, type TimeSyncResult } from "./time-sync-manager";
+
+// Leader Election
 export { LeaderElection, type LeaderElectionOptions } from "./leader-election";
 
-// Routes
-export {
-  type Route,
-  type RouteType,
-  type RouteState,
-  ROUTE_PRIORITY,
-  getBestRoute,
-  BroadcastRoute,
-  SignalingRoute,
-  type SignalingRouteOptions,
-} from "./transport";
+// Transports
+export { BroadcastTransport } from "./transports/broadcast";
 
 // Hooks
 export {
@@ -24,4 +36,3 @@ export {
   type UseSyncRoomOptions,
   type UseSyncRoomReturn,
 } from "./hooks";
-

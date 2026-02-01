@@ -32,11 +32,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
 
-  // Ref for sendTo (to avoid circular dependency with handlePeerConnect)
-  const sendToRef = useRef<((peerId: string, data: ArrayBuffer) => void) | null>(null);
-
   // Handle incoming messages from any transport
-  // Note: time-sync is handled automatically by SyncCoordinator
+  // Time-sync is handled automatically by SyncCoordinator
   const handleMessage = useCallback((data: ArrayBuffer, peerId: string, timeOffset: number) => {
     // Try to decode as spinner event (binary)
     const event = decodeSpinnerEvent(data);
@@ -83,35 +80,15 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
   }, []);
 
-  // Handle new peer connections - send current state
-  // Note: time-sync is handled automatically by SyncCoordinator
-  const handlePeerConnect = useCallback((peerId: string) => {
-    // Send current state if we have any
-    const currentEvent = currentEventRef.current;
-    if (currentEvent) {
-      const syncMsg: SyncJsonMessage = {
-        type: "sync",
-        event: currentEvent,
-      };
-      const data = new TextEncoder().encode(JSON.stringify(syncMsg));
-      sendToRef.current?.(peerId, data.buffer as ArrayBuffer);
-    }
-  }, []);
-
   const {
     broadcast,
-    sendTo,
     isConnected,
     connectionState,
   } = useSyncRoom({
     roomId: "spinner",
     autoConnect: true,
     onMessage: handleMessage,
-    onPeerConnect: handlePeerConnect,
   });
-
-  // Store ref for use in callbacks
-  sendToRef.current = sendTo;
 
   // Emit CRDT events to all peers (binary encoded)
   const handleEventEmit = useCallback(

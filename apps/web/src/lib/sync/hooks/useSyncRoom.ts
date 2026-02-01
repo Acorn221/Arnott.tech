@@ -3,13 +3,10 @@
  *
  * Provides a unified interface for syncing state across:
  * - Local tabs (via BroadcastChannel)
- * - Remote peers (WebRTC P2P, low latency)
- * - Fallback relay (WebSocket, when P2P fails)
+ * - Remote peers (WebRTC P2P, future)
  *
- * Uses leader election - one tab owns WebSocket/WebRTC connections,
- * other tabs sync locally via BroadcastChannel.
- *
- * Time sync is automatic - no manual setTimeOffset calls needed.
+ * Time sync is automatic - no manual offset handling needed.
+ * Peer tracking is internal - app just receives messages.
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
@@ -25,10 +22,6 @@ export interface UseSyncRoomOptions {
   autoConnect?: boolean;
   /** Message received callback (data, peerId, timeOffset) */
   onMessage?: (data: ArrayBuffer, peerId: string, timeOffset: number) => void;
-  /** Peer connected callback */
-  onPeerConnect?: (peerId: string) => void;
-  /** Peer disconnected callback */
-  onPeerDisconnect?: (peerId: string) => void;
   /** Connection state changed callback */
   onConnectionStateChange?: (state: CoordinatorState) => void;
 }
@@ -80,14 +73,6 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         setConnectionState(state);
         setIsConnected(state === "connected");
         onConnectionStateChange?.(state);
-      };
-
-      coordinatorRef.current.onPeerJoin = (peerId) => {
-        optionsRef.current.onPeerConnect?.(peerId);
-      };
-
-      coordinatorRef.current.onPeerLeave = (peerId) => {
-        optionsRef.current.onPeerDisconnect?.(peerId);
       };
     }
     return coordinatorRef.current;
