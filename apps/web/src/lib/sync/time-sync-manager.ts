@@ -19,21 +19,29 @@
  */
 
 import { createLogger } from "@arnott/logger";
-import { TIME_SYNC_MAX_MESSAGE_SIZE, TIME_SYNC_LATENCY_BUFFER_MS } from "./config";
+import {
+  TIME_SYNC_MAX_MESSAGE_SIZE,
+  TIME_SYNC_LATENCY_BUFFER_MS,
+} from "./config";
 
 const log = createLogger("sync:timesync");
+
+/** Encode a time sync message to ArrayBuffer */
+function encodeTimeSyncMessage(msg: TimeSyncMessage): ArrayBuffer {
+  return new TextEncoder().encode(JSON.stringify(msg)).buffer;
+}
 
 /** Time-sync request message (initiator) */
 export interface TimeSyncRequest {
   type: "time-sync-request";
-  requestTime: number;  // T_a1 - when request was sent
+  requestTime: number; // T_a1 - when request was sent
 }
 
 /** Time-sync response message (responder) */
 export interface TimeSyncResponse {
   type: "time-sync-response";
-  requestTime: number;   // T_a1 - echoed from request
-  responseTime: number;  // T_b1 - when response was sent
+  requestTime: number; // T_a1 - echoed from request
+  responseTime: number; // T_b1 - when response was sent
 }
 
 /** Combined message type for parsing */
@@ -97,8 +105,7 @@ export class TimeSyncManager {
       type: "time-sync-request",
       requestTime,
     };
-    const data = new TextEncoder().encode(JSON.stringify(msg));
-    return data.buffer as ArrayBuffer;
+    return encodeTimeSyncMessage(msg);
   }
 
   /**
@@ -113,8 +120,11 @@ export class TimeSyncManager {
       const text = new TextDecoder().decode(data);
       const msg = JSON.parse(text);
       return (
-        (msg?.type === "time-sync-request" && typeof msg.requestTime === "number") ||
-        (msg?.type === "time-sync-response" && typeof msg.requestTime === "number" && typeof msg.responseTime === "number")
+        (msg?.type === "time-sync-request" &&
+          typeof msg.requestTime === "number") ||
+        (msg?.type === "time-sync-response" &&
+          typeof msg.requestTime === "number" &&
+          typeof msg.responseTime === "number")
       );
     } catch {
       return false;
@@ -133,7 +143,10 @@ export class TimeSyncManager {
       const msg = JSON.parse(text);
 
       // Handle sync request - respond with our time
-      if (msg.type === "time-sync-request" && typeof msg.requestTime === "number") {
+      if (
+        msg.type === "time-sync-request" &&
+        typeof msg.requestTime === "number"
+      ) {
         const responseTime = performance.now();
 
         // Create response with both times
@@ -142,18 +155,23 @@ export class TimeSyncManager {
           requestTime: msg.requestTime,
           responseTime,
         };
-        const responseData = new TextEncoder().encode(JSON.stringify(response));
+        const responseData = encodeTimeSyncMessage(response);
 
         // Also send our own request to get bidirectional sync
         const isNewPeer = !this.offsets.has(peerId);
 
         // If we don't have a pending request to this peer, initiate one
-        const shouldInitiateSync = isNewPeer && !this.pendingRequests.has(peerId);
+        const shouldInitiateSync =
+          isNewPeer && !this.pendingRequests.has(peerId);
         if (shouldInitiateSync) {
           this.pendingRequests.set(peerId, performance.now());
         }
 
-        log.debug("Received sync request, sending response", { peerId, requestTime: msg.requestTime, responseTime });
+        log.debug("Received sync request, sending response", {
+          peerId,
+          requestTime: msg.requestTime,
+          responseTime,
+        });
 
         // If this is a new peer and we should initiate, combine response + request
         if (shouldInitiateSync) {
@@ -161,22 +179,26 @@ export class TimeSyncManager {
           return {
             offset: this.offsets.get(peerId) ?? 0,
             isNewPeer,
-            responseMessage: responseData.buffer as ArrayBuffer,
+            responseMessage: responseData,
           };
         }
 
         return {
           offset: this.offsets.get(peerId) ?? 0,
           isNewPeer: false,
-          responseMessage: responseData.buffer as ArrayBuffer,
+          responseMessage: responseData,
         };
       }
 
       // Handle sync response - calculate RTT-compensated offset
-      if (msg.type === "time-sync-response" && typeof msg.requestTime === "number" && typeof msg.responseTime === "number") {
-        const receiveTime = performance.now();  // T_a2
-        const requestTime = msg.requestTime;     // T_a1 (echoed)
-        const responseTime = msg.responseTime;   // T_b1
+      if (
+        msg.type === "time-sync-response" &&
+        typeof msg.requestTime === "number" &&
+        typeof msg.responseTime === "number"
+      ) {
+        const receiveTime = performance.now(); // T_a2
+        const requestTime = msg.requestTime; // T_a1 (echoed)
+        const responseTime = msg.responseTime; // T_b1
 
         // Calculate RTT-compensated offset
         const rtt = receiveTime - requestTime;
@@ -184,7 +206,11 @@ export class TimeSyncManager {
 
         // Add a small buffer to ensure adjusted timestamps are slightly in the past
         // This handles asymmetric latency and ensures physics simulation always runs
-        const offset = receiveTime - responseTime - oneWayLatency + TIME_SYNC_LATENCY_BUFFER_MS;
+        const offset =
+          receiveTime -
+          responseTime -
+          oneWayLatency +
+          TIME_SYNC_LATENCY_BUFFER_MS;
 
         const oldOffset = this.offsets.get(peerId);
         const isNewPeer = oldOffset === undefined;
@@ -200,7 +226,7 @@ export class TimeSyncManager {
           offset,
           rtt,
           oneWayLatency,
-          isNewPeer
+          isNewPeer,
         });
 
         return {
