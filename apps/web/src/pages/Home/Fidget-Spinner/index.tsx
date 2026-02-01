@@ -231,9 +231,11 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
                 <>
                   {" - "}
                   {peerInfo.total} other{peerInfo.total !== 1 ? "s" : ""}
-                  {peerInfo.remoteTransport && (
-                    <> - {peerInfo.remoteTransport === "webrtc" ? "WebRTC" : "WebSocket"}</>
+                  {peerInfo.remoteTransport === "mixed" && (
+                    <> - WebRTC ({peerInfo.remoteWebRTC}) + WebSocket ({peerInfo.remoteWebSocket})</>
                   )}
+                  {peerInfo.remoteTransport === "webrtc" && <> - WebRTC</>}
+                  {peerInfo.remoteTransport === "websocket" && <> - WebSocket</>}
                 </>
               )}
             </span>

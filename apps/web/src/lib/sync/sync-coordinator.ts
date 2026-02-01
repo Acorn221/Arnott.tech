@@ -149,6 +149,30 @@ export class SyncCoordinator {
     return this.signalingTransport?.state === "connected";
   }
 
+  /**
+   * Get counts of remote peers by transport type.
+   */
+  getRemoteTransportCounts(): { webrtc: number; websocket: number } {
+    if (!this.signalingTransport) {
+      return { webrtc: 0, websocket: 0 };
+    }
+
+    let webrtc = 0;
+    let websocket = 0;
+
+    for (const peer of this.registry.getAllPeers()) {
+      if (!peer.isLocal) {
+        if (this.signalingTransport.hasPeerRTC(peer.id)) {
+          webrtc++;
+        } else {
+          websocket++;
+        }
+      }
+    }
+
+    return { webrtc, websocket };
+  }
+
   // --- Connection lifecycle ---
 
   /**

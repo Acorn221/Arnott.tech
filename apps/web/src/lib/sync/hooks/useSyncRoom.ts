@@ -54,7 +54,7 @@ export interface UseSyncRoomOptions {
 }
 
 /** Remote transport type */
-export type RemoteTransport = "webrtc" | "websocket" | null;
+export type RemoteTransport = "webrtc" | "websocket" | "mixed" | null;
 
 /** Information about connected peers */
 export interface PeerInfo {
@@ -64,7 +64,11 @@ export interface PeerInfo {
   local: number;
   /** Number of remote peers (different browser/device, via WebRTC/WebSocket) */
   remote: number;
-  /** Transport being used for remote peers (null if no remote peers) */
+  /** Number of remote peers connected via WebRTC P2P */
+  remoteWebRTC: number;
+  /** Number of remote peers connected via WebSocket relay */
+  remoteWebSocket: number;
+  /** Transport being used for remote peers (null if no remote peers, "mixed" if both) */
   remoteTransport: RemoteTransport;
 }
 
@@ -96,7 +100,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] =
     useState<CoordinatorState>("disconnected");
-  const [peerInfo, setPeerInfo] = useState<PeerInfo>({ total: 0, local: 0, remote: 0, remoteTransport: null });
+  const [peerInfo, setPeerInfo] = useState<PeerInfo>({ total: 0, local: 0, remote: 0, remoteWebRTC: 0, remoteWebSocket: 0, remoteTransport: null });
 
   // Refs
   const coordinatorRef = useRef<SyncCoordinator | null>(null);
@@ -109,17 +113,20 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
     const local = peers.filter(p => p.isLocal).length;
     const remote = peers.filter(p => !p.isLocal).length;
 
+    // Get remote transport counts
+    const { webrtc: remoteWebRTC, websocket: remoteWebSocket } = coordinator.getRemoteTransportCounts();
+
     // Determine remote transport type
     let remoteTransport: RemoteTransport = null;
-    if (remote > 0) {
-      // Check if any peer has WebRTC working
-      remoteTransport = coordinator.hasWebRTCConnection() ? "webrtc" : "websocket";
-    } else if (coordinator.hasSignalingConnection()) {
-      // Connected to signaling but no remote peers yet
-      remoteTransport = coordinator.hasWebRTCConnection() ? "webrtc" : "websocket";
+    if (remoteWebRTC > 0 && remoteWebSocket > 0) {
+      remoteTransport = "mixed";
+    } else if (remoteWebRTC > 0) {
+      remoteTransport = "webrtc";
+    } else if (remoteWebSocket > 0) {
+      remoteTransport = "websocket";
     }
 
-    return { total: peers.length, local, remote, remoteTransport };
+    return { total: peers.length, local, remote, remoteWebRTC, remoteWebSocket, remoteTransport };
   }, []);
 
   // Update test instrumentation and peer info
