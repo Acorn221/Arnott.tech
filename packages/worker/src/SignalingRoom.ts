@@ -88,13 +88,15 @@ export class SignalingRoom extends DurableObject<Env> {
 
   private handleMessage(fromPeerId: string, data: string | ArrayBuffer): void {
     // Binary = spinner data, broadcast to all other peers
-    if (data instanceof ArrayBuffer) {
+    // Use typeof check for robustness (instanceof can fail across realms)
+    if (typeof data !== "string") {
+      console.log(`[SignalingRoom] Relaying binary from ${fromPeerId} to ${this.sessions.size - 1} peers`);
       for (const [peerId, session] of this.sessions) {
         if (peerId !== fromPeerId) {
           try {
             session.ws.send(data);
-          } catch {
-            // Ignore send errors
+          } catch (e) {
+            console.error(`[SignalingRoom] Failed to relay to ${peerId}:`, e);
           }
         }
       }
