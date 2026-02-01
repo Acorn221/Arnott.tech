@@ -8,7 +8,7 @@ import {
   useCallback,
 } from "react";
 import { OrbitControls, Environment, BakeShadows } from "@react-three/drei";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import { EffectComposer, Vignette } from "@react-three/postprocessing";
 import InteractiveSlotMachine from "./interactive-slot-machine";
 import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
 import ShareDialog from "./ShareDialog";
@@ -172,13 +172,6 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
 
           {/* Post-processing effects */}
           <EffectComposer multisampling={8}>
-            {/* Bloom - subtle glow on bright elements */}
-            <Bloom
-              intensity={0.35}
-              luminanceThreshold={0.5}
-              luminanceSmoothing={0.7}
-              mipmapBlur
-            />
             {/* Vignette - darkens edges for cinematic focus */}
             <Vignette offset={0.3} darkness={0.5} />
           </EffectComposer>
