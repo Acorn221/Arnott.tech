@@ -5,6 +5,9 @@
  * - Local tabs (BroadcastChannel, ~1ms)
  * - Remote peers (WebRTC P2P, low latency)
  * - Fallback relay (WebSocket, when P2P fails)
+ *
+ * With leader election enabled (default), only one tab per device
+ * connects to remote peers. Other tabs sync through the leader.
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
@@ -12,6 +15,7 @@ import {
   TransportManager,
   type TransportState,
   type SyncMessage,
+  type LeaderRole,
 } from "../transport";
 
 export interface UseSyncRoomOptions {
@@ -27,6 +31,8 @@ export interface UseSyncRoomOptions {
   enableWebRTC?: boolean;
   /** Enable WebSocket fallback (default: true) */
   enableWebSocket?: boolean;
+  /** Enable leader election - only one tab connects to signaling (default: true) */
+  enableLeaderElection?: boolean;
   /** Message received callback */
   onMessage?: (message: SyncMessage) => void;
   /** Peer connected callback */
@@ -46,16 +52,20 @@ export interface UseSyncRoomReturn {
   reconnect: () => Promise<void>;
   /** Broadcast data to all peers */
   broadcast: (data: ArrayBuffer | string) => void;
-  /** Send data to a specific peer */
+  /** Send data to a specific peer (leader only) */
   sendTo: (peerId: string, data: ArrayBuffer | string) => void;
   /** Whether connected to the room */
   isConnected: boolean;
   /** Current connection state */
   connectionState: TransportState;
-  /** Number of connected peers */
+  /** Number of connected peers (remote devices, not tabs) */
   peerCount: number;
-  /** Our peer ID (null if not connected) */
+  /** Our peer ID (null if not connected or follower) */
   myPeerId: string | null;
+  /** Whether this tab is the leader (has signaling connection) */
+  isLeader: boolean;
+  /** Current leader election role */
+  leaderRole: LeaderRole;
   /** Get time offset for a specific peer */
   getTimeOffset: (peerId: string) => number;
   /** Set time offset for a specific peer */
@@ -70,6 +80,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
     enableBroadcast = true,
     enableWebRTC = true,
     enableWebSocket = true,
+    enableLeaderElection = true,
     onConnectionStateChange,
   } = options;
 
@@ -78,6 +89,8 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   const [connectionState, setConnectionState] = useState<TransportState>("disconnected");
   const [peerCount, setPeerCount] = useState(0);
   const [myPeerId, setMyPeerId] = useState<string | null>(null);
+  const [isLeader, setIsLeader] = useState(false);
+  const [leaderRole, setLeaderRole] = useState<LeaderRole>("unknown");
 
   // Refs
   const managerRef = useRef<TransportManager | null>(null);
@@ -93,6 +106,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         enableWebRTC,
         enableWebSocket,
         autoReconnect,
+        enableLeaderElection,
       });
 
       // Set up callbacks
@@ -105,6 +119,8 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         setIsConnected(state === "connected");
         setMyPeerId(managerRef.current?.myPeerId ?? null);
         setPeerCount(managerRef.current?.peerCount ?? 0);
+        setIsLeader(managerRef.current?.isLeader ?? false);
+        setLeaderRole(managerRef.current?.leaderRole ?? "unknown");
         onConnectionStateChange?.(state);
       };
 
@@ -119,12 +135,15 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
       };
     }
     return managerRef.current;
-  }, [roomId, enableBroadcast, enableWebRTC, enableWebSocket, autoReconnect, onConnectionStateChange]);
+  }, [roomId, enableBroadcast, enableWebRTC, enableWebSocket, autoReconnect, enableLeaderElection, onConnectionStateChange]);
 
   // Connect
   const connect = useCallback(async () => {
     const manager = getManager();
     await manager.connect();
+    // Update leader state after connect
+    setIsLeader(manager.isLeader);
+    setLeaderRole(manager.leaderRole);
   }, [getManager]);
 
   // Disconnect
@@ -197,6 +216,8 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
     connectionState,
     peerCount,
     myPeerId,
+    isLeader,
+    leaderRole,
     getTimeOffset,
     setTimeOffset,
   };

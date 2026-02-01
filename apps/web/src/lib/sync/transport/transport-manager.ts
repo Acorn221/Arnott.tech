@@ -3,6 +3,7 @@
  *
  * Responsibilities:
  * - Manages transport lifecycle (connect/disconnect)
+ * - Leader election (only one tab per device connects to signaling)
  * - Deduplicates messages received via multiple transports
  * - Handles time sync with peers
  * - Aggregates peer counts and connection state
@@ -16,6 +17,7 @@ import type {
 } from "./types";
 import { BroadcastTransport } from "./broadcast-transport";
 import { SignalingTransport } from "./signaling-transport";
+import { LeaderElection, type LeaderRole } from "./leader-election";
 
 /** Simple LRU cache for message deduplication */
 class MessageCache {
@@ -53,12 +55,14 @@ function getMessageId(data: unknown): string | null {
 export class TransportManager {
   private broadcastTransport: BroadcastTransport | null = null;
   private signalingTransport: SignalingTransport | null = null;
+  private leaderElection: LeaderElection | null = null;
   private messageCache = new MessageCache();
   private peers = new Map<string, PeerInfo>();
   private roomId: string;
   private options: Required<TransportManagerOptions>;
 
   private _state: TransportState = "disconnected";
+  private _leaderRole: LeaderRole = "unknown";
 
   // Callbacks
   onMessage: ((message: SyncMessage) => void) | null = null;
@@ -75,6 +79,7 @@ export class TransportManager {
       enableWebSocket: options.enableWebSocket ?? true,
       autoConnect: options.autoConnect ?? false,
       autoReconnect: options.autoReconnect ?? true,
+      enableLeaderElection: options.enableLeaderElection ?? true,
     };
   }
 
@@ -95,6 +100,14 @@ export class TransportManager {
     return this.signalingTransport?.getPeerId() ?? null;
   }
 
+  get isLeader(): boolean {
+    return this._leaderRole === "leader";
+  }
+
+  get leaderRole(): LeaderRole {
+    return this._leaderRole;
+  }
+
   async connect(): Promise<void> {
     if (this._state === "connected" || this._state === "connecting") {
       return;
@@ -103,29 +116,32 @@ export class TransportManager {
     this.setState("connecting");
 
     try {
-      // Connect transports in parallel
-      const connectPromises: Promise<void>[] = [];
-
-      // BroadcastChannel (local tabs)
+      // 1. Always connect BroadcastChannel for local tab sync
       if (this.options.enableBroadcast) {
         this.broadcastTransport = new BroadcastTransport();
         if (this.broadcastTransport.isSupported) {
           this.setupBroadcastCallbacks();
-          connectPromises.push(this.broadcastTransport.connect(this.roomId));
+          await this.broadcastTransport.connect(this.roomId);
         }
       }
 
-      // Signaling (WebSocket + WebRTC)
-      if (this.options.enableWebSocket || this.options.enableWebRTC) {
-        this.signalingTransport = new SignalingTransport({
-          enableWebRTC: this.options.enableWebRTC,
-          autoReconnect: this.options.autoReconnect,
-        });
-        this.setupSignalingCallbacks();
-        connectPromises.push(this.signalingTransport.connect(this.roomId));
+      // 2. Run leader election (if enabled)
+      if (this.options.enableLeaderElection && this.options.enableBroadcast) {
+        this.leaderElection = new LeaderElection({ roomId: this.roomId });
+        this.setupLeaderElectionCallbacks();
+        await this.leaderElection.start();
+
+        this._leaderRole = this.leaderElection.role;
+
+        // 3. Only leader connects to signaling
+        if (this.leaderElection.isLeader) {
+          await this.connectSignaling();
+        }
+      } else {
+        // No leader election - connect directly (legacy behavior)
+        await this.connectSignaling();
       }
 
-      await Promise.all(connectPromises);
       this.setState("connected");
     } catch (error) {
       this.setState("disconnected");
@@ -133,7 +149,29 @@ export class TransportManager {
     }
   }
 
+  private async connectSignaling(): Promise<void> {
+    if (this.options.enableWebSocket || this.options.enableWebRTC) {
+      this.signalingTransport = new SignalingTransport({
+        enableWebRTC: this.options.enableWebRTC,
+        autoReconnect: this.options.autoReconnect,
+      });
+      this.setupSignalingCallbacks();
+      await this.signalingTransport.connect(this.roomId);
+    }
+  }
+
+  private async disconnectSignaling(): Promise<void> {
+    if (this.signalingTransport) {
+      await this.signalingTransport.disconnect();
+      this.signalingTransport = null;
+    }
+  }
+
   async disconnect(): Promise<void> {
+    // Stop leader election
+    this.leaderElection?.stop();
+    this.leaderElection = null;
+
     const disconnectPromises: Promise<void>[] = [];
 
     if (this.broadcastTransport) {
@@ -148,6 +186,7 @@ export class TransportManager {
     this.broadcastTransport = null;
     this.signalingTransport = null;
     this.peers.clear();
+    this._leaderRole = "unknown";
     this.setState("disconnected");
   }
 
@@ -163,7 +202,13 @@ export class TransportManager {
     if (!this.signalingTransport) return;
 
     this.signalingTransport.onMessage = (msg) => {
+      // Handle message locally
       this.handleMessage(msg);
+
+      // If leader, relay to followers
+      if (this.leaderElection?.isLeader) {
+        this.leaderElection.relayToFollowers(msg.source, msg.data as ArrayBuffer | string);
+      }
     };
 
     this.signalingTransport.onStateChange = (state) => {
@@ -183,6 +228,44 @@ export class TransportManager {
     this.signalingTransport.onPeerDisconnect = (peerId) => {
       this.removePeer(peerId);
       this.onPeerDisconnect?.(peerId);
+    };
+  }
+
+  private setupLeaderElectionCallbacks(): void {
+    if (!this.leaderElection) return;
+
+    this.leaderElection.onBecomeLeader = () => {
+      this._leaderRole = "leader";
+      // Connect to signaling as the new leader
+      void this.connectSignaling();
+    };
+
+    this.leaderElection.onBecomeFollower = () => {
+      this._leaderRole = "follower";
+      // Disconnect signaling if we had it (we're no longer leader)
+      void this.disconnectSignaling();
+    };
+
+    this.leaderElection.onLeaderLost = () => {
+      // Leader tab closed - re-election happening
+      this.setState("reconnecting");
+    };
+
+    this.leaderElection.onRelayRequest = (data) => {
+      // Follower wants to send to remote peers
+      if (this.signalingTransport?.state === "connected") {
+        this.signalingTransport.broadcast(data);
+      }
+    };
+
+    this.leaderElection.onRelayBroadcast = (source, data) => {
+      // Leader relayed a remote message to us
+      const msg: SyncMessage = {
+        data,
+        source,
+        receivedAt: performance.now(),
+      };
+      this.handleMessage(msg);
     };
   }
 
@@ -221,8 +304,9 @@ export class TransportManager {
   }
 
   /**
-   * Broadcast data to all peers via all available transports.
-   * Transports handle deduplication internally.
+   * Broadcast data to all peers.
+   * - Local tabs: via BroadcastChannel
+   * - Remote peers: leader sends directly, follower relays through leader
    */
   broadcast(data: ArrayBuffer | string): void {
     // Send to local tabs (instant)
@@ -230,9 +314,20 @@ export class TransportManager {
       this.broadcastTransport.broadcast(data);
     }
 
-    // Send to remote peers (signaling handles WebRTC vs WebSocket)
-    if (this.signalingTransport?.state === "connected") {
-      this.signalingTransport.broadcast(data);
+    // Send to remote peers
+    if (this.leaderElection?.isLeader) {
+      // Leader: send directly via signaling
+      if (this.signalingTransport?.state === "connected") {
+        this.signalingTransport.broadcast(data);
+      }
+    } else if (this.leaderElection?.isFollower) {
+      // Follower: request leader to relay
+      this.leaderElection.requestRelay(data);
+    } else if (!this.options.enableLeaderElection) {
+      // No leader election: send directly
+      if (this.signalingTransport?.state === "connected") {
+        this.signalingTransport.broadcast(data);
+      }
     }
   }
 
@@ -240,6 +335,7 @@ export class TransportManager {
    * Send data to a specific peer.
    */
   sendTo(peerId: string, data: ArrayBuffer | string): void {
+    // Only works for leader (has direct signaling connection)
     this.signalingTransport?.sendTo(peerId, data);
   }
 

@@ -122,4 +122,6 @@ export interface TransportManagerOptions {
   autoConnect?: boolean;
   /** Auto-reconnect on disconnect (default: true) */
   autoReconnect?: boolean;
+  /** Enable leader election - only one tab connects to signaling (default: true) */
+  enableLeaderElection?: boolean;
 }

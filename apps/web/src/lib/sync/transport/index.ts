@@ -14,5 +14,8 @@ export type {
 export { BroadcastTransport } from "./broadcast-transport";
 export { SignalingTransport, type SignalingTransportOptions } from "./signaling-transport";
 
+// Leader Election
+export { LeaderElection, type LeaderRole, type LeaderElectionConfig } from "./leader-election";
+
 // Manager
 export { TransportManager } from "./transport-manager";

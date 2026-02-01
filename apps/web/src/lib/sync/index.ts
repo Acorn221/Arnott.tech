@@ -6,6 +6,7 @@ export {
   TransportManager,
   BroadcastTransport,
   SignalingTransport,
+  LeaderElection,
   type Transport,
   type TransportState,
   type TransportType,
@@ -14,6 +15,8 @@ export {
   type MessageSource,
   type PeerInfo,
   type SignalingTransportOptions,
+  type LeaderRole,
+  type LeaderElectionConfig,
 } from "./transport";
 
 // Hooks
