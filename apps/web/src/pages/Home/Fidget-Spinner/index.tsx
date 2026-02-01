@@ -31,10 +31,12 @@ declare global {
 
 /** Welcome spin velocity (radians/second) */
 const WELCOME_SPIN_VELOCITY = 8;
-/** Minimum time between welcome spins (ms) */
-const WELCOME_SPIN_DEBOUNCE_MS = 5000;
+/** Minimum time between welcome spins (ms) - short to allow rapid peer joins */
+const WELCOME_SPIN_DEBOUNCE_MS = 500;
 /** Velocity threshold - don't trigger welcome spin if already moving faster */
 const WELCOME_SPIN_VELOCITY_THRESHOLD = 2;
+/** Delay before sending welcome spin (ms) - gives connection time to stabilize */
+const WELCOME_SPIN_DELAY_MS = 100;
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
@@ -74,36 +76,52 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     [],
   );
 
-  // Share current state when a remote peer joins
-  const handlePeerJoin = useCallback((_peerId: string, isLocal: boolean) => {
-    // Only share state with remote peers (not local tabs)
-    if (isLocal) return;
-
-    // Debounce to prevent spam
+  // Share current state when any peer joins (local or remote)
+  const handlePeerJoin = useCallback((_peerId: string, _isLocal: boolean) => {
+    // Debounce to prevent spam when many peers join at once
     const now = Date.now();
     if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
     lastWelcomeSpinRef.current = now;
 
-    // Defer broadcast to next microtask to ensure broadcastRef is set
-    // (handles race condition during initial connection)
-    queueMicrotask(() => {
-      // If we have an existing event, re-broadcast it to the new peer
+    // Small delay to ensure connection is stable before sending
+    setTimeout(() => {
+      // Determine what to send: existing state or welcome spin
+      let eventToSend: SpinnerEvent;
+
       if (currentEventRef.current) {
-        broadcastRef.current?.(encodeSpinnerEvent(currentEventRef.current));
-        return;
+        const state = spinnerStateComputer.compute(currentEventRef.current, Date.now());
+        // Only use existing event if spinner is still moving meaningfully
+        if (Math.abs(state.velocity) > WELCOME_SPIN_VELOCITY_THRESHOLD) {
+          eventToSend = currentEventRef.current;
+        } else {
+          // Spinner stopped, send a welcome spin
+          eventToSend = {
+            type: "release",
+            timestamp: Date.now(),
+            rotation: state.rotation, // Start from current position
+            velocity: WELCOME_SPIN_VELOCITY,
+          };
+          currentEventRef.current = eventToSend;
+        }
+      } else {
+        // No state, send a welcome spin
+        eventToSend = {
+          type: "release",
+          timestamp: Date.now(),
+          rotation: 0,
+          velocity: WELCOME_SPIN_VELOCITY,
+        };
+        currentEventRef.current = eventToSend;
       }
 
-      // If no current state, send a welcome spin
-      const welcomeEvent: SpinnerEvent = {
-        type: "release",
-        timestamp: Date.now(),
-        rotation: 0,
-        velocity: WELCOME_SPIN_VELOCITY,
-      };
+      // Send immediately
+      broadcastRef.current?.(encodeSpinnerEvent(eventToSend));
 
-      currentEventRef.current = welcomeEvent;
-      broadcastRef.current?.(encodeSpinnerEvent(welcomeEvent));
-    });
+      // Retry once after delay for reliability (same event, same timestamp)
+      setTimeout(() => {
+        broadcastRef.current?.(encodeSpinnerEvent(eventToSend));
+      }, 200);
+    }, WELCOME_SPIN_DELAY_MS);
   }, []);
 
   const {
