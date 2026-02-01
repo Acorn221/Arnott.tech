@@ -427,7 +427,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     const spinDuration = 2000 + secureRandom() * 1500;
     [0, 1, 2].forEach((reelIndex) => {
       const delay = spinDuration + reelIndex * STOP_DELAY * 1000;
-      const timer = setTimeout(() => stopReel(reelIndex), delay);
+      const timer = window.setTimeout(() => stopReel(reelIndex), delay);
       stopTimers.current.push(timer);
     });
   }, [stopReel]);
