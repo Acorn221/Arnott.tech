@@ -44,7 +44,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
 
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
-  const timeOffsetRef = useRef(0);
 
   // Create refs for WebRTC methods to avoid circular deps
   const webrtcRef = useRef<{
@@ -84,10 +83,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     if (msg.type === "time-sync") {
       const offset = performance.now() - msg.localTime;
       timeOffsetsRef.current.set(peerId, offset);
-      // Use average offset
-      const offsets = Array.from(timeOffsetsRef.current.values());
-      timeOffsetRef.current =
-        offsets.reduce((a, b) => a + b, 0) / offsets.length;
       return;
     }
 

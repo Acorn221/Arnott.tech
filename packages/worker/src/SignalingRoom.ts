@@ -1,10 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
 
-interface WebSocketMeta {
-  peerId: string;
-  roomId: string;
-}
-
 interface IceCandidate {
   candidate?: string;
   sdpMid?: string | null;
@@ -90,7 +85,6 @@ export class SignalingRoom extends DurableObject<Env> {
     // Binary = spinner data, broadcast to all other peers
     // Use typeof check for robustness (instanceof can fail across realms)
     if (typeof data !== "string") {
-      console.log(`[SignalingRoom] Relaying binary from ${fromPeerId} to ${this.sessions.size - 1} peers`);
       for (const [peerId, session] of this.sessions) {
         if (peerId !== fromPeerId) {
           try {

@@ -575,7 +575,6 @@ export function useWebRTCRoom(
     if (peer?.rtcConnected && peer.dataChannel?.readyState === "open") {
       peer.dataChannel.send(JSON.stringify(data));
     }
-    // TODO: Could add WebSocket fallback for sendTo as well
   }, []);
 
   // No need for WebRTC reconnect logic - we use WebSocket fallback now
