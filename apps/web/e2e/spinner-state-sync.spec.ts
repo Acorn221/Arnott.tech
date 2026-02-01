@@ -12,6 +12,25 @@ interface SpinnerState {
   velocity: number;
 }
 
+interface SyncTestState {
+  isConnected: boolean;
+  peerCount: number;
+  isLeader: boolean;
+  localId: string;
+}
+
+interface SyncCoordinatorLike {
+  peerCount: number;
+}
+
+declare global {
+  interface Window {
+    __spinner_get_state__?: () => SpinnerState;
+    __sync_state__?: SyncTestState;
+    __sync_coordinator__?: SyncCoordinatorLike;
+  }
+}
+
 // Get current spinner state from page
 async function getSpinnerState(page: Page): Promise<SpinnerState> {
   return page.evaluate(() => {
@@ -23,13 +42,13 @@ async function getSpinnerState(page: Page): Promise<SpinnerState> {
 }
 
 // Wait for spinner to be synced and canvas visible
-async function waitForReady(page: Page, timeout = 15000) {
+async function waitForReady(page: Page, timeoutMs = 15000) {
   await page.waitForFunction(
     () => window.__sync_state__?.isConnected === true,
-    { timeout }
+    { timeout: timeoutMs }
   );
   // Also wait for canvas to be visible
-  await page.locator("canvas").first().waitFor({ state: "visible", timeout });
+  await page.locator("canvas").first().waitFor({ state: "visible", timeout: timeoutMs });
 }
 
 // Spin the spinner with a drag gesture
@@ -121,6 +140,89 @@ test.describe("Spinner State Sync - Multi-Tab", () => {
     }
   });
 
+  test("three tabs all stay synchronized", async ({ browser }) => {
+    test.setTimeout(120000);
+
+    const context = await browser.newContext();
+    const page1 = await context.newPage();
+    const page2 = await context.newPage();
+    const page3 = await context.newPage();
+
+    try {
+      // Navigate all tabs (sequentially with waits)
+      await page1.goto("/");
+      await page1.waitForLoadState("domcontentloaded");
+
+      await page2.goto("/");
+      await page2.waitForLoadState("domcontentloaded");
+
+      await page3.goto("/");
+      await page3.waitForLoadState("domcontentloaded");
+
+      // Debug: check if pages loaded
+      const title1 = await page1.title();
+      const title2 = await page2.title();
+      const title3 = await page3.title();
+      console.log("Page titles:", { title1, title2, title3 });
+
+      // Check sync state on all pages
+      const syncState1 = await page1.evaluate(() => window.__sync_state__);
+      const syncState2 = await page2.evaluate(() => window.__sync_state__);
+      const syncState3 = await page3.evaluate(() => window.__sync_state__);
+      console.log("Initial sync states:", { syncState1, syncState2, syncState3 });
+
+      // Wait for sync to complete
+      await page1.waitForTimeout(2000);
+
+      // Re-check sync states
+      const finalState1 = await page1.evaluate(() => window.__sync_state__);
+      const finalState2 = await page2.evaluate(() => window.__sync_state__);
+      const finalState3 = await page3.evaluate(() => window.__sync_state__);
+      console.log("Final sync states:", { finalState1, finalState2, finalState3 });
+
+      // Verify all connected
+      expect(finalState1?.isConnected).toBe(true);
+      expect(finalState2?.isConnected).toBe(true);
+      expect(finalState3?.isConnected).toBe(true);
+
+      // Wait for peer discovery (presence announcements every second)
+      await page1.waitForTimeout(2000);
+
+      // Check peer counts
+      const peerCount1 = await page1.evaluate(() => window.__sync_state__?.peerCount ?? 0);
+      const peerCount2 = await page2.evaluate(() => window.__sync_state__?.peerCount ?? 0);
+      const peerCount3 = await page3.evaluate(() => window.__sync_state__?.peerCount ?? 0);
+      console.log("Peer counts:", { peerCount1, peerCount2, peerCount3 });
+
+      // Each tab should see at least 2 peers
+      expect(peerCount1).toBeGreaterThanOrEqual(2);
+      expect(peerCount2).toBeGreaterThanOrEqual(2);
+      expect(peerCount3).toBeGreaterThanOrEqual(2);
+
+      // Check initial states
+      let state1 = await getSpinnerState(page1);
+      let state2 = await getSpinnerState(page2);
+      let state3 = await getSpinnerState(page3);
+      console.log("Initial states:", { state1, state2, state3 });
+
+      // Spin from tab 1
+      await spinSpinner(page1, "medium");
+      await page1.waitForTimeout(500);
+
+      // Check states
+      state1 = await getSpinnerState(page1);
+      state2 = await getSpinnerState(page2);
+      state3 = await getSpinnerState(page3);
+      console.log("After tab1 spin:", { state1, state2, state3 });
+
+      // All should be in sync
+      expect(Math.abs(state1.rotation - state2.rotation)).toBeLessThan(ROTATION_TOLERANCE);
+      expect(Math.abs(state1.rotation - state3.rotation)).toBeLessThan(ROTATION_TOLERANCE);
+    } finally {
+      await context.close();
+    }
+  });
+
   test("rapid interactions stay synchronized", async ({ browser }) => {
     const context = await browser.newContext();
     const page1 = await context.newPage();
@@ -131,20 +233,16 @@ test.describe("Spinner State Sync - Multi-Tab", () => {
       await Promise.all([waitForReady(page1), waitForReady(page2)]);
       await page1.waitForTimeout(1000);
 
-      // Multiple rapid spins
+      // Multiple spins with sync checks between each
       for (let i = 0; i < 3; i++) {
         await spinSpinner(page1, "slow");
-        await page1.waitForTimeout(200);
+        await page1.waitForTimeout(500); // Allow sync propagation
+
+        // Check sync after each spin
+        const state1 = await getSpinnerState(page1);
+        const state2 = await getSpinnerState(page2);
+        expect(Math.abs(state1.rotation - state2.rotation)).toBeLessThan(ROTATION_TOLERANCE);
       }
-
-      // Let it settle
-      await page1.waitForTimeout(500);
-
-      // Check sync
-      const state1 = await getSpinnerState(page1);
-      const state2 = await getSpinnerState(page2);
-
-      expect(Math.abs(state1.rotation - state2.rotation)).toBeLessThan(ROTATION_TOLERANCE);
     } finally {
       await context.close();
     }

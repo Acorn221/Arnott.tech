@@ -21,10 +21,14 @@ function generateTabId(): string {
   return `tab-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Message types */
+type BroadcastMessageType = "data" | "presence";
+
 /** Message format sent over BroadcastChannel */
 interface BroadcastMessage {
+  type: BroadcastMessageType;
   sourceTabId: string;
-  payload: Uint8Array; // Use Uint8Array for reliable structured clone
+  payload?: Uint8Array; // Use Uint8Array for reliable structured clone
   timestamp: number;
 }
 
@@ -42,6 +46,8 @@ export class BroadcastTransport implements ITransport {
   private readonly tabId = generateTabId();
   private _state: TransportState = "disconnected";
   private roomId: string | null = null;
+  private presenceInterval: ReturnType<typeof setInterval> | null = null;
+  private static readonly PRESENCE_INTERVAL_MS = 1000; // Announce presence every second
 
   // --- Callbacks ---
   onReceive: ((peerId: string, data: ArrayBuffer) => void) | null = null;
@@ -91,9 +97,52 @@ export class BroadcastTransport implements ITransport {
     };
 
     this.setState("connected");
+
+    // Start presence announcements to help discover peers
+    this.startPresence();
+  }
+
+  /**
+   * Start periodic presence announcements.
+   */
+  private startPresence(): void {
+    // Announce immediately
+    this.announcePresence();
+
+    // Then announce periodically
+    this.presenceInterval = setInterval(() => {
+      this.announcePresence();
+    }, BroadcastTransport.PRESENCE_INTERVAL_MS);
+  }
+
+  /**
+   * Stop presence announcements.
+   */
+  private stopPresence(): void {
+    if (this.presenceInterval) {
+      clearInterval(this.presenceInterval);
+      this.presenceInterval = null;
+    }
+  }
+
+  /**
+   * Announce our presence to other tabs.
+   */
+  private announcePresence(): void {
+    if (!this.channel || this._state !== "connected") return;
+
+    const message: BroadcastMessage = {
+      type: "presence",
+      sourceTabId: this.tabId,
+      timestamp: performance.now(),
+    };
+
+    this.channel.postMessage(message);
   }
 
   async disconnect(): Promise<void> {
+    this.stopPresence();
+
     if (this.channel) {
       this.channel.close();
       this.channel = null;
@@ -131,12 +180,13 @@ export class BroadcastTransport implements ITransport {
     }
 
     const message: BroadcastMessage = {
+      type: "data",
       sourceTabId: this.tabId,
       payload: new Uint8Array(data),
       timestamp: performance.now(),
     };
 
-    log.debug("Sending", { tabId: this.tabId, payloadLength: message.payload.byteLength });
+    log.debug("Sending", { tabId: this.tabId, payloadLength: message.payload?.byteLength });
     this.channel.postMessage(message);
   }
 
@@ -147,7 +197,7 @@ export class BroadcastTransport implements ITransport {
     const msg = event.data as BroadcastMessage;
 
     // Validate message format
-    if (!msg || typeof msg.sourceTabId !== "string" || !msg.payload) {
+    if (!msg || typeof msg.sourceTabId !== "string") {
       log.debug("Invalid message format", { msg });
       return;
     }
@@ -157,17 +207,26 @@ export class BroadcastTransport implements ITransport {
       return;
     }
 
-    log.debug("Received message", { from: msg.sourceTabId, payloadLength: msg.payload.byteLength });
-
-    // Convert Uint8Array back to ArrayBuffer
-    // Note: payload.buffer might be a SharedArrayBuffer, so we create a new ArrayBuffer
-    const data = new Uint8Array(msg.payload).buffer;
-
     // Report peer reachable (all broadcast peers are local)
     this.onPeerReachable?.(msg.sourceTabId, true);
 
-    // Report received data
-    this.onReceive?.(msg.sourceTabId, data);
+    // Handle presence-only messages (no data to forward)
+    if (msg.type === "presence") {
+      log.debug("Presence received", { from: msg.sourceTabId });
+      return;
+    }
+
+    // Handle data messages
+    if (msg.type === "data" && msg.payload) {
+      log.debug("Received message", { from: msg.sourceTabId, payloadLength: msg.payload.byteLength });
+
+      // Convert Uint8Array back to ArrayBuffer
+      // Note: payload.buffer might be a SharedArrayBuffer, so we create a new ArrayBuffer
+      const data = new Uint8Array(msg.payload).buffer;
+
+      // Report received data
+      this.onReceive?.(msg.sourceTabId, data);
+    }
   }
 
   private setState(state: TransportState): void {
