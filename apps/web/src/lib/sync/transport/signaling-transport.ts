@@ -343,14 +343,14 @@ export class SignalingTransport implements Transport {
     };
 
     pc.oniceconnectionstatechange = () => {
-      rtcLog.info("ICE connection state", { peerId: peer.id, state: pc.iceConnectionState });
+      rtcLog.debug("ICE connection state", { peerId: peer.id, state: pc.iceConnectionState });
       if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
         peer.rtcConnected = false;
       }
     };
 
     pc.onconnectionstatechange = () => {
-      rtcLog.info("Connection state", { peerId: peer.id, state: pc.connectionState });
+      rtcLog.debug("Connection state", { peerId: peer.id, state: pc.connectionState });
       if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
         peer.rtcConnected = false;
       }
@@ -536,11 +536,8 @@ export class SignalingTransport implements Transport {
     // Send to peers with WebRTC data channels
     for (const [, peer] of this.peers) {
       if (peer.rtcConnected && peer.dataChannel?.readyState === "open") {
-        if (isBinary) {
-          peer.dataChannel.send(data);
-        } else {
-          peer.dataChannel.send(data);
-        }
+        // RTCDataChannel.send accepts both string and ArrayBuffer
+        peer.dataChannel.send(data as string & ArrayBuffer);
       } else {
         hasWsOnlyPeers = true;
       }
@@ -559,11 +556,8 @@ export class SignalingTransport implements Transport {
   sendTo(peerId: string, data: ArrayBuffer | string): void {
     const peer = this.peers.get(peerId);
     if (peer?.rtcConnected && peer.dataChannel?.readyState === "open") {
-      if (data instanceof ArrayBuffer) {
-        peer.dataChannel.send(data);
-      } else {
-        peer.dataChannel.send(data);
-      }
+      // RTCDataChannel.send accepts both string and ArrayBuffer
+      peer.dataChannel.send(data as string & ArrayBuffer);
     }
     // No WebSocket fallback for sendTo - it's for targeted messages
   }

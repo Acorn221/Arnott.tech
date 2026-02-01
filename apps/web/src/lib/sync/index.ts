@@ -24,9 +24,3 @@ export {
   type UseSyncRoomReturn,
 } from "./hooks";
 
-// Legacy - keep for now, can remove later
-export {
-  useBroadcastChannel,
-  type UseBroadcastChannelOptions,
-  type UseBroadcastChannelReturn,
-} from "./useBroadcastChannel";

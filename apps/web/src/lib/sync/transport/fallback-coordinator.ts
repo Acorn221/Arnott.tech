@@ -90,7 +90,7 @@ export class FallbackCoordinator implements Transport {
       } else {
         this._isLeader = false;
         this.startLeaderWatchdog();
-        log.info("Became follower (local sync only)", { leaderId: this.leaderTabId });
+        log.debug("Became follower (local sync only)", { leaderId: this.leaderTabId });
       }
 
       this.setState("connected");
@@ -126,6 +126,7 @@ export class FallbackCoordinator implements Transport {
     this._isLeader = false;
     this.leaderTabId = null;
     this.roomId = null;
+    window.removeEventListener("beforeunload", this.handleBeforeUnload);
     this.setState("disconnected");
   }
 
@@ -195,7 +196,7 @@ export class FallbackCoordinator implements Transport {
     this._isLeader = true;
     this.leaderTabId = this.tabId;
 
-    log.info("Became leader, connecting signaling");
+    log.debug("Became leader, connecting signaling");
 
     // Claim leadership
     this.sendLeaderMessage({ type: "claim", tabId: this.tabId, timestamp: this.tabTimestamp });
@@ -258,7 +259,7 @@ export class FallbackCoordinator implements Transport {
 
     // 2 seconds without heartbeat = leader lost
     this.leaderTimeout = window.setTimeout(() => {
-      log.info("Leader timeout, attempting takeover");
+      log.debug("Leader timeout, attempting takeover");
       void this.becomeLeader();
     }, 2000);
   }
@@ -276,7 +277,7 @@ export class FallbackCoordinator implements Transport {
       // Someone claimed leadership
       if (this._isLeader && this.shouldYieldTo(msg.tabId, msg.timestamp)) {
         // They have priority, yield
-        log.info("Yielding leadership", { newLeader: msg.tabId });
+        log.debug("Yielding leadership", { newLeader: msg.tabId });
         void this.yieldLeadership();
         this.leaderTabId = msg.tabId;
         this.startLeaderWatchdog();

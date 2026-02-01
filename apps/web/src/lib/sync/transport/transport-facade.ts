@@ -2,7 +2,6 @@
  * TransportFacade - Unified sync transport API.
  *
  * Uses FallbackCoordinator with leader election for WebRTC P2P support.
- * (SharedWorker was removed because RTCPeerConnection isn't available in workers)
  */
 
 import { createLogger } from "@arnott/logger";
@@ -60,22 +59,20 @@ export class TransportFacade {
   onPeerDisconnect: ((peerId: string) => void) | null = null;
 
   constructor(_options: TransportFacadeOptions = {}) {
-    // Use FallbackCoordinator with leader election (supports WebRTC)
     this.transport = new FallbackCoordinator();
-    log.info("Using leader election transport (WebRTC enabled)");
 
     // Wire up callbacks with deduplication
     this.transport.onMessage = (msg) => this.handleMessage(msg);
     this.transport.onStateChange = (state) => {
-      log.info("State changed", { state });
+      log.debug("State changed", { state });
       this.onStateChange?.(state);
     };
     this.transport.onPeerConnect = (peerId) => {
-      log.info("Peer connected", { peerId });
+      log.debug("Peer connected", { peerId });
       this.onPeerConnect?.(peerId);
     };
     this.transport.onPeerDisconnect = (peerId) => {
-      log.info("Peer disconnected", { peerId });
+      log.debug("Peer disconnected", { peerId });
       this.onPeerDisconnect?.(peerId);
     };
   }
@@ -99,12 +96,11 @@ export class TransportFacade {
   }
 
   async disconnect(): Promise<void> {
-    log.info("Disconnecting");
+    log.debug("Disconnecting");
     return this.transport.disconnect();
   }
 
   broadcast(data: ArrayBuffer | string): void {
-    log.debug("Facade broadcasting", { connected: this.isConnected });
     this.transport.broadcast(data);
   }
 
@@ -117,19 +113,15 @@ export class TransportFacade {
   }
 
   private handleMessage(msg: SyncMessage): void {
-    log.debug("Facade received message", { source: msg.source.peerId, transport: msg.source.transport });
-
     // Deduplication - same message may arrive via multiple paths
     const msgId = getMessageId(msg.data);
     if (msgId) {
       if (this.messageDedup.has(msgId)) {
-        log.debug("Duplicate message dropped", { msgId: msgId.slice(0, 8) });
         return;
       }
       this.messageDedup.set(msgId, msg.receivedAt);
     }
 
-    log.debug("Passing message to onMessage callback", { hasCallback: !!this.onMessage });
     this.onMessage?.(msg);
   }
 }
