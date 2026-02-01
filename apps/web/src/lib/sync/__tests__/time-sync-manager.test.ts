@@ -45,21 +45,6 @@ describe("TimeSyncManager", () => {
     });
   });
 
-  describe("createSyncMessage (alias)", () => {
-    it("returns same result as createSyncRequest", () => {
-      const msg1 = timeSync.createSyncMessage();
-      const msg2 = timeSync.createSyncRequest();
-
-      const text1 = new TextDecoder().decode(msg1);
-      const text2 = new TextDecoder().decode(msg2);
-
-      const parsed1 = JSON.parse(text1);
-      const parsed2 = JSON.parse(text2);
-
-      expect(parsed1.type).toBe(parsed2.type);
-    });
-  });
-
   describe("isTimeSyncMessage", () => {
     it("returns true for valid time-sync-request message", () => {
       const msg: TimeSyncRequest = { type: "time-sync-request", requestTime: 12345 };
@@ -70,13 +55,6 @@ describe("TimeSyncManager", () => {
 
     it("returns true for valid time-sync-response message", () => {
       const msg: TimeSyncResponse = { type: "time-sync-response", requestTime: 12345, responseTime: 12400 };
-      const data = new TextEncoder().encode(JSON.stringify(msg));
-
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(true);
-    });
-
-    it("returns true for legacy time-sync message", () => {
-      const msg = { type: "time-sync", localTime: 12345 };
       const data = new TextEncoder().encode(JSON.stringify(msg));
 
       expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(true);
@@ -214,35 +192,6 @@ describe("TimeSyncManager", () => {
 
       expect(timeSync.getOffset(peerId)).toBe(result!.offset);
       expect(timeSync.isReady(peerId)).toBe(true);
-    });
-  });
-
-  describe("handleMessage - legacy support", () => {
-    it("handles legacy time-sync messages", () => {
-      const msg = { type: "time-sync", localTime: 1000 };
-      const data = new TextEncoder().encode(JSON.stringify(msg));
-
-      const result = timeSync.handleMessage("peer-1", data.buffer as ArrayBuffer);
-
-      expect(result).not.toBeNull();
-      expect(result!.isNewPeer).toBe(true);
-      // Legacy handler should respond with a new-style request
-      expect(result!.responseMessage).not.toBeNull();
-    });
-
-    it("calculates offset for legacy messages", () => {
-      const peerTime = 1000;
-      const msg = { type: "time-sync", localTime: peerTime };
-      const data = new TextEncoder().encode(JSON.stringify(msg));
-
-      const beforeHandle = performance.now();
-      const result = timeSync.handleMessage("peer-1", data.buffer as ArrayBuffer);
-      const afterHandle = performance.now();
-
-      expect(result).not.toBeNull();
-      // Legacy offset = current time - peer's localTime
-      expect(result!.offset).toBeGreaterThanOrEqual(beforeHandle - peerTime);
-      expect(result!.offset).toBeLessThanOrEqual(afterHandle - peerTime);
     });
   });
 

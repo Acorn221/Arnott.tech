@@ -101,13 +101,6 @@ export class TimeSyncManager {
   }
 
   /**
-   * Alias for createSyncRequest for backwards compatibility.
-   */
-  createSyncMessage(peerId?: string): ArrayBuffer {
-    return this.createSyncRequest(peerId);
-  }
-
-  /**
    * Check if data is a time-sync message.
    * @param data - Raw data received
    * @returns true if this is a time-sync message
@@ -120,9 +113,7 @@ export class TimeSyncManager {
       const msg = JSON.parse(text);
       return (
         (msg?.type === "time-sync-request" && typeof msg.requestTime === "number") ||
-        (msg?.type === "time-sync-response" && typeof msg.requestTime === "number" && typeof msg.responseTime === "number") ||
-        // Legacy support for old "time-sync" messages
-        (msg?.type === "time-sync" && typeof msg.localTime === "number")
+        (msg?.type === "time-sync-response" && typeof msg.requestTime === "number" && typeof msg.responseTime === "number")
       );
     } catch {
       return false;
@@ -219,41 +210,6 @@ export class TimeSyncManager {
         };
       }
 
-      // Legacy support for old "time-sync" messages
-      if (msg.type === "time-sync" && typeof msg.localTime === "number") {
-        const oldOffset = this.offsets.get(peerId);
-        const isNewPeer = oldOffset === undefined;
-
-        // Old offset calculation (includes latency, less accurate)
-        // Only use if we don't have an RTT-based offset yet
-        if (isNewPeer) {
-          const offset = performance.now() - msg.localTime;
-          this.offsets.set(peerId, offset);
-
-          log.debug("Time sync processed (legacy)", { peerId, offset, isNewPeer });
-
-          // Respond with new-style request to upgrade to RTT-based sync
-          this.pendingRequests.set(peerId, performance.now());
-          const request: TimeSyncRequest = {
-            type: "time-sync-request",
-            requestTime: performance.now(),
-          };
-          const requestData = new TextEncoder().encode(JSON.stringify(request));
-
-          return {
-            offset,
-            isNewPeer,
-            responseMessage: requestData.buffer as ArrayBuffer,
-          };
-        }
-
-        return {
-          offset: oldOffset,
-          isNewPeer: false,
-          responseMessage: null,
-        };
-      }
-
       return null;
     } catch (err) {
       log.debug("Failed to parse time-sync message", { error: err });
@@ -285,6 +241,7 @@ export class TimeSyncManager {
    */
   removePeer(peerId: string): void {
     this.offsets.delete(peerId);
+    this.pendingRequests.delete(peerId);
   }
 
   /**

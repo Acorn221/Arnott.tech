@@ -253,7 +253,7 @@ describe("SyncCoordinator", () => {
       };
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
-      const timeSyncMsg = JSON.stringify({ type: "time-sync", localTime: 12345 });
+      const timeSyncMsg = JSON.stringify({ type: "time-sync-request", requestTime: 12345 });
       const payload = new TextEncoder().encode(timeSyncMsg);
 
       syncChannel.receiveMessage({
@@ -307,7 +307,7 @@ describe("SyncCoordinator", () => {
   });
 
   describe("time sync", () => {
-    it("responds to time-sync messages", async () => {
+    it("responds to time-sync-request messages", async () => {
       await coordinator.connect("test-room");
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
@@ -316,8 +316,8 @@ describe("SyncCoordinator", () => {
       // Clear initial calls
       postMessageSpy.mockClear();
 
-      // Send a time-sync message from a peer
-      const timeSyncMsg = JSON.stringify({ type: "time-sync", localTime: performance.now() });
+      // Send a time-sync-request message from a peer
+      const timeSyncMsg = JSON.stringify({ type: "time-sync-request", requestTime: performance.now() });
       const payload = new TextEncoder().encode(timeSyncMsg);
 
       syncChannel.receiveMessage({
@@ -327,11 +327,11 @@ describe("SyncCoordinator", () => {
         timestamp: performance.now(),
       });
 
-      // Should respond with our own time-sync
+      // Should respond with a time-sync-response
       expect(postMessageSpy).toHaveBeenCalled();
     });
 
-    it("stores time offset after sync", async () => {
+    it("stores time offset after sync response", async () => {
       await coordinator.connect("test-room");
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
@@ -345,8 +345,13 @@ describe("SyncCoordinator", () => {
         timestamp: performance.now(),
       });
 
-      // Now send time-sync
-      const timeSyncMsg = JSON.stringify({ type: "time-sync", localTime: 1000 });
+      // Now send a time-sync-response (simulating peer responding to our request)
+      const requestTime = performance.now() - 10; // Simulate request sent 10ms ago
+      const timeSyncMsg = JSON.stringify({
+        type: "time-sync-response",
+        requestTime: requestTime,
+        responseTime: requestTime + 5,
+      });
       const timeSyncPayload = new TextEncoder().encode(timeSyncMsg);
 
       syncChannel.receiveMessage({
