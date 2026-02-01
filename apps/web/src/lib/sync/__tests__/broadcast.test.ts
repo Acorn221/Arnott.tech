@@ -225,6 +225,7 @@ describe("BroadcastTransport", () => {
       const channel = MockBroadcastChannel.instances[0];
       const payload = new TextEncoder().encode("hello");
       channel.receiveMessage({
+        type: "data",
         sourceTabId: "other-tab-123",
         payload: new Uint8Array(payload),
         timestamp: 12345,
@@ -244,6 +245,7 @@ describe("BroadcastTransport", () => {
 
       const channel = MockBroadcastChannel.instances[0];
       channel.receiveMessage({
+        type: "data",
         sourceTabId: "other-tab-456",
         payload: new Uint8Array([1, 2, 3]),
         timestamp: 12345,
@@ -264,6 +266,7 @@ describe("BroadcastTransport", () => {
 
       const channel = MockBroadcastChannel.instances[0];
       channel.receiveMessage({
+        type: "data",
         sourceTabId: transport.getLocalId(), // Self
         payload: new Uint8Array([1, 2, 3]),
         timestamp: 12345,
@@ -283,9 +286,11 @@ describe("BroadcastTransport", () => {
       const channel = MockBroadcastChannel.instances[0];
 
       // Missing sourceTabId
-      channel.receiveMessage({ payload: new Uint8Array([1]) });
+      channel.receiveMessage({ type: "data", payload: new Uint8Array([1]) });
       // Missing payload
-      channel.receiveMessage({ sourceTabId: "peer-1" });
+      channel.receiveMessage({ type: "data", sourceTabId: "peer-1" });
+      // Missing type
+      channel.receiveMessage({ sourceTabId: "peer-1", payload: new Uint8Array([1]) });
       // Null message
       channel.receiveMessage(null);
 

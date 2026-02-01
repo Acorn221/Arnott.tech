@@ -180,6 +180,7 @@ describe("SyncCoordinator", () => {
       // Simulate receiving our own message back (shouldn't happen with real BC, but testing dedup)
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: coordinator.getLocalId(),
         payload: new Uint8Array(data),
         timestamp: performance.now(),
@@ -203,6 +204,7 @@ describe("SyncCoordinator", () => {
       const payload = new TextEncoder().encode("hello from peer");
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
@@ -225,12 +227,14 @@ describe("SyncCoordinator", () => {
 
       // Send same message twice
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
       });
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-456", // Different peer, same content
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
@@ -253,6 +257,7 @@ describe("SyncCoordinator", () => {
       const payload = new TextEncoder().encode(timeSyncMsg);
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
@@ -273,6 +278,7 @@ describe("SyncCoordinator", () => {
       const payload = new TextEncoder().encode("hello");
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
@@ -290,6 +296,7 @@ describe("SyncCoordinator", () => {
       const payload = new TextEncoder().encode("hello");
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
@@ -314,6 +321,7 @@ describe("SyncCoordinator", () => {
       const payload = new TextEncoder().encode(timeSyncMsg);
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),
@@ -331,6 +339,7 @@ describe("SyncCoordinator", () => {
       // First send a regular message to create the peer
       const regularPayload = new TextEncoder().encode("hello");
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(regularPayload),
         timestamp: performance.now(),
@@ -341,6 +350,7 @@ describe("SyncCoordinator", () => {
       const timeSyncPayload = new TextEncoder().encode(timeSyncMsg);
 
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(timeSyncPayload),
         timestamp: performance.now(),
@@ -361,6 +371,7 @@ describe("SyncCoordinator", () => {
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
       const payload = new TextEncoder().encode("hello");
       syncChannel.receiveMessage({
+        type: "data",
         sourceTabId: "peer-123",
         payload: new Uint8Array(payload),
         timestamp: performance.now(),

@@ -156,6 +156,9 @@ export const spinnerStateComputer: StateComputer<SpinnerEvent, SpinnerState> = {
 /**
  * ConflictResolver for spinner events.
  * Simple: latest event always wins.
+ *
+ * NOTE: Timestamps use Date.now() (absolute wall-clock time) for consistency
+ * across tabs, instead of performance.now() which is relative to page load.
  */
 export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
   shouldReplace(
@@ -168,20 +171,17 @@ export const spinnerConflictResolver: ConflictResolver<SpinnerEvent> = {
     return incoming.timestamp >= current.timestamp;
   },
 
-  adjustTimestamp(event: SpinnerEvent, timeOffset: number): SpinnerEvent {
-    const now = performance.now();
-    let adjustedTimestamp = event.timestamp + timeOffset;
+  adjustTimestamp(event: SpinnerEvent, _timeOffset: number): SpinnerEvent {
+    // With Date.now() timestamps, no adjustment needed for local tabs.
+    // Remote peers might have clock skew, but Date.now() is close enough
+    // and much simpler than trying to sync performance.now() across origins.
+    const now = Date.now();
 
-    // If adjusted timestamp is in the future (clock skew, time sync incomplete),
-    // clamp to now so physics simulation starts immediately.
-    // This sacrifices some determinism for better UX.
-    if (adjustedTimestamp > now) {
-      adjustedTimestamp = now;
+    // Clamp future timestamps to now
+    if (event.timestamp > now) {
+      return { ...event, timestamp: now };
     }
 
-    return {
-      ...event,
-      timestamp: adjustedTimestamp,
-    };
+    return event;
   },
 };

@@ -80,7 +80,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     if (isLocal) return;
 
     // Debounce to prevent spam
-    const now = performance.now();
+    const now = Date.now();
     if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
     lastWelcomeSpinRef.current = now;
 
@@ -96,7 +96,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       // If no current state, send a welcome spin
       const welcomeEvent: SpinnerEvent = {
         type: "release",
-        timestamp: performance.now(),
+        timestamp: Date.now(),
         rotation: 0,
         velocity: WELCOME_SPIN_VELOCITY,
       };
@@ -147,7 +147,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     (rotation: number) => {
       handleEventEmit({
         type: "grab",
-        timestamp: performance.now(),
+        timestamp: Date.now(),
         rotation,
       });
     },
@@ -158,7 +158,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     (rotation: number, velocity: number) => {
       handleEventEmit({
         type: "drag",
-        timestamp: performance.now(),
+        timestamp: Date.now(),
         rotation,
         velocity,
       });
@@ -170,7 +170,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     (rotation: number, velocity: number) => {
       handleEventEmit({
         type: "release",
-        timestamp: performance.now(),
+        timestamp: Date.now(),
         rotation,
         velocity,
       });
@@ -186,7 +186,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       window.__spinner_get_state__ = () => {
         const event = currentEventRef.current;
         if (!event) return spinnerStateComputer.initialState();
-        return spinnerStateComputer.compute(event, performance.now());
+        return spinnerStateComputer.compute(event, Date.now());
       };
       window.__spinner_event__ = currentEventRef.current;
     }

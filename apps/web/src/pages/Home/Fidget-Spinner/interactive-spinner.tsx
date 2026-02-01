@@ -194,7 +194,7 @@ const InteractiveSpinner = ({
 
     // When synced and not dragging, use CRDT state
     if (isSynced && !isDragging.current && computeState) {
-      const state = computeState(performance.now());
+      const state = computeState(Date.now());
       groupRef.current.rotation.y = state.rotation;
       angularVelocity.current = state.velocity;
 
