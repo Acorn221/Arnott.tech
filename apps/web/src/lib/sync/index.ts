@@ -1,20 +1,21 @@
 // Core types
 export type { StateComputer, ConflictResolver } from "./types";
 
-// Transport layer
+// Coordinator
+export { SyncCoordinator, type CoordinatorState, type SyncCoordinatorOptions } from "./sync-coordinator";
+export { PeerRegistry, type Peer } from "./peer-registry";
+export { LeaderElection, type LeaderElectionOptions } from "./leader-election";
+
+// Routes
 export {
-  TransportFacade,
-  BroadcastTransport,
-  SignalingTransport,
-  FallbackCoordinator,
-  type Transport,
-  type TransportState,
-  type TransportType,
-  type TransportFacadeOptions,
-  type SyncMessage,
-  type MessageSource,
-  type PeerInfo,
-  type SignalingTransportOptions,
+  type Route,
+  type RouteType,
+  type RouteState,
+  ROUTE_PRIORITY,
+  getBestRoute,
+  BroadcastRoute,
+  SignalingRoute,
+  type SignalingRouteOptions,
 } from "./transport";
 
 // Hooks

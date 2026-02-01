@@ -1,24 +1,7 @@
-// Types
-export type {
-  Transport,
-  TransportState,
-  TransportType,
-  TransportConfig,
-  SyncMessage,
-  MessageSource,
-  PeerInfo,
-} from "./types";
+// Route types
+export type { Route, RouteType, RouteState } from "./route";
+export { ROUTE_PRIORITY, getBestRoute } from "./route";
 
-// Main facade (use this)
-export {
-  TransportFacade,
-  type TransportFacadeOptions,
-} from "./transport-facade";
-
-// Individual transports (for advanced use)
-export { BroadcastTransport } from "./broadcast-transport";
-export {
-  SignalingTransport,
-  type SignalingTransportOptions,
-} from "./signaling-transport";
-export { FallbackCoordinator } from "./fallback-coordinator";
+// Routes
+export { BroadcastRoute } from "./broadcast-route";
+export { SignalingRoute, type SignalingRouteOptions } from "./signaling-route";

@@ -8,25 +8,26 @@
  *
  * Uses leader election - one tab owns WebSocket/WebRTC connections,
  * other tabs sync locally via BroadcastChannel.
+ *
+ * Time sync is automatic - no manual setTimeOffset calls needed.
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
-import { TransportFacade } from "../transport/transport-facade";
-import type { TransportState, SyncMessage } from "../transport/types";
+import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
 
 export interface UseSyncRoomOptions {
   /** Room ID to join */
   roomId: string;
   /** Auto-connect on mount (default: false) */
   autoConnect?: boolean;
-  /** Message received callback */
-  onMessage?: (message: SyncMessage) => void;
+  /** Message received callback (data, peerId, timeOffset) */
+  onMessage?: (data: ArrayBuffer, peerId: string, timeOffset: number) => void;
   /** Peer connected callback */
   onPeerConnect?: (peerId: string) => void;
   /** Peer disconnected callback */
   onPeerDisconnect?: (peerId: string) => void;
   /** Connection state changed callback */
-  onConnectionStateChange?: (state: TransportState) => void;
+  onConnectionStateChange?: (state: CoordinatorState) => void;
 }
 
 export interface UseSyncRoomReturn {
@@ -37,17 +38,15 @@ export interface UseSyncRoomReturn {
   /** Reconnect (disconnect then connect) */
   reconnect: () => Promise<void>;
   /** Broadcast data to all peers */
-  broadcast: (data: ArrayBuffer | string) => void;
+  broadcast: (data: ArrayBuffer) => void;
   /** Send data to a specific peer */
-  sendTo: (peerId: string, data: ArrayBuffer | string) => void;
+  sendTo: (peerId: string, data: ArrayBuffer) => void;
   /** Whether connected to the room */
   isConnected: boolean;
   /** Current connection state */
-  connectionState: TransportState;
+  connectionState: CoordinatorState;
   /** Whether this tab is the leader (owns remote connections) */
   isLeader: boolean;
-  /** Set time offset for a specific peer */
-  setTimeOffset: (peerId: string, offset: number) => void;
 }
 
 export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
@@ -56,50 +55,50 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   // State
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] =
-    useState<TransportState>("disconnected");
+    useState<CoordinatorState>("disconnected");
 
   // Refs
-  const facadeRef = useRef<TransportFacade | null>(null);
+  const coordinatorRef = useRef<SyncCoordinator | null>(null);
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
-  // Initialize facade
-  const getFacade = useCallback((): TransportFacade => {
-    if (!facadeRef.current) {
-      facadeRef.current = new TransportFacade();
+  // Initialize coordinator
+  const getCoordinator = useCallback((): SyncCoordinator => {
+    if (!coordinatorRef.current) {
+      coordinatorRef.current = new SyncCoordinator();
 
       // Set up callbacks
-      facadeRef.current.onMessage = (msg) => {
-        optionsRef.current.onMessage?.(msg);
+      coordinatorRef.current.onMessage = (data, peerId, timeOffset) => {
+        optionsRef.current.onMessage?.(data, peerId, timeOffset);
       };
 
-      facadeRef.current.onStateChange = (state) => {
+      coordinatorRef.current.onStateChange = (state) => {
         setConnectionState(state);
         setIsConnected(state === "connected");
         onConnectionStateChange?.(state);
       };
 
-      facadeRef.current.onPeerConnect = (peerId) => {
+      coordinatorRef.current.onPeerJoin = (peerId) => {
         optionsRef.current.onPeerConnect?.(peerId);
       };
 
-      facadeRef.current.onPeerDisconnect = (peerId) => {
+      coordinatorRef.current.onPeerLeave = (peerId) => {
         optionsRef.current.onPeerDisconnect?.(peerId);
       };
     }
-    return facadeRef.current;
+    return coordinatorRef.current;
   }, [onConnectionStateChange]);
 
   // Connect
   const connect = useCallback(async () => {
-    const facade = getFacade();
-    await facade.connect(roomId);
-  }, [getFacade, roomId]);
+    const coordinator = getCoordinator();
+    await coordinator.connect(roomId);
+  }, [getCoordinator, roomId]);
 
   // Disconnect
   const disconnect = useCallback(async () => {
-    if (facadeRef.current) {
-      await facadeRef.current.disconnect();
+    if (coordinatorRef.current) {
+      await coordinatorRef.current.disconnect();
     }
   }, []);
 
@@ -110,18 +109,13 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   }, [connect, disconnect]);
 
   // Broadcast
-  const broadcast = useCallback((data: ArrayBuffer | string) => {
-    facadeRef.current?.broadcast(data);
+  const broadcast = useCallback((data: ArrayBuffer) => {
+    coordinatorRef.current?.broadcast(data);
   }, []);
 
   // Send to specific peer
-  const sendTo = useCallback((peerId: string, data: ArrayBuffer | string) => {
-    facadeRef.current?.sendTo(peerId, data);
-  }, []);
-
-  // Set time offset
-  const setTimeOffset = useCallback((peerId: string, offset: number) => {
-    facadeRef.current?.setTimeOffset(peerId, offset);
+  const sendTo = useCallback((peerId: string, data: ArrayBuffer) => {
+    coordinatorRef.current?.sendTo(peerId, data);
   }, []);
 
   // Auto-connect on mount
@@ -138,7 +132,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   // Network awareness - reconnect when back online
   useEffect(() => {
     const handleOnline = () => {
-      if (connectionState === "disconnected" && facadeRef.current) {
+      if (connectionState === "disconnected" && coordinatorRef.current) {
         void connect();
       }
     };
@@ -155,7 +149,6 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
     sendTo,
     isConnected,
     connectionState,
-    isLeader: facadeRef.current?.isLeader ?? false,
-    setTimeOffset,
+    isLeader: coordinatorRef.current?.isLeader ?? false,
   };
 }

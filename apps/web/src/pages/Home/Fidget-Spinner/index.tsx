@@ -9,7 +9,7 @@ import {
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
-import { useSyncRoom, type SyncMessage } from "@/lib/sync";
+import { useSyncRoom } from "@/lib/sync";
 import {
   encodeSpinnerEvent,
   decodeSpinnerEvent,
@@ -18,10 +18,11 @@ import {
   type SpinnerEvent,
 } from "./spinner-codec";
 
-// JSON message types (binary used for spinner events)
-type SpinnerJsonMessage =
-  | { type: "sync"; event: SpinnerEvent }
-  | { type: "time-sync"; localTime: number };
+// JSON message types (sync event for initial state sharing)
+interface SyncJsonMessage {
+  type: "sync";
+  event: SpinnerEvent;
+}
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
@@ -31,88 +32,69 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
 
-  // Refs for sendTo (to avoid circular dependency with handlePeerConnect)
-  const sendToRef = useRef<((peerId: string, data: ArrayBuffer | string) => void) | null>(null);
-  const setTimeOffsetRef = useRef<((peerId: string, offset: number) => void) | null>(null);
+  // Ref for sendTo (to avoid circular dependency with handlePeerConnect)
+  const sendToRef = useRef<((peerId: string, data: ArrayBuffer) => void) | null>(null);
 
   // Handle incoming messages from any transport
-  const handleMessage = useCallback((msg: SyncMessage) => {
-    const { data, source } = msg;
+  // Note: time-sync is handled automatically by SyncCoordinator
+  const handleMessage = useCallback((data: ArrayBuffer, peerId: string, timeOffset: number) => {
+    // Try to decode as spinner event (binary)
+    const event = decodeSpinnerEvent(data);
+    if (event) {
+      const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
+        event,
+        timeOffset,
+      );
 
-    console.log("[Spinner] handleMessage", {
-      dataType: typeof data,
-      isArrayBuffer: data instanceof ArrayBuffer,
-      constructorName: data?.constructor?.name,
-      source: source.transport,
-    });
+      if (
+        spinnerConflictResolver.shouldReplace(
+          currentEventRef.current,
+          adjustedEvent,
+          timeOffset,
+        )
+      ) {
+        currentEventRef.current = adjustedEvent;
+      }
+      return;
+    }
 
-    // Binary = spinner event (fast path)
-    if (data instanceof ArrayBuffer) {
-      const event = decodeSpinnerEvent(data);
-      if (event) {
-        // Time offset is already in source.timeOffset
+    // Try to decode as JSON sync message
+    try {
+      const text = new TextDecoder().decode(data);
+      const jsonMsg = JSON.parse(text) as SyncJsonMessage;
+
+      if (jsonMsg.type === "sync" && jsonMsg.event) {
         const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
-          event,
-          source.timeOffset,
+          jsonMsg.event,
+          timeOffset,
         );
-
         if (
           spinnerConflictResolver.shouldReplace(
             currentEventRef.current,
             adjustedEvent,
-            source.timeOffset,
+            timeOffset,
           )
         ) {
           currentEventRef.current = adjustedEvent;
         }
       }
-      return;
-    }
-
-    // JSON messages (time-sync, sync)
-    const jsonMsg = data as SpinnerJsonMessage;
-
-    if (jsonMsg.type === "time-sync") {
-      // Calculate and store time offset for this peer
-      const offset = performance.now() - jsonMsg.localTime;
-      setTimeOffsetRef.current?.(source.peerId, offset);
-      return;
-    }
-
-    if (jsonMsg.type === "sync" && jsonMsg.event) {
-      const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
-        jsonMsg.event,
-        source.timeOffset,
-      );
-      if (
-        spinnerConflictResolver.shouldReplace(
-          currentEventRef.current,
-          adjustedEvent,
-          source.timeOffset,
-        )
-      ) {
-        currentEventRef.current = adjustedEvent;
-      }
+    } catch {
+      // Not JSON, ignore
     }
   }, []);
 
-  // Handle new peer connections - exchange time sync and current state
+  // Handle new peer connections - send current state
+  // Note: time-sync is handled automatically by SyncCoordinator
   const handlePeerConnect = useCallback((peerId: string) => {
-    // Send time sync for timestamp alignment
-    const timeSyncMsg: SpinnerJsonMessage = {
-      type: "time-sync",
-      localTime: performance.now(),
-    };
-    sendToRef.current?.(peerId, JSON.stringify(timeSyncMsg));
-
     // Send current state if we have any
     const currentEvent = currentEventRef.current;
     if (currentEvent) {
-      const syncMsg: SpinnerJsonMessage = {
+      const syncMsg: SyncJsonMessage = {
         type: "sync",
         event: currentEvent,
       };
-      sendToRef.current?.(peerId, JSON.stringify(syncMsg));
+      const data = new TextEncoder().encode(JSON.stringify(syncMsg));
+      sendToRef.current?.(peerId, data.buffer as ArrayBuffer);
     }
   }, []);
 
@@ -121,7 +103,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     sendTo,
     isConnected,
     connectionState,
-    setTimeOffset,
   } = useSyncRoom({
     roomId: "spinner",
     autoConnect: true,
@@ -129,9 +110,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     onPeerConnect: handlePeerConnect,
   });
 
-  // Store refs for use in callbacks
+  // Store ref for use in callbacks
   sendToRef.current = sendTo;
-  setTimeOffsetRef.current = setTimeOffset;
 
   // Emit CRDT events to all peers (binary encoded)
   const handleEventEmit = useCallback(

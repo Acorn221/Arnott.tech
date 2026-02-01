@@ -1,14 +1,16 @@
 /**
- * Signaling transport that combines WebSocket signaling + WebRTC P2P + WebSocket relay fallback.
+ * SignalingRoute - WebSocket signaling + WebRTC P2P + WebSocket relay.
  *
  * Architecture:
  * - WebSocket is always connected for signaling and peer discovery
- * - WebRTC data channels are established for P2P communication (preferred)
+ * - WebRTC data channels are established for P2P (preferred)
  * - WebSocket relay is used as fallback when WebRTC fails
+ *
+ * Implements the simplified Route interface - no peer state tracking.
  */
 
 import { createLogger } from "@arnott/logger";
-import type { Transport, TransportState, SyncMessage, TransportType } from "./types";
+import type { Route, RouteState } from "./route";
 
 const log = createLogger("sync:signaling");
 const rtcLog = createLogger("sync:webrtc");
@@ -41,15 +43,14 @@ const DEFAULT_RECONNECT_BACKOFF = {
   multiplier: 2,
 };
 
-/** Peer state for WebRTC connection */
-interface PeerState {
+/** Internal peer connection state */
+interface PeerConnection {
   id: string;
   rtcConnection: RTCPeerConnection | null;
   dataChannel: RTCDataChannel | null;
   rtcConnected: boolean;
   remoteDescriptionSet: boolean;
   pendingCandidates: RTCIceCandidateInit[];
-  timeOffset: number;
   rtcTimeout: number | null;
 }
 
@@ -74,7 +75,7 @@ interface SignalMessage {
 
 type ServerMessage = WelcomeMessage | PeerEventMessage | SignalMessage;
 
-export interface SignalingTransportOptions {
+export interface SignalingRouteOptions {
   /** Enable WebRTC P2P connections (default: true) */
   enableWebRTC?: boolean;
   /** Auto-reconnect on disconnect (default: true) */
@@ -90,31 +91,33 @@ export interface SignalingTransportOptions {
 }
 
 /**
- * Combined transport for WebSocket signaling + WebRTC P2P + WebSocket relay.
- * Reports as "webrtc" when P2P is working, "websocket" when using relay.
+ * SignalingRoute - WebSocket + WebRTC route.
+ *
+ * Reports "webrtc" or "websocket" route type based on connection.
  */
-export class SignalingTransport implements Transport {
-  readonly name: TransportType = "webrtc";
+export class SignalingRoute implements Route {
+  // Report as "webrtc" since that's the preferred path
+  readonly type = "webrtc" as const;
 
   private ws: WebSocket | null = null;
-  private peers = new Map<string, PeerState>();
+  private peers = new Map<string, PeerConnection>();
   private myPeerId: string | null = null;
   private roomId: string | null = null;
-  private _state: TransportState = "disconnected";
+  private _state: RouteState = "disconnected";
   private intentionalDisconnect = false;
   private isConnecting = false;
   private reconnectAttempt = 0;
   private reconnectTimeout: number | null = null;
 
-  private options: Required<SignalingTransportOptions>;
+  private options: Required<SignalingRouteOptions>;
 
-  // Callbacks
-  onMessage: ((message: SyncMessage) => void) | null = null;
-  onStateChange: ((state: TransportState) => void) | null = null;
-  onPeerConnect: ((peerId: string) => void) | null = null;
-  onPeerDisconnect: ((peerId: string) => void) | null = null;
+  // --- Callbacks ---
+  onRawMessage: ((peerId: string, data: ArrayBuffer) => void) | null = null;
+  onPeerDiscovered: ((peerId: string, isLocal: boolean) => void) | null = null;
+  onPeerLost: ((peerId: string) => void) | null = null;
+  onStateChange: ((state: RouteState) => void) | null = null;
 
-  constructor(options: SignalingTransportOptions = {}) {
+  constructor(options: SignalingRouteOptions = {}) {
     this.options = {
       enableWebRTC: options.enableWebRTC ?? true,
       autoReconnect: options.autoReconnect ?? true,
@@ -123,7 +126,7 @@ export class SignalingTransport implements Transport {
     };
   }
 
-  get state(): TransportState {
+  get state(): RouteState {
     return this._state;
   }
 
@@ -131,33 +134,14 @@ export class SignalingTransport implements Transport {
     return typeof WebSocket !== "undefined";
   }
 
-  /** Get our peer ID (assigned by server) */
-  getPeerId(): string | null {
+  getLocalId(): string | null {
     return this.myPeerId;
-  }
-
-  /** Get count of known peers */
-  getPeerCount(): number {
-    return this.peers.size;
   }
 
   /** Check if a peer has WebRTC connection */
   hasPeerRTC(peerId: string): boolean {
     const peer = this.peers.get(peerId);
     return peer?.rtcConnected ?? false;
-  }
-
-  /** Get time offset for a peer */
-  getPeerTimeOffset(peerId: string): number {
-    return this.peers.get(peerId)?.timeOffset ?? 0;
-  }
-
-  /** Set time offset for a peer */
-  setPeerTimeOffset(peerId: string, offset: number): void {
-    const peer = this.peers.get(peerId);
-    if (peer) {
-      peer.timeOffset = offset;
-    }
   }
 
   async connect(roomId: string): Promise<void> {
@@ -173,7 +157,6 @@ export class SignalingTransport implements Transport {
     this.intentionalDisconnect = false;
 
     try {
-      // Clean up previous connection
       await this.cleanup();
 
       this.roomId = roomId;
@@ -203,6 +186,11 @@ export class SignalingTransport implements Transport {
         if (this.ws !== ws) return;
 
         this.ws = null;
+
+        // Notify peer loss for all peers
+        for (const peerId of this.peers.keys()) {
+          this.onPeerLost?.(peerId);
+        }
         this.peers.clear();
 
         if (!this.intentionalDisconnect) {
@@ -227,19 +215,10 @@ export class SignalingTransport implements Transport {
     // Server wraps with 8-byte sender ID header
     if (event.data instanceof ArrayBuffer && event.data.byteLength > 8) {
       const view = new Uint8Array(event.data);
-      const senderId = new TextDecoder().decode(view.slice(0, 8)).replace(/\0/g, '');
+      const senderId = new TextDecoder().decode(view.slice(0, 8)).replace(/\0/g, "");
       const payload = event.data.slice(8);
 
-      this.onMessage?.({
-        data: payload,
-        source: {
-          transport: "websocket",
-          peerId: senderId,  // Actual sender, not "ws-relay"
-          isLocalTab: false,
-          timeOffset: this.peers.get(senderId)?.timeOffset ?? 0,
-        },
-        receivedAt: performance.now(),
-      });
+      this.onRawMessage?.(senderId, payload);
       return;
     }
 
@@ -261,10 +240,10 @@ export class SignalingTransport implements Transport {
       this.reconnectAttempt = 0;
       this.setState("connected");
 
-      // Track all existing peers and fire onPeerConnect immediately (reachable via WS)
+      // Report all existing peers as discovered (remote, not local)
       for (const remotePeerId of peers) {
-        this.peers.set(remotePeerId, this.createPeerState(remotePeerId));
-        this.onPeerConnect?.(remotePeerId);
+        this.peers.set(remotePeerId, this.createPeerConnection(remotePeerId));
+        this.onPeerDiscovered?.(remotePeerId, false);
       }
 
       // Initiate WebRTC connections if enabled
@@ -277,10 +256,8 @@ export class SignalingTransport implements Transport {
       resolveConnect?.();
     } else if (msg.type === "peer-joined") {
       const { peerId } = msg;
-      // Add peer and fire onPeerConnect immediately (reachable via WS)
-      // WebRTC will be established in the background for better performance
-      this.peers.set(peerId, this.createPeerState(peerId));
-      this.onPeerConnect?.(peerId);
+      this.peers.set(peerId, this.createPeerConnection(peerId));
+      this.onPeerDiscovered?.(peerId, false);
     } else if (msg.type === "peer-left") {
       const { peerId } = msg;
       this.removePeer(peerId);
@@ -289,7 +266,7 @@ export class SignalingTransport implements Transport {
     }
   }
 
-  private createPeerState(peerId: string): PeerState {
+  private createPeerConnection(peerId: string): PeerConnection {
     return {
       id: peerId,
       rtcConnection: null,
@@ -297,7 +274,6 @@ export class SignalingTransport implements Transport {
       rtcConnected: false,
       remoteDescriptionSet: false,
       pendingCandidates: [],
-      timeOffset: 0,
       rtcTimeout: null,
     };
   }
@@ -311,7 +287,7 @@ export class SignalingTransport implements Transport {
       peer.dataChannel?.close();
       peer.rtcConnection?.close();
       this.peers.delete(peerId);
-      this.onPeerDisconnect?.(peerId);
+      this.onPeerLost?.(peerId);
     }
   }
 
@@ -340,7 +316,7 @@ export class SignalingTransport implements Transport {
     }
   }
 
-  private setupRTCConnection(peer: PeerState, isInitiator: boolean): void {
+  private setupRTCConnection(peer: PeerConnection, isInitiator: boolean): void {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     peer.rtcConnection = pc;
 
@@ -350,7 +326,6 @@ export class SignalingTransport implements Transport {
           peerId: peer.id,
           type: event.candidate.type,
           protocol: event.candidate.protocol,
-          address: event.candidate.address,
         });
         this.sendSignal("ice", peer.id, {
           candidate: event.candidate.toJSON(),
@@ -358,10 +333,6 @@ export class SignalingTransport implements Transport {
       } else {
         rtcLog.debug("ICE gathering complete", { peerId: peer.id });
       }
-    };
-
-    pc.onicegatheringstatechange = () => {
-      rtcLog.debug("ICE gathering state", { peerId: peer.id, state: pc.iceGatheringState });
     };
 
     pc.oniceconnectionstatechange = () => {
@@ -382,44 +353,24 @@ export class SignalingTransport implements Transport {
       channel.onopen = () => {
         peer.dataChannel = channel;
         peer.rtcConnected = true;
-        // onPeerConnect already fired on peer-joined/welcome (WS reachable)
-        // Clear any pending RTC timeout
         if (peer.rtcTimeout) {
           clearTimeout(peer.rtcTimeout);
           peer.rtcTimeout = null;
         }
+        rtcLog.debug("Data channel open", { peerId: peer.id });
       };
 
       channel.onclose = () => {
         if (peer.rtcConnected) {
           peer.rtcConnected = false;
-          this.onPeerDisconnect?.(peer.id);
+          rtcLog.debug("Data channel closed", { peerId: peer.id });
         }
       };
 
-      channel.onmessage = (event: MessageEvent<string | ArrayBuffer>) => {
-        let data: unknown;
+      channel.onmessage = (event: MessageEvent<ArrayBuffer>) => {
         if (event.data instanceof ArrayBuffer) {
-          data = event.data;
-        } else {
-          try {
-            data = JSON.parse(event.data);
-          } catch (err) {
-            rtcLog.debug("Failed to parse data channel message, using raw", { error: err });
-            data = event.data;
-          }
+          this.onRawMessage?.(peer.id, event.data);
         }
-
-        this.onMessage?.({
-          data,
-          source: {
-            transport: "webrtc",
-            peerId: peer.id,
-            isLocalTab: false,
-            timeOffset: peer.timeOffset,
-          },
-          receivedAt: performance.now(),
-        });
       };
     };
 
@@ -444,8 +395,9 @@ export class SignalingTransport implements Transport {
 
     let peer = this.peers.get(from);
     if (!peer) {
-      peer = this.createPeerState(from);
+      peer = this.createPeerConnection(from);
       this.peers.set(from, peer);
+      this.onPeerDiscovered?.(from, false);
     }
 
     if (type === "offer") {
@@ -487,7 +439,7 @@ export class SignalingTransport implements Transport {
     }
   }
 
-  private async processPendingCandidates(peer: PeerState): Promise<void> {
+  private async processPendingCandidates(peer: PeerConnection): Promise<void> {
     if (peer.pendingCandidates.length > 0 && peer.rtcConnection) {
       for (const candidate of peer.pendingCandidates) {
         try {
@@ -555,19 +507,25 @@ export class SignalingTransport implements Transport {
     this.myPeerId = null;
   }
 
-  broadcast(data: ArrayBuffer | string): void {
+  send(target: string | "all", data: ArrayBuffer): void {
     if (this._state !== "connected") {
       return;
     }
 
-    const isBinary = data instanceof ArrayBuffer;
+    if (target === "all") {
+      this.broadcastToAll(data);
+    } else {
+      this.sendToPeer(target, data);
+    }
+  }
+
+  private broadcastToAll(data: ArrayBuffer): void {
     let hasWsOnlyPeers = false;
 
     // Send to peers with WebRTC data channels
     for (const [, peer] of this.peers) {
       if (peer.rtcConnected && peer.dataChannel?.readyState === "open") {
-        // RTCDataChannel.send accepts both string and ArrayBuffer
-        peer.dataChannel.send(data as string & ArrayBuffer);
+        peer.dataChannel.send(data);
       } else {
         hasWsOnlyPeers = true;
       }
@@ -575,33 +533,27 @@ export class SignalingTransport implements Transport {
 
     // Send via WebSocket relay for peers without WebRTC
     if (hasWsOnlyPeers && this.ws?.readyState === WebSocket.OPEN) {
-      if (isBinary) {
-        this.ws.send(data);
-      } else {
-        this.ws.send(JSON.stringify({ type: "relay-json", data }));
-      }
+      this.ws.send(data);
     }
   }
 
-  sendTo(peerId: string, data: ArrayBuffer | string): void {
+  private sendToPeer(peerId: string, data: ArrayBuffer): void {
     const peer = this.peers.get(peerId);
 
     // Prefer WebRTC
     if (peer?.rtcConnected && peer.dataChannel?.readyState === "open") {
-      peer.dataChannel.send(data as string & ArrayBuffer);
+      peer.dataChannel.send(data);
       return;
     }
 
     // Fallback to WebSocket targeted relay
     if (this.ws?.readyState === WebSocket.OPEN) {
-      const payload = data instanceof ArrayBuffer
-        ? btoa(String.fromCharCode(...new Uint8Array(data)))
-        : btoa(data);
+      const payload = btoa(String.fromCharCode(...new Uint8Array(data)));
       this.ws.send(JSON.stringify({ type: "relay-to", to: peerId, payload }));
     }
   }
 
-  private setState(state: TransportState): void {
+  private setState(state: RouteState): void {
     if (this._state !== state) {
       this._state = state;
       this.onStateChange?.(state);

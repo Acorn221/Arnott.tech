@@ -1,10 +1,12 @@
 /**
- * BroadcastChannel transport for instant same-browser tab sync.
+ * BroadcastRoute - Local tab sync via BroadcastChannel.
+ *
  * Fastest transport (~1ms latency) but only works within same browser.
+ * Implements the simplified Route interface.
  */
 
 import { createLogger } from "@arnott/logger";
-import type { Transport, TransportState, SyncMessage } from "./types";
+import type { Route, RouteState } from "./route";
 
 const log = createLogger("sync:broadcast");
 
@@ -16,25 +18,25 @@ function generateTabId(): string {
 /** Message format sent over BroadcastChannel */
 interface BroadcastMessage {
   sourceTabId: string;
-  payload: ArrayBuffer | string;
+  payload: ArrayBuffer;
   timestamp: number;
 }
 
-export class BroadcastTransport implements Transport {
-  readonly name = "broadcast" as const;
+export class BroadcastRoute implements Route {
+  readonly type = "broadcast" as const;
 
   private channel: BroadcastChannel | null = null;
   private readonly tabId = generateTabId();
-  private _state: TransportState = "disconnected";
+  private _state: RouteState = "disconnected";
   private roomId: string | null = null;
 
-  // Callbacks
-  onMessage: ((message: SyncMessage) => void) | null = null;
-  onStateChange: ((state: TransportState) => void) | null = null;
-  onPeerConnect: ((peerId: string) => void) | null = null;
-  onPeerDisconnect: ((peerId: string) => void) | null = null;
+  // --- Callbacks ---
+  onRawMessage: ((peerId: string, data: ArrayBuffer) => void) | null = null;
+  onPeerDiscovered: ((peerId: string, isLocal: boolean) => void) | null = null;
+  onPeerLost: ((peerId: string) => void) | null = null;
+  onStateChange: ((state: RouteState) => void) | null = null;
 
-  get state(): TransportState {
+  get state(): RouteState {
     return this._state;
   }
 
@@ -42,8 +44,7 @@ export class BroadcastTransport implements Transport {
     return typeof BroadcastChannel !== "undefined";
   }
 
-  /** Get this tab's unique ID */
-  getTabId(): string {
+  getLocalId(): string {
     return this.tabId;
   }
 
@@ -53,10 +54,10 @@ export class BroadcastTransport implements Transport {
     }
 
     if (this._state === "connected" && this.roomId === roomId) {
-      return; // Already connected to this room
+      return;
     }
 
-    // Disconnect from previous room if any
+    // Disconnect from previous room
     await this.disconnect();
 
     this.roomId = roomId;
@@ -68,35 +69,25 @@ export class BroadcastTransport implements Transport {
 
     this.channel.onmessage = (event: MessageEvent<BroadcastMessage>) => {
       const msg = event.data;
-      const payload = msg.payload;
-      log.debug("Received message", {
-        from: msg.sourceTabId,
-        myTabId: this.tabId,
-        payloadType: typeof payload,
-        isArrayBuffer: payload instanceof ArrayBuffer,
-        constructorName: payload?.constructor?.name,
-      });
 
       // Skip messages from self
       if (msg.sourceTabId === this.tabId) {
-        log.debug("Skipping self message");
         return;
       }
 
-      this.onMessage?.({
-        data: msg.payload,
-        source: {
-          transport: "broadcast",
-          peerId: msg.sourceTabId,
-          isLocalTab: true,
-          timeOffset: 0, // Same device = no clock skew
-        },
-        receivedAt: performance.now(),
-      });
+      log.debug("Received message", { from: msg.sourceTabId });
+
+      // Report peer discovery (local tabs are always "local")
+      // Note: BroadcastChannel doesn't have explicit connect/disconnect
+      // so we discover peers when we first hear from them
+      this.onPeerDiscovered?.(msg.sourceTabId, true);
+
+      // Report raw message
+      this.onRawMessage?.(msg.sourceTabId, msg.payload);
     };
 
     this.channel.onmessageerror = () => {
-      // Message parsing failed - ignore
+      log.debug("Message parse error");
     };
 
     this.setState("connected");
@@ -111,23 +102,25 @@ export class BroadcastTransport implements Transport {
     this.setState("disconnected");
   }
 
-  broadcast(data: ArrayBuffer | string): void {
+  send(target: string | "all", data: ArrayBuffer): void {
     if (this._state !== "connected" || !this.channel) {
-      log.debug("Broadcast skipped - not connected", { state: this._state, hasChannel: !!this.channel });
+      log.debug("Send skipped - not connected", { state: this._state });
       return;
     }
 
+    // BroadcastChannel is always broadcast - can't target specific tabs
+    // sendTo is handled by coordinator checking if target is local
     const message: BroadcastMessage = {
       sourceTabId: this.tabId,
       payload: data,
       timestamp: performance.now(),
     };
 
-    log.debug("Broadcasting", { tabId: this.tabId, payloadType: typeof data, isArrayBuffer: data instanceof ArrayBuffer });
+    log.debug("Sending", { tabId: this.tabId, target });
     this.channel.postMessage(message);
   }
 
-  private setState(state: TransportState): void {
+  private setState(state: RouteState): void {
     if (this._state !== state) {
       this._state = state;
       this.onStateChange?.(state);
