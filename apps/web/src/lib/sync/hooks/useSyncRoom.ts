@@ -53,6 +53,21 @@ export interface UseSyncRoomOptions {
   onPeerJoin?: (peerId: string, isLocal: boolean) => void;
 }
 
+/** Remote transport type */
+export type RemoteTransport = "webrtc" | "websocket" | null;
+
+/** Information about connected peers */
+export interface PeerInfo {
+  /** Total number of connected peers */
+  total: number;
+  /** Number of local peers (same browser, via BroadcastChannel) */
+  local: number;
+  /** Number of remote peers (different browser/device, via WebRTC/WebSocket) */
+  remote: number;
+  /** Transport being used for remote peers (null if no remote peers) */
+  remoteTransport: RemoteTransport;
+}
+
 export interface UseSyncRoomReturn {
   /** Connect to the room */
   connect: () => Promise<void>;
@@ -70,6 +85,8 @@ export interface UseSyncRoomReturn {
   connectionState: CoordinatorState;
   /** Whether this tab is the leader (owns remote connections) */
   isLeader: boolean;
+  /** Information about connected peers */
+  peerInfo: PeerInfo;
 }
 
 export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
@@ -79,14 +96,38 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] =
     useState<CoordinatorState>("disconnected");
+  const [peerInfo, setPeerInfo] = useState<PeerInfo>({ total: 0, local: 0, remote: 0, remoteTransport: null });
 
   // Refs
   const coordinatorRef = useRef<SyncCoordinator | null>(null);
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
-  // Update test instrumentation
-  const updateTestState = useCallback((coordinator: SyncCoordinator) => {
+  // Compute peer info from coordinator
+  const computePeerInfo = useCallback((coordinator: SyncCoordinator): PeerInfo => {
+    const peers = coordinator.peers;
+    const local = peers.filter(p => p.isLocal).length;
+    const remote = peers.filter(p => !p.isLocal).length;
+
+    // Determine remote transport type
+    let remoteTransport: RemoteTransport = null;
+    if (remote > 0) {
+      // Check if any peer has WebRTC working
+      remoteTransport = coordinator.hasWebRTCConnection() ? "webrtc" : "websocket";
+    } else if (coordinator.hasSignalingConnection()) {
+      // Connected to signaling but no remote peers yet
+      remoteTransport = coordinator.hasWebRTCConnection() ? "webrtc" : "websocket";
+    }
+
+    return { total: peers.length, local, remote, remoteTransport };
+  }, []);
+
+  // Update test instrumentation and peer info
+  const updateState = useCallback((coordinator: SyncCoordinator) => {
+    // Update peer info
+    setPeerInfo(computePeerInfo(coordinator));
+
+    // Update test instrumentation
     if (typeof window !== "undefined") {
       window.__sync_state__ = {
         isConnected: coordinator.isConnected,
@@ -95,7 +136,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         localId: coordinator.getLocalId(),
       };
     }
-  }, []);
+  }, [computePeerInfo]);
 
   // Initialize coordinator
   const getCoordinator = useCallback((): SyncCoordinator => {
@@ -133,18 +174,23 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         log.debug("State changed in hook", { state });
         setConnectionState(state);
         setIsConnected(state === "connected");
-        updateTestState(coordinatorRef.current!);
+        updateState(coordinatorRef.current!);
         onConnectionStateChange?.(state);
       };
 
       coordinatorRef.current.onPeerJoin = (peerId, isLocal) => {
         log.debug("Peer joined", { peerId, isLocal });
-        updateTestState(coordinatorRef.current!);
+        updateState(coordinatorRef.current!);
         optionsRef.current.onPeerJoin?.(peerId, isLocal);
+      };
+
+      coordinatorRef.current.onTransportChange = () => {
+        log.debug("Transport changed (WebRTC status update)");
+        updateState(coordinatorRef.current!);
       };
     }
     return coordinatorRef.current;
-  }, [onConnectionStateChange, updateTestState]);
+  }, [onConnectionStateChange, updateState]);
 
   // Connect
   const connect = useCallback(async () => {
@@ -216,5 +262,6 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
     isConnected,
     connectionState,
     isLeader: coordinatorRef.current?.isLeader ?? false,
+    peerInfo,
   };
 }

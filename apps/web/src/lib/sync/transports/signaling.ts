@@ -118,6 +118,8 @@ export class SignalingTransport implements ITransport {
   onPeerReachable: ((peerId: string, isLocal: boolean) => void) | null = null;
   onPeerUnreachable: ((peerId: string) => void) | null = null;
   onStateChange: ((state: TransportState) => void) | null = null;
+  /** Called when WebRTC status changes (connects or disconnects) */
+  onWebRTCChange: (() => void) | null = null;
 
   constructor(options: SignalingTransportOptions = {}) {
     this.options = {
@@ -256,9 +258,15 @@ export class SignalingTransport implements ITransport {
       }
 
       // Initiate WebRTC connections if enabled
-      if (this.options.enableWebRTC) {
+      // Use peer ID comparison as tie-breaker - lower ID always initiates
+      if (this.options.enableWebRTC && this.myPeerId) {
         for (const remotePeerId of peers) {
-          await this.initiateWebRTC(remotePeerId);
+          if (this.myPeerId < remotePeerId) {
+            log.debug("Initiating WebRTC (we have lower ID)", { myId: this.myPeerId, remotePeerId });
+            await this.initiateWebRTC(remotePeerId);
+          } else {
+            log.debug("Waiting for WebRTC initiation (they have lower ID)", { myId: this.myPeerId, remotePeerId });
+          }
         }
       }
 
@@ -268,6 +276,14 @@ export class SignalingTransport implements ITransport {
       log.debug("Peer joined", { peerId });
       this.peers.set(peerId, this.createPeerConnection(peerId));
       this.onPeerReachable?.(peerId, false);
+
+      // Also initiate WebRTC to the new peer
+      // Use peer ID comparison as tie-breaker to avoid both sides sending offers
+      // Lower peer ID initiates the connection
+      if (this.options.enableWebRTC && this.myPeerId && this.myPeerId < peerId) {
+        log.debug("Initiating WebRTC to new peer (we have lower ID)", { myId: this.myPeerId, peerId });
+        void this.initiateWebRTC(peerId);
+      }
     } else if (msg.type === "peer-left") {
       const { peerId } = msg;
       this.removePeer(peerId);
@@ -346,16 +362,32 @@ export class SignalingTransport implements ITransport {
     };
 
     pc.oniceconnectionstatechange = () => {
-      rtcLog.debug("ICE connection state", { peerId: peer.id, state: pc.iceConnectionState });
-      if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+      const state = pc.iceConnectionState;
+      if (state === "connected" || state === "completed") {
+        rtcLog.debug("ICE connected successfully!", { peerId: peer.id, state });
+      } else if (state === "failed") {
+        rtcLog.debug("ICE connection FAILED - falling back to WebSocket", { peerId: peer.id, state });
         peer.rtcConnected = false;
+      } else if (state === "disconnected") {
+        rtcLog.debug("ICE disconnected", { peerId: peer.id, state });
+        peer.rtcConnected = false;
+      } else {
+        rtcLog.debug("ICE state change", { peerId: peer.id, state });
       }
     };
 
     pc.onconnectionstatechange = () => {
-      rtcLog.debug("Connection state", { peerId: peer.id, state: pc.connectionState });
-      if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+      const state = pc.connectionState;
+      if (state === "connected") {
+        rtcLog.debug("WebRTC connection established!", { peerId: peer.id });
+      } else if (state === "failed") {
+        rtcLog.debug("WebRTC connection FAILED", { peerId: peer.id });
         peer.rtcConnected = false;
+      } else if (state === "disconnected") {
+        rtcLog.debug("WebRTC disconnected", { peerId: peer.id });
+        peer.rtcConnected = false;
+      } else {
+        rtcLog.debug("WebRTC state change", { peerId: peer.id, state });
       }
     };
 
@@ -367,14 +399,22 @@ export class SignalingTransport implements ITransport {
           clearTimeout(peer.rtcTimeout);
           peer.rtcTimeout = null;
         }
-        rtcLog.debug("Data channel open", { peerId: peer.id });
+        rtcLog.debug("Data channel OPEN - WebRTC P2P active!", { peerId: peer.id, label: channel.label });
+        // Notify that WebRTC status changed
+        this.onWebRTCChange?.();
       };
 
       channel.onclose = () => {
         if (peer.rtcConnected) {
           peer.rtcConnected = false;
           rtcLog.debug("Data channel closed", { peerId: peer.id });
+          // Notify that WebRTC status changed
+          this.onWebRTCChange?.();
         }
+      };
+
+      channel.onerror = (event) => {
+        rtcLog.debug("Data channel error", { peerId: peer.id, error: event });
       };
 
       channel.onmessage = (event: MessageEvent<ArrayBuffer>) => {

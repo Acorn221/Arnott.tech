@@ -88,6 +88,8 @@ export class SyncCoordinator {
   onStateChange: ((state: CoordinatorState) => void) | null = null;
   /** New peer joined (for welcome effects, etc.) */
   onPeerJoin: ((peerId: string, isLocal: boolean) => void) | null = null;
+  /** Transport status changed (e.g., WebRTC connected) */
+  onTransportChange: (() => void) | null = null;
 
   constructor(options: SyncCoordinatorOptions = {}) {
     this.options = {
@@ -122,6 +124,29 @@ export class SyncCoordinator {
 
   getLocalId(): string {
     return this.broadcastTransport?.getLocalId() ?? "";
+  }
+
+  /**
+   * Check if any remote peer has a working WebRTC connection.
+   * Returns true if at least one peer is connected via WebRTC P2P.
+   */
+  hasWebRTCConnection(): boolean {
+    if (!this.signalingTransport) return false;
+
+    // Check if any remote peer has WebRTC working
+    for (const peer of this.registry.getAllPeers()) {
+      if (!peer.isLocal && this.signalingTransport.hasPeerRTC(peer.id)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Check if signaling transport is connected (WebSocket to server).
+   */
+  hasSignalingConnection(): boolean {
+    return this.signalingTransport?.state === "connected";
   }
 
   // --- Connection lifecycle ---
@@ -312,6 +337,13 @@ export class SyncCoordinator {
     transport.onStateChange = (state) => {
       this.handleTransportStateChange(transportType, state);
     };
+
+    // Wire WebRTC change callback for SignalingTransport
+    if (transport.type === "webrtc" && "onWebRTCChange" in transport) {
+      (transport as SignalingTransport).onWebRTCChange = () => {
+        this.onTransportChange?.();
+      };
+    }
   }
 
   // --- Incoming message handling ---

@@ -128,6 +128,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     broadcast,
     isConnected,
     connectionState,
+    peerInfo,
   } = useSyncRoom({
     roomId: "spinner",
     autoConnect: true,
@@ -226,6 +227,15 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-500" />
               Synced
+              {peerInfo.total > 0 && (
+                <>
+                  {" - "}
+                  {peerInfo.total} other{peerInfo.total !== 1 ? "s" : ""}
+                  {peerInfo.remoteTransport && (
+                    <> - {peerInfo.remoteTransport === "webrtc" ? "WebRTC" : "WebSocket"}</>
+                  )}
+                </>
+              )}
             </span>
           )}
         </div>
