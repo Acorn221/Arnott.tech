@@ -174,6 +174,9 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // isSynced = connected to room
   const isSynced = connectionState === "connected";
 
+  // Debug logging
+  console.log("[Spinner] State:", { isConnected, connectionState, isSynced });
+
   return (
     <div {...props}>
       <div className="flex w-full justify-center align-middle gap-4 items-center">

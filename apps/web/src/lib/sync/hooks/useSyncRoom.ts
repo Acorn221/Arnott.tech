@@ -13,7 +13,10 @@
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
+import { createLogger } from "@arnott/logger";
 import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
+
+const log = createLogger("sync:hook");
 
 export interface UseSyncRoomOptions {
   /** Room ID to join */
@@ -73,6 +76,7 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
       };
 
       coordinatorRef.current.onStateChange = (state) => {
+        log.debug("State changed in hook", { state });
         setConnectionState(state);
         setIsConnected(state === "connected");
         onConnectionStateChange?.(state);
@@ -91,8 +95,10 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
 
   // Connect
   const connect = useCallback(async () => {
+    log.debug("Connecting", { roomId });
     const coordinator = getCoordinator();
     await coordinator.connect(roomId);
+    log.debug("Connected", { roomId, state: coordinator.state });
   }, [getCoordinator, roomId]);
 
   // Disconnect

@@ -18,7 +18,7 @@ function generateTabId(): string {
 /** Message format sent over BroadcastChannel */
 interface BroadcastMessage {
   sourceTabId: string;
-  payload: ArrayBuffer;
+  payload: Uint8Array;  // Use Uint8Array for reliable structured clone
   timestamp: number;
 }
 
@@ -67,23 +67,31 @@ export class BroadcastRoute implements Route {
     log.debug("Opening channel", { channelName, tabId: this.tabId });
     this.channel = new BroadcastChannel(channelName);
 
-    this.channel.onmessage = (event: MessageEvent<BroadcastMessage>) => {
-      const msg = event.data;
+    this.channel.onmessage = (event: MessageEvent) => {
+      const msg = event.data as BroadcastMessage;
+
+      // Validate message format
+      if (!msg || typeof msg.sourceTabId !== "string" || !msg.payload) {
+        log.debug("Invalid message format", { msg });
+        return;
+      }
 
       // Skip messages from self
       if (msg.sourceTabId === this.tabId) {
         return;
       }
 
-      log.debug("Received message", { from: msg.sourceTabId });
+      log.debug("Received message", { from: msg.sourceTabId, payloadLength: msg.payload.byteLength });
+
+      // Convert Uint8Array back to ArrayBuffer
+      // Note: payload.buffer might be a SharedArrayBuffer, so we create a new ArrayBuffer
+      const data = new Uint8Array(msg.payload).buffer;
 
       // Report peer discovery (local tabs are always "local")
-      // Note: BroadcastChannel doesn't have explicit connect/disconnect
-      // so we discover peers when we first hear from them
       this.onPeerDiscovered?.(msg.sourceTabId, true);
 
       // Report raw message
-      this.onRawMessage?.(msg.sourceTabId, msg.payload);
+      this.onRawMessage?.(msg.sourceTabId, data);
     };
 
     this.channel.onmessageerror = () => {
@@ -109,14 +117,14 @@ export class BroadcastRoute implements Route {
     }
 
     // BroadcastChannel is always broadcast - can't target specific tabs
-    // sendTo is handled by coordinator checking if target is local
+    // Convert ArrayBuffer to Uint8Array for reliable structured clone
     const message: BroadcastMessage = {
       sourceTabId: this.tabId,
-      payload: data,
+      payload: new Uint8Array(data),
       timestamp: performance.now(),
     };
 
-    log.debug("Sending", { tabId: this.tabId, target });
+    log.debug("Sending", { tabId: this.tabId, target, payloadLength: message.payload.byteLength });
     this.channel.postMessage(message);
   }
 

@@ -25,6 +25,12 @@ interface TimeSyncMessage {
   localTime: number;
 }
 
+/** Announce message for peer discovery */
+interface AnnounceMessage {
+  type: "announce";
+  peerId: string;
+}
+
 /** Coordinator state */
 export type CoordinatorState = "disconnected" | "connecting" | "connected" | "reconnecting";
 
@@ -112,7 +118,11 @@ export class SyncCoordinator {
     };
 
     // Wire up registry events
-    this.registry.onPeerJoin = (peer) => this.onPeerJoin?.(peer.id);
+    // Defer onPeerJoin to next microtask so time-sync is sent first
+    // (sendTimeSync is called in wireRoute immediately after addRoute)
+    this.registry.onPeerJoin = (peer) => {
+      queueMicrotask(() => this.onPeerJoin?.(peer.id));
+    };
     this.registry.onPeerLeave = (peerId) => this.onPeerLeave?.(peerId);
   }
 
@@ -153,7 +163,14 @@ export class SyncCoordinator {
         await this.broadcastRoute.connect(roomId);
       }
 
-      // 2. Start leader election
+      // Connected for local tab sync immediately
+      // (leader election determines WHO connects to signaling, but local sync works now)
+      this.setState("connected");
+
+      // Announce ourselves so other tabs know we exist and can send their state
+      this.broadcastAnnounce();
+
+      // 2. Start leader election (async - doesn't block connected state)
       const tabId = this.broadcastRoute?.getLocalId() ?? `tab-${Date.now()}`;
       this.leaderElection = new LeaderElection({ roomId, tabId });
 
@@ -171,9 +188,8 @@ export class SyncCoordinator {
         log.debug("Leader lost, will attempt takeover");
       };
 
-      await this.leaderElection.start();
-
-      this.setState("connected");
+      // Don't await - let leader election happen in background
+      void this.leaderElection.start();
     } catch (err) {
       log.error("Failed to connect", { error: err });
       this.setState("disconnected");
@@ -301,10 +317,10 @@ export class SyncCoordinator {
     route.onPeerDiscovered = (peerId, peerIsLocal) => {
       this.registry.addRoute(peerId, routeType, peerIsLocal);
 
-      // Send time-sync to new remote peers (leader only)
-      if (!peerIsLocal && this.isLeader) {
-        this.sendTimeSync(peerId);
-      }
+      // Send time-sync to new peers
+      // Local tabs need time-sync too because each has different performance.now() origin
+      // (e.g., if Tab A has been open 5 minutes and Tab B just refreshed)
+      this.sendTimeSync(peerId);
     };
 
     route.onPeerLost = (peerId) => {
@@ -321,9 +337,12 @@ export class SyncCoordinator {
     data: ArrayBuffer,
     isLocal: boolean
   ): void {
+    log.debug("handleRawMessage", { routeType, peerId, isLocal, dataLength: data.byteLength });
+
     // Deduplication - same message may arrive via multiple paths
     const msgId = getMessageId(data);
     if (this.messageDedup.has(msgId)) {
+      log.debug("Message deduplicated", { msgId });
       return;
     }
     this.messageDedup.set(msgId, performance.now());
@@ -331,10 +350,19 @@ export class SyncCoordinator {
     // Update peer registry
     this.registry.touch(peerId);
 
-    // Check if this is a time-sync message (JSON)
-    if (this.isTimeSyncMessage(data)) {
-      this.handleTimeSync(peerId, data);
-      return; // Don't pass time-sync to app
+    // Check if this is an internal message (time-sync or announce)
+    if (this.isInternalMessage(data)) {
+      this.handleInternalMessage(peerId, data);
+      return; // Don't pass internal messages to app
+    }
+
+    // If we receive a message from a peer with no time offset established,
+    // send time-sync immediately to establish clock sync
+    // (applies to both local and remote peers - each tab has different performance.now() origin)
+    const offset = this.registry.getTimeOffset(peerId);
+    if (offset === 0) {
+      log.debug("No time offset for peer, sending time-sync", { peerId });
+      this.sendTimeSync(peerId);
     }
 
     // Relay if needed
@@ -342,40 +370,85 @@ export class SyncCoordinator {
 
     // Notify app
     const timeOffset = this.registry.getTimeOffset(peerId);
+    log.debug("Notifying app", { peerId, timeOffset, hasCallback: !!this.onMessage });
     this.onMessage?.(data, peerId, timeOffset);
   }
 
   /**
-   * Check if data is a time-sync message.
+   * Check if data is an internal message (time-sync or announce).
    */
-  private isTimeSyncMessage(data: ArrayBuffer): boolean {
-    // Time-sync messages are small JSON
+  private isInternalMessage(data: ArrayBuffer): boolean {
     if (data.byteLength > 100) return false;
 
     try {
       const text = new TextDecoder().decode(data);
       const msg = JSON.parse(text);
-      return msg?.type === "time-sync";
+      return msg?.type === "time-sync" || msg?.type === "announce";
     } catch {
       return false;
     }
   }
 
   /**
-   * Handle time-sync message.
+   * Handle internal messages (time-sync, announce).
    */
-  private handleTimeSync(peerId: string, data: ArrayBuffer): void {
+  private handleInternalMessage(peerId: string, data: ArrayBuffer): void {
     try {
       const text = new TextDecoder().decode(data);
-      const msg = JSON.parse(text) as TimeSyncMessage;
+      const msg = JSON.parse(text);
 
       if (msg.type === "time-sync") {
-        const offset = performance.now() - msg.localTime;
-        this.registry.setTimeOffset(peerId, offset);
-        log.debug("Time sync received", { peerId, offset });
+        this.handleTimeSyncMessage(peerId, msg as TimeSyncMessage);
+      } else if (msg.type === "announce") {
+        this.handleAnnounce(peerId);
       }
     } catch (err) {
-      log.debug("Failed to parse time-sync", { error: err });
+      log.debug("Failed to parse internal message", { error: err });
+    }
+  }
+
+  /**
+   * Handle announce message - a new peer has joined.
+   */
+  private handleAnnounce(peerId: string): void {
+    log.debug("Peer announced", { peerId });
+    // The peer is already discovered via onPeerDiscovered
+    // This just ensures onPeerJoin is called so app can send state
+  }
+
+  /**
+   * Broadcast announce to let other tabs know we exist.
+   */
+  private broadcastAnnounce(): void {
+    if (!this.broadcastRoute || this.broadcastRoute.state !== "connected") {
+      return;
+    }
+
+    const myId = this.broadcastRoute.getLocalId();
+    const msg: AnnounceMessage = {
+      type: "announce",
+      peerId: myId,
+    };
+
+    const data = new TextEncoder().encode(JSON.stringify(msg));
+    this.broadcastRoute.send("all", data.buffer as ArrayBuffer);
+    log.debug("Broadcast announce", { peerId: myId });
+  }
+
+  /**
+   * Handle time-sync message (already parsed).
+   */
+  private handleTimeSyncMessage(peerId: string, msg: TimeSyncMessage): void {
+    const oldOffset = this.registry.getTimeOffset(peerId);
+    const offset = performance.now() - msg.localTime;
+    this.registry.setTimeOffset(peerId, offset);
+    log.debug("Time sync received", { peerId, offset });
+
+    // Respond with our own time-sync if we haven't sent one yet
+    // (detected by their offset for us being 0, meaning we need to send ours)
+    // All tabs need to do bidirectional time-sync for local tab communication
+    if (oldOffset === 0) {
+      this.sendTimeSync(peerId);
     }
   }
 
@@ -417,6 +490,7 @@ export class SyncCoordinator {
 
   private setState(state: CoordinatorState): void {
     if (this._state !== state) {
+      log.debug("State change", { from: this._state, to: state, hasCallback: !!this.onStateChange });
       this._state = state;
       this.onStateChange?.(state);
     }

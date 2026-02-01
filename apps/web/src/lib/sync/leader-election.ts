@@ -67,8 +67,8 @@ export class LeaderElection {
     this.roomId = options.roomId;
     this.tabId = options.tabId ?? `tab-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     this.tabTimestamp = Date.now();
-    this.heartbeatInterval = options.heartbeatInterval ?? 500;
-    this.leaderTimeoutMs = options.leaderTimeout ?? 2000;
+    this.heartbeatInterval = options.heartbeatInterval ?? 100;
+    this.leaderTimeoutMs = options.leaderTimeout ?? 500;
   }
 
   /** Whether this tab is the leader */
@@ -150,12 +150,14 @@ export class LeaderElection {
     return new Promise((resolve) => {
       let resolved = false;
 
+      // Wait briefly for existing leader heartbeat
+      // Short timeout since heartbeats are sent every 500ms with immediate first beat
       const timeout = setTimeout(() => {
         if (!resolved) {
           resolved = true;
           resolve(false); // No leader found
         }
-      }, 500);
+      }, 150);
 
       const originalHandler = this.channel!.onmessage;
       this.channel!.onmessage = (e: MessageEvent<ElectionMessage>) => {
