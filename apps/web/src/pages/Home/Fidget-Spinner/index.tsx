@@ -9,8 +9,7 @@ import {
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
-import { useWebRTCRoom } from "@/hooks/useWebRTCRoom";
-import { useBroadcastChannel } from "@/lib/sync/useBroadcastChannel";
+import { useSyncRoom, type SyncMessage } from "@/lib/sync";
 import {
   encodeSpinnerEvent,
   decodeSpinnerEvent,
@@ -20,55 +19,41 @@ import {
 } from "./spinner-codec";
 
 // JSON message types (binary used for spinner events)
-type SpinnerMessage =
+type SpinnerJsonMessage =
   | { type: "sync"; event: SpinnerEvent }
   | { type: "time-sync"; localTime: number };
-
-// BroadcastChannel message type for local tab sync
-interface LocalTabMessage {
-  event: SpinnerEvent;
-  sourceTabId: string;
-}
-
-// Generate unique tab ID
-const TAB_ID = `tab-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-// Disable inter-tab sync in dev for easier testing
-const ENABLE_LOCAL_TAB_SYNC = !(import.meta.env.VITE_PUBLIC_DEV == "true");
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   const [spinCount, setSpinCount] = useState(0);
-  const timeOffsetsRef = useRef<Map<string, number>>(new Map());
 
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
 
-  // Create refs for WebRTC methods to avoid circular deps
-  const webrtcRef = useRef<{
-    sendTo: (peerId: string, data: unknown) => void;
-    broadcast: (data: unknown) => void;
-  } | null>(null);
+  // Refs for sendTo (to avoid circular dependency with handlePeerConnect)
+  const sendToRef = useRef<((peerId: string, data: ArrayBuffer | string) => void) | null>(null);
+  const setTimeOffsetRef = useRef<((peerId: string, offset: number) => void) | null>(null);
 
-  // Handle incoming CRDT messages
-  const handleMessage = useCallback((peerId: string, data: unknown) => {
-    // Binary spinner events (fast path)
+  // Handle incoming messages from any transport
+  const handleMessage = useCallback((msg: SyncMessage) => {
+    const { data, source } = msg;
+
+    // Binary = spinner event (fast path)
     if (data instanceof ArrayBuffer) {
       const event = decodeSpinnerEvent(data);
       if (event) {
-        // Apply time offset
-        const offset = timeOffsetsRef.current.get(peerId) ?? 0;
+        // Time offset is already in source.timeOffset
         const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
           event,
-          offset,
+          source.timeOffset,
         );
 
         if (
           spinnerConflictResolver.shouldReplace(
             currentEventRef.current,
             adjustedEvent,
-            offset,
+            source.timeOffset,
           )
         ) {
           currentEventRef.current = adjustedEvent;
@@ -78,25 +63,25 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
 
     // JSON messages (time-sync, sync)
-    const msg = data as SpinnerMessage;
+    const jsonMsg = data as SpinnerJsonMessage;
 
-    if (msg.type === "time-sync") {
-      const offset = performance.now() - msg.localTime;
-      timeOffsetsRef.current.set(peerId, offset);
+    if (jsonMsg.type === "time-sync") {
+      // Calculate and store time offset for this peer
+      const offset = performance.now() - jsonMsg.localTime;
+      setTimeOffsetRef.current?.(source.peerId, offset);
       return;
     }
 
-    if (msg.type === "sync" && msg.event) {
-      const offset = timeOffsetsRef.current.get(peerId) ?? 0;
+    if (jsonMsg.type === "sync" && jsonMsg.event) {
       const adjustedEvent = spinnerConflictResolver.adjustTimestamp(
-        msg.event,
-        offset,
+        jsonMsg.event,
+        source.timeOffset,
       );
       if (
         spinnerConflictResolver.shouldReplace(
           currentEventRef.current,
           adjustedEvent,
-          offset,
+          source.timeOffset,
         )
       ) {
         currentEventRef.current = adjustedEvent;
@@ -107,71 +92,53 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Handle new peer connections - exchange time sync and current state
   const handlePeerConnect = useCallback((peerId: string) => {
     // Send time sync for timestamp alignment
-    webrtcRef.current?.sendTo(peerId, {
+    const timeSyncMsg: SpinnerJsonMessage = {
       type: "time-sync",
       localTime: performance.now(),
-    } as SpinnerMessage);
+    };
+    sendToRef.current?.(peerId, JSON.stringify(timeSyncMsg));
 
-    // Send current state if we have any - conflict resolver will pick the winner
+    // Send current state if we have any
     const currentEvent = currentEventRef.current;
     if (currentEvent) {
-      webrtcRef.current?.sendTo(peerId, {
+      const syncMsg: SpinnerJsonMessage = {
         type: "sync",
         event: currentEvent,
-      } as SpinnerMessage);
+      };
+      sendToRef.current?.(peerId, JSON.stringify(syncMsg));
     }
   }, []);
 
-  const { broadcast, sendTo, isConnected, peerCount, connectionState } =
-    useWebRTCRoom({
-      roomId: "spinner",
-      autoConnect: true,
-      autoReconnect: true,
-      onMessage: handleMessage,
-      onPeerConnect: handlePeerConnect,
-    });
-
-  // Store webrtc methods in ref (sync, not useEffect, to avoid race condition)
-  webrtcRef.current = { sendTo, broadcast };
-
-  // Handle local tab messages (via BroadcastChannel)
-  const handleLocalTabMessage = useCallback((data: LocalTabMessage) => {
-    // Ignore messages from self
-    if (data.sourceTabId === TAB_ID) {
-      return;
-    }
-
-    const event = data.event;
-    // No time offset needed for same-device tabs
-    if (
-      spinnerConflictResolver.shouldReplace(currentEventRef.current, event, 0)
-    ) {
-      currentEventRef.current = event;
-    }
-  }, []);
-
-  // BroadcastChannel for instant same-browser tab sync
-  const { broadcast: localBroadcast } = useBroadcastChannel<LocalTabMessage>({
-    channelName: "spinner-sync",
-    onMessage: handleLocalTabMessage,
-    enabled: ENABLE_LOCAL_TAB_SYNC,
+  const {
+    broadcast,
+    sendTo,
+    isConnected,
+    peerCount,
+    connectionState,
+    setTimeOffset,
+  } = useSyncRoom({
+    roomId: "spinner",
+    autoConnect: true,
+    autoReconnect: true,
+    onMessage: handleMessage,
+    onPeerConnect: handlePeerConnect,
   });
 
-  // Emit CRDT events to all peers (binary encoded) and local tabs
+  // Store refs for use in callbacks
+  sendToRef.current = sendTo;
+  setTimeOffsetRef.current = setTimeOffset;
+
+  // Emit CRDT events to all peers (binary encoded)
   const handleEventEmit = useCallback(
     (event: SpinnerEvent) => {
       currentEventRef.current = event;
 
-      // 1. Broadcast to other tabs (instant, ~1ms)
-      localBroadcast({ event, sourceTabId: TAB_ID });
-
-      // 2. Broadcast to peers (cross-device)
-      // Hook internally handles transport selection (WebRTC or WebSocket fallback)
-      if (isConnected && peerCount > 0) {
+      // Broadcast to all peers (transport manager handles local tabs + remote)
+      if (isConnected) {
         broadcast(encodeSpinnerEvent(event));
       }
     },
-    [isConnected, peerCount, broadcast, localBroadcast],
+    [isConnected, broadcast],
   );
 
   // Compute state from current event
