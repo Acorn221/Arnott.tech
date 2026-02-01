@@ -1,16 +1,42 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import { type FC, useRef, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { type GltfMaterialKey } from "../TechStackSlotMachine/materials";
 
 interface SpinnerModelProps {
   isXray: boolean;
 }
 
-const createMaterials = () => ({
+/** Material keys from the fidget spinner GLTF model (based on vertex colors) */
+type SpinnerMaterialKey =
+  | "0.000000_0.000000_0.000000_0.000000_0.000000" // Amoungi + Text
+  | "0.647059_0.647059_0.647059_0.000000_0.000000" // Bearing casing
+  | "0.000000_0.000000_1.000000_0.000000_0.000000" // Bearing Seal
+  | "1.000000_0.000000_0.000000_0.000000_0.000000"; // Main body
+
+type SpinnerMaterialMap = Record<SpinnerMaterialKey, THREE.MeshPhysicalMaterial>;
+
+const isSpinnerMaterialKey = (
+  key: string,
+  materials: SpinnerMaterialMap,
+): key is SpinnerMaterialKey => key in materials;
+
+/** Safely extracts material name from a mesh (handles single material only) */
+const getMaterialName = (object: THREE.Object3D): string | null => {
+  if (!(object instanceof THREE.Mesh)) return null;
+  const material: unknown = object.material;
+  if (
+    material &&
+    typeof material === "object" &&
+    "name" in material &&
+    typeof material.name === "string"
+  ) {
+    return material.name;
+  }
+  return null;
+};
+
+const createMaterials = (): SpinnerMaterialMap => ({
   // Amoungi + Text
   "0.000000_0.000000_0.000000_0.000000_0.000000":
     new THREE.MeshPhysicalMaterial({
@@ -56,12 +82,9 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
     materials.current = customMaterials;
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
-        object.userData.materialKey = object.material.name as GltfMaterialKey;
-        const materialKey = object.material.name as GltfMaterialKey;
-        // @ts-expect-error - materialKey is fine
-        if (customMaterials[materialKey]) {
-          // @ts-expect-error - materialKey is fine
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const materialKey = getMaterialName(object);
+        if (materialKey && isSpinnerMaterialKey(materialKey, customMaterials)) {
+          object.userData.materialKey = materialKey;
           object.material = customMaterials[materialKey];
           object.castShadow = true;
           object.receiveShadow = true;
@@ -82,12 +105,12 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
             opacity: 0.7,
           });
         } else {
-          const { materialKey } = object.userData;
-          // @ts-expect-error - materialKey is fine
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const originalMaterial = materials.current[materialKey];
-          if (originalMaterial) {
-            object.material = originalMaterial as THREE.MeshPhysicalMaterial;
+          const materialKey: unknown = object.userData.materialKey;
+          if (
+            typeof materialKey === "string" &&
+            isSpinnerMaterialKey(materialKey, materials.current)
+          ) {
+            object.material = materials.current[materialKey];
             object.castShadow = true;
             object.receiveShadow = true;
           }
