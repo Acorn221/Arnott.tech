@@ -13,6 +13,31 @@ import { useRef, useCallback, useEffect, useState } from "react";
 import { createLogger } from "@arnott/logger";
 import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
 
+// Test instrumentation types
+interface SyncTestState {
+  isConnected: boolean;
+  peerCount: number;
+  isLeader: boolean;
+  localId: string;
+}
+
+interface SyncTestMessage {
+  peerId: string;
+  data: ArrayBuffer;
+  timeOffset: number;
+  timestamp: number;
+}
+
+// Extend Window for test instrumentation
+declare global {
+  interface Window {
+    __sync_state__?: SyncTestState;
+    __sync_messages__?: SyncTestMessage[];
+    __sync_broadcast__?: (data: ArrayBuffer) => void;
+    __sync_coordinator__?: SyncCoordinator;
+  }
+}
+
 const log = createLogger("sync:hook");
 
 export interface UseSyncRoomOptions {
@@ -58,13 +83,47 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
+  // Update test instrumentation
+  const updateTestState = useCallback((coordinator: SyncCoordinator) => {
+    if (typeof window !== "undefined") {
+      window.__sync_state__ = {
+        isConnected: coordinator.isConnected,
+        peerCount: coordinator.peerCount,
+        isLeader: coordinator.isLeader,
+        localId: coordinator.getLocalId(),
+      };
+    }
+  }, []);
+
   // Initialize coordinator
   const getCoordinator = useCallback((): SyncCoordinator => {
     if (!coordinatorRef.current) {
       coordinatorRef.current = new SyncCoordinator();
 
+      // Initialize test instrumentation
+      if (typeof window !== "undefined") {
+        window.__sync_messages__ = [];
+        window.__sync_coordinator__ = coordinatorRef.current;
+        window.__sync_broadcast__ = (data: ArrayBuffer) => {
+          coordinatorRef.current?.broadcast(data);
+        };
+      }
+
       // Set up callbacks
       coordinatorRef.current.onMessage = (data, peerId, timeOffset) => {
+        // Store for test inspection
+        if (typeof window !== "undefined" && window.__sync_messages__) {
+          window.__sync_messages__.push({
+            peerId,
+            data,
+            timeOffset,
+            timestamp: Date.now(),
+          });
+          // Keep only last 100 messages
+          if (window.__sync_messages__.length > 100) {
+            window.__sync_messages__.shift();
+          }
+        }
         optionsRef.current.onMessage?.(data, peerId, timeOffset);
       };
 
@@ -72,11 +131,12 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         log.debug("State changed in hook", { state });
         setConnectionState(state);
         setIsConnected(state === "connected");
+        updateTestState(coordinatorRef.current!);
         onConnectionStateChange?.(state);
       };
     }
     return coordinatorRef.current;
-  }, [onConnectionStateChange]);
+  }, [onConnectionStateChange, updateTestState]);
 
   // Connect
   const connect = useCallback(async () => {
@@ -117,6 +177,13 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
 
     return () => {
       void disconnect();
+      // Cleanup test instrumentation
+      if (typeof window !== "undefined") {
+        delete window.__sync_state__;
+        delete window.__sync_messages__;
+        delete window.__sync_broadcast__;
+        delete window.__sync_coordinator__;
+      }
     };
   }, [autoConnect, connect, disconnect]);
 

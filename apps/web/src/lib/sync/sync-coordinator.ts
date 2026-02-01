@@ -20,6 +20,7 @@ import { PeerRegistry, type Peer } from "./peer-registry";
 import { TimeSyncManager } from "./time-sync-manager";
 import { LeaderElection } from "./leader-election";
 import { BroadcastTransport } from "./transports/broadcast";
+import { SignalingTransport } from "./transports/signaling";
 import type { ITransport } from "./interfaces/transport";
 import type { TransportType, TransportState, TransportConfig } from "./interfaces/types";
 
@@ -32,8 +33,10 @@ export type CoordinatorState = "disconnected" | "connecting" | "connected" | "re
 export interface SyncCoordinatorOptions {
   /** Enable BroadcastChannel for local tabs (default: true) */
   enableBroadcast?: boolean;
-  /** Enable WebRTC for P2P (default: false for now) */
-  enableWebRTC?: boolean;
+  /** Enable WebRTC/WebSocket for remote sync when leader (default: true) */
+  enableSignaling?: boolean;
+  /** Signaling server URL (default: auto-detected) */
+  signalingUrl?: string;
   /** Auto-reconnect on disconnect (default: true) */
   autoReconnect?: boolean;
 }
@@ -58,6 +61,7 @@ export class SyncCoordinator {
   // --- Transports ---
   private transports = new Map<TransportType, ITransport>();
   private broadcastTransport: BroadcastTransport | null = null;
+  private signalingTransport: SignalingTransport | null = null;
 
   // --- Message deduplication ---
   private seenMessages = new Set<string>();
@@ -66,7 +70,12 @@ export class SyncCoordinator {
   // --- State ---
   private _state: CoordinatorState = "disconnected";
   private roomId: string | null = null;
-  private options: Required<SyncCoordinatorOptions>;
+  private options: {
+    enableBroadcast: boolean;
+    enableSignaling: boolean;
+    signalingUrl: string | undefined;
+    autoReconnect: boolean;
+  };
 
   // --- App callbacks ---
   /** Message received (data, peerId, timeOffset) */
@@ -77,7 +86,8 @@ export class SyncCoordinator {
   constructor(options: SyncCoordinatorOptions = {}) {
     this.options = {
       enableBroadcast: options.enableBroadcast ?? true,
-      enableWebRTC: options.enableWebRTC ?? false, // Disabled for now
+      enableSignaling: options.enableSignaling ?? true,
+      signalingUrl: options.signalingUrl,
       autoReconnect: options.autoReconnect ?? true,
     };
   }
@@ -133,16 +143,20 @@ export class SyncCoordinator {
       // Connected for local tab sync immediately
       this.setState("connected");
 
-      // Start leader election (for future remote sync)
+      // Start leader election (for remote sync)
       const tabId = this.broadcastTransport?.getLocalId() ?? `tab-${Date.now()}`;
       this.leader = new LeaderElection({ roomId, tabId });
       this.leader.onBecomeLeader = () => {
         log.debug("Became leader");
-        // Future: connect signaling for remote sync
+        // Connect signaling for remote sync (only leader connects)
+        if (this.options.enableSignaling) {
+          void this.connectSignaling();
+        }
       };
       this.leader.onBecomeFollower = (leaderId) => {
         log.debug("Became follower", { leaderId });
-        // Future: disconnect signaling
+        // Disconnect signaling - only leader should be connected
+        void this.disconnectSignaling();
       };
       void this.leader.start();
 
@@ -165,12 +179,53 @@ export class SyncCoordinator {
     }
     this.transports.clear();
     this.broadcastTransport = null;
+    this.signalingTransport = null;
 
     this.registry.clear();
     this.timeSync.clear();
     this.seenMessages.clear();
     this.roomId = null;
     this.setState("disconnected");
+  }
+
+  /**
+   * Connect to signaling server (called when becoming leader).
+   */
+  private async connectSignaling(): Promise<void> {
+    if (this.signalingTransport || !this.roomId) {
+      return;
+    }
+
+    try {
+      log.debug("Connecting signaling transport as leader");
+      this.signalingTransport = new SignalingTransport();
+      this.wireTransport(this.signalingTransport);
+      await this.signalingTransport.connect({
+        roomId: this.roomId,
+        signalingUrl: this.options.signalingUrl,
+        autoReconnect: this.options.autoReconnect,
+      });
+      this.transports.set("webrtc", this.signalingTransport);
+      log.debug("Signaling transport connected");
+    } catch (err) {
+      log.error("Failed to connect signaling transport", { error: err });
+      this.signalingTransport = null;
+      // Don't throw - local sync via broadcast still works
+    }
+  }
+
+  /**
+   * Disconnect from signaling server (called when becoming follower).
+   */
+  private async disconnectSignaling(): Promise<void> {
+    if (!this.signalingTransport) {
+      return;
+    }
+
+    log.debug("Disconnecting signaling transport");
+    this.transports.delete("webrtc");
+    await this.signalingTransport.disconnect();
+    this.signalingTransport = null;
   }
 
   // --- Sending messages ---

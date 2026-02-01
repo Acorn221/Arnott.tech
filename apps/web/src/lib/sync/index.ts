@@ -29,6 +29,7 @@ export { LeaderElection, type LeaderElectionOptions } from "./leader-election";
 
 // Transports
 export { BroadcastTransport } from "./transports/broadcast";
+export { SignalingTransport, type SignalingTransportOptions } from "./transports/signaling";
 
 // Hooks
 export {
