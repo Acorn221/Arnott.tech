@@ -24,6 +24,9 @@ interface SyncJsonMessage {
   event: SpinnerEvent;
 }
 
+// Welcome spin velocity (radians/second) - a gentle spin to say hello
+const WELCOME_SPIN_VELOCITY = 8;
+
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
@@ -31,6 +34,16 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
 
   // Current CRDT event
   const currentEventRef = useRef<SpinnerEvent | null>(null);
+
+  // Track current rotation for welcome spins
+  const currentRotationRef = useRef(0);
+
+  // Ref for broadcast function to avoid circular dependency
+  const broadcastRef = useRef<((data: ArrayBuffer) => void) | null>(null);
+
+  // Debounce welcome spins - only one per 5 seconds
+  const lastWelcomeSpinRef = useRef(0);
+  const WELCOME_SPIN_DEBOUNCE_MS = 5000;
 
   // Handle incoming messages from any transport
   // Time-sync is handled automatically by SyncCoordinator
@@ -80,6 +93,52 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
   }, []);
 
+  // Welcome spin when a new peer joins
+  const handlePeerJoin = useCallback(
+    (peerId: string, isLocal: boolean) => {
+      console.log("[Spinner] New peer joined!", { peerId, isLocal });
+
+      // Only trigger welcome spin for remote peers (not local tabs)
+      if (isLocal) {
+        return;
+      }
+
+      // Debounce - only one welcome spin per 5 seconds
+      const now = performance.now();
+      if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) {
+        console.log("[Spinner] Welcome spin debounced");
+        return;
+      }
+
+      // Get current state
+      const currentState = currentEventRef.current
+        ? spinnerStateComputer.compute(currentEventRef.current, now)
+        : spinnerStateComputer.initialState();
+
+      // Only trigger welcome spin if spinner is nearly stopped
+      if (Math.abs(currentState.velocity) > 2) {
+        console.log("[Spinner] Spinner already moving, skipping welcome spin");
+        return;
+      }
+
+      lastWelcomeSpinRef.current = now;
+
+      // Trigger a welcome spin!
+      const welcomeEvent: SpinnerEvent = {
+        type: "release",
+        timestamp: now,
+        rotation: currentState.rotation,
+        velocity: WELCOME_SPIN_VELOCITY,
+      };
+
+      currentEventRef.current = welcomeEvent;
+
+      // Broadcast the welcome spin to all peers
+      broadcastRef.current?.(encodeSpinnerEvent(welcomeEvent));
+    },
+    [],
+  );
+
   const {
     broadcast,
     isConnected,
@@ -88,7 +147,11 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     roomId: "spinner",
     autoConnect: true,
     onMessage: handleMessage,
+    onPeerJoin: handlePeerJoin,
   });
+
+  // Keep broadcast ref updated
+  broadcastRef.current = broadcast;
 
   // Emit CRDT events to all peers (binary encoded)
   const handleEventEmit = useCallback(

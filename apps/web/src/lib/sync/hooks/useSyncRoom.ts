@@ -49,6 +49,8 @@ export interface UseSyncRoomOptions {
   onMessage?: (data: ArrayBuffer, peerId: string, timeOffset: number) => void;
   /** Connection state changed callback */
   onConnectionStateChange?: (state: CoordinatorState) => void;
+  /** New peer joined callback (for welcome effects, etc.) */
+  onPeerJoin?: (peerId: string, isLocal: boolean) => void;
 }
 
 export interface UseSyncRoomReturn {
@@ -133,6 +135,12 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
         setIsConnected(state === "connected");
         updateTestState(coordinatorRef.current!);
         onConnectionStateChange?.(state);
+      };
+
+      coordinatorRef.current.onPeerJoin = (peerId, isLocal) => {
+        log.debug("Peer joined", { peerId, isLocal });
+        updateTestState(coordinatorRef.current!);
+        optionsRef.current.onPeerJoin?.(peerId, isLocal);
       };
     }
     return coordinatorRef.current;

@@ -77,11 +77,17 @@ export class SyncCoordinator {
     autoReconnect: boolean;
   };
 
+  // --- Periodic sync ---
+  private syncInterval: ReturnType<typeof setInterval> | null = null;
+  private static readonly SYNC_INTERVAL_MS = 30000; // Re-sync clocks every 30s
+
   // --- App callbacks ---
   /** Message received (data, peerId, timeOffset) */
   onMessage: ((data: ArrayBuffer, peerId: string, timeOffset: number) => void) | null = null;
   /** State changed */
   onStateChange: ((state: CoordinatorState) => void) | null = null;
+  /** New peer joined (for welcome effects, etc.) */
+  onPeerJoin: ((peerId: string, isLocal: boolean) => void) | null = null;
 
   constructor(options: SyncCoordinatorOptions = {}) {
     this.options = {
@@ -143,6 +149,9 @@ export class SyncCoordinator {
       // Connected for local tab sync immediately
       this.setState("connected");
 
+      // Start periodic clock sync
+      this.startPeriodicSync();
+
       // Start leader election (for remote sync)
       const tabId = this.broadcastTransport?.getLocalId() ?? `tab-${Date.now()}`;
       this.leader = new LeaderElection({ roomId, tabId });
@@ -171,6 +180,9 @@ export class SyncCoordinator {
    * Disconnect from the room.
    */
   async disconnect(): Promise<void> {
+    // Stop periodic sync
+    this.stopPeriodicSync();
+
     this.leader?.stop();
     this.leader = null;
 
@@ -410,6 +422,8 @@ export class SyncCoordinator {
       log.debug("New peer discovered", { peerId, transportType, isLocal });
       // Send time-sync to new peer
       this.sendTimeSync(peerId);
+      // Notify app of new peer (for welcome effects)
+      this.onPeerJoin?.(peerId, isLocal);
     }
   }
 
@@ -476,5 +490,45 @@ export class SyncCoordinator {
       if (first) this.seenMessages.delete(first);
     }
     this.seenMessages.add(msgId);
+  }
+
+  // --- Periodic clock sync ---
+
+  /**
+   * Start periodic clock synchronization with all peers.
+   */
+  private startPeriodicSync(): void {
+    if (this.syncInterval) return;
+
+    this.syncInterval = setInterval(() => {
+      this.syncAllPeers();
+    }, SyncCoordinator.SYNC_INTERVAL_MS);
+
+    log.debug("Started periodic clock sync", { intervalMs: SyncCoordinator.SYNC_INTERVAL_MS });
+  }
+
+  /**
+   * Stop periodic clock synchronization.
+   */
+  private stopPeriodicSync(): void {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+      log.debug("Stopped periodic clock sync");
+    }
+  }
+
+  /**
+   * Send time sync to all known peers.
+   */
+  private syncAllPeers(): void {
+    const peers = this.registry.getAllPeers();
+    if (peers.length === 0) return;
+
+    log.debug("Periodic clock sync", { peerCount: peers.length });
+
+    for (const peer of peers) {
+      this.sendTimeSync(peer.id);
+    }
   }
 }
