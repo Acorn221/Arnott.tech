@@ -13,6 +13,7 @@
 import { createLogger } from "@arnott/logger";
 import type { ITransport } from "../interfaces/transport";
 import { SYNC_ROOM_ID, type TransportState, type TransportConfig } from "../interfaces/types";
+import { PRESENCE_INTERVAL_MS } from "../config";
 
 const log = createLogger("sync:broadcast");
 
@@ -46,7 +47,6 @@ export class BroadcastTransport implements ITransport {
   private readonly tabId = generateTabId();
   private _state: TransportState = "disconnected";
   private presenceInterval: ReturnType<typeof setInterval> | null = null;
-  private static readonly PRESENCE_INTERVAL_MS = 1000; // Announce presence every second
 
   // --- Callbacks ---
   onReceive: ((peerId: string, data: ArrayBuffer) => void) | null = null;
@@ -108,7 +108,7 @@ export class BroadcastTransport implements ITransport {
     // Then announce periodically
     this.presenceInterval = setInterval(() => {
       this.announcePresence();
-    }, BroadcastTransport.PRESENCE_INTERVAL_MS);
+    }, PRESENCE_INTERVAL_MS);
   }
 
   /**

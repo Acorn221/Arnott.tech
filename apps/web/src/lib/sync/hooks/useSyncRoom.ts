@@ -12,6 +12,7 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import { createLogger } from "@arnott/logger";
 import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
+import { TEST_MAX_MESSAGES } from "../config";
 
 // Test instrumentation types
 interface SyncTestState {
@@ -167,8 +168,8 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
             timeOffset,
             timestamp: Date.now(),
           });
-          // Keep only last 100 messages
-          if (window.__sync_messages__.length > 100) {
+          // Keep only last N messages
+          if (window.__sync_messages__.length > TEST_MAX_MESSAGES) {
             window.__sync_messages__.shift();
           }
         }

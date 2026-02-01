@@ -39,3 +39,6 @@ export {
   type PeerInfo,
   type RemoteTransport,
 } from "./hooks";
+
+// Config constants
+export * from "./config";

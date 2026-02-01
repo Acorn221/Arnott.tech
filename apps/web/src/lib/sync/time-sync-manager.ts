@@ -19,6 +19,7 @@
  */
 
 import { createLogger } from "@arnott/logger";
+import { TIME_SYNC_MAX_MESSAGE_SIZE, TIME_SYNC_LATENCY_BUFFER_MS } from "./config";
 
 const log = createLogger("sync:timesync");
 
@@ -106,7 +107,7 @@ export class TimeSyncManager {
    * @returns true if this is a time-sync message
    */
   isTimeSyncMessage(data: ArrayBuffer): boolean {
-    if (data.byteLength > 150) return false;
+    if (data.byteLength > TIME_SYNC_MAX_MESSAGE_SIZE) return false;
 
     try {
       const text = new TextDecoder().decode(data);
@@ -181,10 +182,9 @@ export class TimeSyncManager {
         const rtt = receiveTime - requestTime;
         const oneWayLatency = rtt / 2;
 
-        // Add a small buffer (50ms) to ensure adjusted timestamps are slightly in the past
+        // Add a small buffer to ensure adjusted timestamps are slightly in the past
         // This handles asymmetric latency and ensures physics simulation always runs
-        const LATENCY_BUFFER = 50;
-        const offset = receiveTime - responseTime - oneWayLatency + LATENCY_BUFFER;
+        const offset = receiveTime - responseTime - oneWayLatency + TIME_SYNC_LATENCY_BUFFER_MS;
 
         const oldOffset = this.offsets.get(peerId);
         const isNewPeer = oldOffset === undefined;

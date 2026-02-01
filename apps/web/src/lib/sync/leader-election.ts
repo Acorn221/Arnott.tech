@@ -12,6 +12,11 @@
  */
 
 import { createLogger } from "@arnott/logger";
+import {
+  LEADER_HEARTBEAT_INTERVAL_MS,
+  LEADER_TIMEOUT_MS,
+  LEADER_INITIAL_CHECK_DELAY_MS,
+} from "./config";
 
 const log = createLogger("sync:leader");
 
@@ -27,9 +32,9 @@ export interface LeaderElectionOptions {
   roomId: string;
   /** Optional tab ID (generated if not provided) */
   tabId?: string;
-  /** Heartbeat interval in ms (default: 500) */
+  /** Heartbeat interval in ms */
   heartbeatInterval?: number;
-  /** Leader timeout in ms (default: 2000) */
+  /** Leader timeout in ms */
   leaderTimeout?: number;
 }
 
@@ -67,8 +72,8 @@ export class LeaderElection {
     this.roomId = options.roomId;
     this.tabId = options.tabId ?? `tab-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     this.tabTimestamp = Date.now();
-    this.heartbeatInterval = options.heartbeatInterval ?? 100;
-    this.leaderTimeoutMs = options.leaderTimeout ?? 500;
+    this.heartbeatInterval = options.heartbeatInterval ?? LEADER_HEARTBEAT_INTERVAL_MS;
+    this.leaderTimeoutMs = options.leaderTimeout ?? LEADER_TIMEOUT_MS;
   }
 
   /** Whether this tab is the leader */
@@ -151,13 +156,12 @@ export class LeaderElection {
       let resolved = false;
 
       // Wait briefly for existing leader heartbeat
-      // Short timeout since heartbeats are sent every 500ms with immediate first beat
       const timeout = setTimeout(() => {
         if (!resolved) {
           resolved = true;
           resolve(false); // No leader found
         }
-      }, 150);
+      }, LEADER_INITIAL_CHECK_DELAY_MS);
 
       const originalHandler = this.channel!.onmessage;
       this.channel!.onmessage = (e: MessageEvent<ElectionMessage>) => {

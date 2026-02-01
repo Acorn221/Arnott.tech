@@ -23,6 +23,7 @@ import { BroadcastTransport } from "./transports/broadcast";
 import { SignalingTransport } from "./transports/signaling";
 import type { ITransport } from "./interfaces/transport";
 import { SYNC_ROOM_ID, type TransportType, type TransportState, type TransportConfig } from "./interfaces/types";
+import { MAX_SEEN_MESSAGES, CLOCK_SYNC_INTERVAL_MS } from "./config";
 
 const log = createLogger("sync:coordinator");
 
@@ -65,7 +66,6 @@ export class SyncCoordinator {
 
   // --- Message deduplication ---
   private seenMessages = new Set<string>();
-  private readonly maxSeenMessages = 1000;
 
   // --- State ---
   private _state: CoordinatorState = "disconnected";
@@ -78,7 +78,6 @@ export class SyncCoordinator {
 
   // --- Periodic sync ---
   private syncInterval: ReturnType<typeof setInterval> | null = null;
-  private static readonly SYNC_INTERVAL_MS = 30000; // Re-sync clocks every 30s
 
   // --- App callbacks ---
   /** Message received (data, peerId, timeOffset) */
@@ -536,7 +535,7 @@ export class SyncCoordinator {
    * Add message ID to seen set with LRU eviction.
    */
   private addSeenMessage(msgId: string): void {
-    if (this.seenMessages.size >= this.maxSeenMessages) {
+    if (this.seenMessages.size >= MAX_SEEN_MESSAGES) {
       // Remove oldest (first) entry
       const first = this.seenMessages.values().next().value;
       if (first) this.seenMessages.delete(first);
@@ -554,9 +553,9 @@ export class SyncCoordinator {
 
     this.syncInterval = setInterval(() => {
       this.syncAllPeers();
-    }, SyncCoordinator.SYNC_INTERVAL_MS);
+    }, CLOCK_SYNC_INTERVAL_MS);
 
-    log.debug("Started periodic clock sync", { intervalMs: SyncCoordinator.SYNC_INTERVAL_MS });
+    log.debug("Started periodic clock sync", { intervalMs: CLOCK_SYNC_INTERVAL_MS });
   }
 
   /**

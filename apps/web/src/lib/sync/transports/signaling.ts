@@ -12,6 +12,12 @@
 import { createLogger } from "@arnott/logger";
 import type { ITransport } from "../interfaces/transport";
 import { SYNC_ROOM_ID, type TransportState, type TransportConfig } from "../interfaces/types";
+import {
+  RECONNECT_INITIAL_DELAY_MS,
+  RECONNECT_MAX_DELAY_MS,
+  RECONNECT_BACKOFF_MULTIPLIER,
+  WEBRTC_CONNECTION_TIMEOUT_MS,
+} from "../config";
 
 const log = createLogger("sync:signaling");
 const rtcLog = createLogger("sync:webrtc");
@@ -40,9 +46,9 @@ const ICE_SERVERS = [
 ];
 
 const DEFAULT_RECONNECT_BACKOFF = {
-  initial: 1000,
-  max: 30000,
-  multiplier: 2,
+  initial: RECONNECT_INITIAL_DELAY_MS,
+  max: RECONNECT_MAX_DELAY_MS,
+  multiplier: RECONNECT_BACKOFF_MULTIPLIER,
 };
 
 /** Internal peer connection state */
@@ -323,7 +329,7 @@ export class SignalingTransport implements ITransport {
         peer.rtcConnection = null;
         peer.dataChannel = null;
       }
-    }, 10000);
+    }, WEBRTC_CONNECTION_TIMEOUT_MS);
 
     try {
       const offer = await rtcConnection.createOffer();
