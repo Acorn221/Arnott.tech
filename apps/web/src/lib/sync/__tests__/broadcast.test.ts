@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi, type MockInstance } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { BroadcastTransport } from "../transports/broadcast";
 import type { TransportState } from "../interfaces/types";
 
@@ -92,7 +92,7 @@ describe("BroadcastTransport", () => {
 
     it("returns false when BroadcastChannel is undefined", () => {
       const saved = globalThis.BroadcastChannel;
-      // @ts-ignore - intentionally setting to undefined
+      // @ts-expect-error - intentionally setting to undefined for test
       globalThis.BroadcastChannel = undefined;
 
       const newTransport = new BroadcastTransport();
@@ -104,7 +104,7 @@ describe("BroadcastTransport", () => {
 
   describe("connect", () => {
     it("sets state to connected", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       expect(transport.state).toBe("connected");
     });
@@ -113,32 +113,24 @@ describe("BroadcastTransport", () => {
       const stateChanges: TransportState[] = [];
       transport.onStateChange = (state) => stateChanges.push(state);
 
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       expect(stateChanges).toContain("connecting");
       expect(stateChanges).toContain("connected");
     });
 
     it("opens BroadcastChannel with correct name", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       expect(MockBroadcastChannel.instances).toHaveLength(1);
-      expect(MockBroadcastChannel.instances[0].name).toBe("sync-test-room");
+      expect(MockBroadcastChannel.instances[0].name).toBe("sync-spinner");
     });
 
-    it("reconnects when called with different room", async () => {
-      await transport.connect({ roomId: "room-1" });
-      expect(MockBroadcastChannel.instances[0].name).toBe("sync-room-1");
-
-      await transport.connect({ roomId: "room-2" });
-      expect(MockBroadcastChannel.instances[0].name).toBe("sync-room-2");
-    });
-
-    it("does nothing when already connected to same room", async () => {
-      await transport.connect({ roomId: "test-room" });
+    it("does nothing when already connected", async () => {
+      await transport.connect({});
       const firstInstance = MockBroadcastChannel.instances[0];
 
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       expect(MockBroadcastChannel.instances[0]).toBe(firstInstance);
     });
@@ -146,14 +138,14 @@ describe("BroadcastTransport", () => {
 
   describe("disconnect", () => {
     it("sets state to disconnected", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
       await transport.disconnect();
 
       expect(transport.state).toBe("disconnected");
     });
 
     it("closes the BroadcastChannel", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
       const channel = MockBroadcastChannel.instances[0];
 
       await transport.disconnect();
@@ -162,7 +154,7 @@ describe("BroadcastTransport", () => {
     });
 
     it("fires onStateChange callback", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const stateChanges: TransportState[] = [];
       transport.onStateChange = (state) => stateChanges.push(state);
@@ -175,7 +167,7 @@ describe("BroadcastTransport", () => {
 
   describe("broadcast", () => {
     it("sends message to BroadcastChannel", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const postMessageSpy = vi.spyOn(MockBroadcastChannel.instances[0], "postMessage");
 
@@ -202,7 +194,7 @@ describe("BroadcastTransport", () => {
 
   describe("send (to specific peer)", () => {
     it("broadcasts since BroadcastChannel cannot target peers", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const postMessageSpy = vi.spyOn(MockBroadcastChannel.instances[0], "postMessage");
 
@@ -215,7 +207,7 @@ describe("BroadcastTransport", () => {
 
   describe("receiving messages", () => {
     it("calls onReceive when message received from another tab", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const receivedMessages: Array<{ peerId: string; data: ArrayBuffer }> = [];
       transport.onReceive = (peerId, data) => {
@@ -236,7 +228,7 @@ describe("BroadcastTransport", () => {
     });
 
     it("calls onPeerReachable when message received", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const reachablePeers: Array<{ peerId: string; isLocal: boolean }> = [];
       transport.onPeerReachable = (peerId, isLocal) => {
@@ -257,7 +249,7 @@ describe("BroadcastTransport", () => {
     });
 
     it("ignores messages from self", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const receivedMessages: Array<{ peerId: string; data: ArrayBuffer }> = [];
       transport.onReceive = (peerId, data) => {
@@ -276,7 +268,7 @@ describe("BroadcastTransport", () => {
     });
 
     it("ignores invalid message format", async () => {
-      await transport.connect({ roomId: "test-room" });
+      await transport.connect({});
 
       const receivedMessages: Array<{ peerId: string; data: ArrayBuffer }> = [];
       transport.onReceive = (peerId, data) => {

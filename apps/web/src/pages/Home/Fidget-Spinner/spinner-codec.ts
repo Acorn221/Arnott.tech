@@ -13,7 +13,7 @@ const MSG_GRAB = 0;
 const MSG_DRAG = 1;
 const MSG_RELEASE = 2;
 
-// Pre-allocate buffer for encoding (24 bytes max: type(1) + timestamp(8) + rotation(8) + velocity(8))
+// Pre-allocate buffer for encoding (25 bytes max: type(1) + timestamp(8) + rotation(8) + velocity(8))
 const encodeBuffer = new ArrayBuffer(25);
 const encodeView = new DataView(encodeBuffer);
 

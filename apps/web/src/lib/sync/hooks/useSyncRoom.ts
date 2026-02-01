@@ -12,6 +12,7 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import { createLogger } from "@arnott/logger";
 import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
+import { TEST_MAX_MESSAGES } from "../config";
 
 // Test instrumentation types
 interface SyncTestState {
@@ -41,8 +42,6 @@ declare global {
 const log = createLogger("sync:hook");
 
 export interface UseSyncRoomOptions {
-  /** Room ID to join */
-  roomId: string;
   /** Auto-connect on mount (default: false) */
   autoConnect?: boolean;
   /** Message received callback (data, peerId, timeOffset) */
@@ -94,7 +93,7 @@ export interface UseSyncRoomReturn {
 }
 
 export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
-  const { roomId, autoConnect = false, onConnectionStateChange } = options;
+  const { autoConnect = false, onConnectionStateChange } = options;
 
   // State
   const [isConnected, setIsConnected] = useState(false);
@@ -169,8 +168,8 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
             timeOffset,
             timestamp: Date.now(),
           });
-          // Keep only last 100 messages
-          if (window.__sync_messages__.length > 100) {
+          // Keep only last N messages
+          if (window.__sync_messages__.length > TEST_MAX_MESSAGES) {
             window.__sync_messages__.shift();
           }
         }
@@ -201,11 +200,11 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
 
   // Connect
   const connect = useCallback(async () => {
-    log.debug("Connecting", { roomId });
+    log.debug("Connecting");
     const coordinator = getCoordinator();
-    await coordinator.connect(roomId);
-    log.debug("Connected", { roomId, state: coordinator.state });
-  }, [getCoordinator, roomId]);
+    await coordinator.connect();
+    log.debug("Connected", { state: coordinator.state });
+  }, [getCoordinator]);
 
   // Disconnect
   const disconnect = useCallback(async () => {

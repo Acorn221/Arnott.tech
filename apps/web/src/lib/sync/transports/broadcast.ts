@@ -12,7 +12,8 @@
 
 import { createLogger } from "@arnott/logger";
 import type { ITransport } from "../interfaces/transport";
-import type { TransportState, TransportConfig } from "../interfaces/types";
+import { SYNC_ROOM_ID, type TransportState, type TransportConfig } from "../interfaces/types";
+import { PRESENCE_INTERVAL_MS } from "../config";
 
 const log = createLogger("sync:broadcast");
 
@@ -45,9 +46,7 @@ export class BroadcastTransport implements ITransport {
   private channel: BroadcastChannel | null = null;
   private readonly tabId = generateTabId();
   private _state: TransportState = "disconnected";
-  private roomId: string | null = null;
   private presenceInterval: ReturnType<typeof setInterval> | null = null;
-  private static readonly PRESENCE_INTERVAL_MS = 1000; // Announce presence every second
 
   // --- Callbacks ---
   onReceive: ((peerId: string, data: ArrayBuffer) => void) | null = null;
@@ -67,24 +66,21 @@ export class BroadcastTransport implements ITransport {
     return this.tabId;
   }
 
-  async connect(config: TransportConfig): Promise<void> {
+  async connect(_config: TransportConfig = {}): Promise<void> {
     if (!this.isSupported) {
       throw new Error("BroadcastChannel not supported");
     }
 
-    const { roomId } = config;
-
-    if (this._state === "connected" && this.roomId === roomId) {
+    if (this._state === "connected") {
       return;
     }
 
-    // Disconnect from previous room
+    // Disconnect from previous connection
     await this.disconnect();
 
-    this.roomId = roomId;
     this.setState("connecting");
 
-    const channelName = `sync-${roomId}`;
+    const channelName = `sync-${SYNC_ROOM_ID}`;
     log.debug("Opening channel", { channelName, tabId: this.tabId });
     this.channel = new BroadcastChannel(channelName);
 
@@ -112,7 +108,7 @@ export class BroadcastTransport implements ITransport {
     // Then announce periodically
     this.presenceInterval = setInterval(() => {
       this.announcePresence();
-    }, BroadcastTransport.PRESENCE_INTERVAL_MS);
+    }, PRESENCE_INTERVAL_MS);
   }
 
   /**
@@ -147,7 +143,6 @@ export class BroadcastTransport implements ITransport {
       this.channel.close();
       this.channel = null;
     }
-    this.roomId = null;
     this.setState("disconnected");
   }
 

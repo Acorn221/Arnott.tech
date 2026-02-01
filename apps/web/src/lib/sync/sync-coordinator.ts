@@ -22,9 +22,13 @@ import { LeaderElection } from "./leader-election";
 import { BroadcastTransport } from "./transports/broadcast";
 import { SignalingTransport } from "./transports/signaling";
 import type { ITransport } from "./interfaces/transport";
-import type { TransportType, TransportState, TransportConfig } from "./interfaces/types";
+import { SYNC_ROOM_ID, type TransportType, type TransportState } from "./interfaces/types";
+import { MAX_SEEN_MESSAGES, CLOCK_SYNC_INTERVAL_MS } from "./config";
 
 const log = createLogger("sync:coordinator");
+
+/** Pre-computed hex lookup table for fast byte-to-hex conversion */
+const HEX_CHARS = "0123456789abcdef";
 
 /** Coordinator connection state */
 export type CoordinatorState = "disconnected" | "connecting" | "connected" | "reconnecting";
@@ -65,11 +69,9 @@ export class SyncCoordinator {
 
   // --- Message deduplication ---
   private seenMessages = new Set<string>();
-  private readonly maxSeenMessages = 1000;
 
   // --- State ---
   private _state: CoordinatorState = "disconnected";
-  private roomId: string | null = null;
   private options: {
     enableBroadcast: boolean;
     enableSignaling: boolean;
@@ -79,7 +81,6 @@ export class SyncCoordinator {
 
   // --- Periodic sync ---
   private syncInterval: ReturnType<typeof setInterval> | null = null;
-  private static readonly SYNC_INTERVAL_MS = 30000; // Re-sync clocks every 30s
 
   // --- App callbacks ---
   /** Message received (data, peerId, timeOffset) */
@@ -176,14 +177,13 @@ export class SyncCoordinator {
   // --- Connection lifecycle ---
 
   /**
-   * Connect to a sync room.
+   * Connect to sync.
    */
-  async connect(roomId: string): Promise<void> {
-    if (this._state === "connected" && this.roomId === roomId) {
+  async connect(): Promise<void> {
+    if (this._state === "connected") {
       return;
     }
 
-    this.roomId = roomId;
     this.setState("connecting");
 
     try {
@@ -191,7 +191,7 @@ export class SyncCoordinator {
       if (this.options.enableBroadcast) {
         this.broadcastTransport = new BroadcastTransport();
         this.wireTransport(this.broadcastTransport);
-        await this.broadcastTransport.connect({ roomId });
+        await this.broadcastTransport.connect({});
         this.transports.set("broadcast", this.broadcastTransport);
       }
 
@@ -203,7 +203,7 @@ export class SyncCoordinator {
 
       // Start leader election (for remote sync)
       const tabId = this.broadcastTransport?.getLocalId() ?? `tab-${Date.now()}`;
-      this.leader = new LeaderElection({ roomId, tabId });
+      this.leader = new LeaderElection({ roomId: SYNC_ROOM_ID, tabId });
       this.leader.onBecomeLeader = () => {
         log.debug("Became leader");
         // Connect signaling for remote sync (only leader connects)
@@ -245,7 +245,6 @@ export class SyncCoordinator {
     this.registry.clear();
     this.timeSync.clear();
     this.seenMessages.clear();
-    this.roomId = null;
     this.setState("disconnected");
   }
 
@@ -253,7 +252,7 @@ export class SyncCoordinator {
    * Connect to signaling server (called when becoming leader).
    */
   private async connectSignaling(): Promise<void> {
-    if (this.signalingTransport || !this.roomId) {
+    if (this.signalingTransport) {
       return;
     }
 
@@ -262,7 +261,6 @@ export class SyncCoordinator {
       this.signalingTransport = new SignalingTransport();
       this.wireTransport(this.signalingTransport);
       await this.signalingTransport.connect({
-        roomId: this.roomId,
         signalingUrl: this.options.signalingUrl,
         autoReconnect: this.options.autoReconnect,
       });
@@ -528,19 +526,22 @@ export class SyncCoordinator {
 
   /**
    * Generate message ID from first 16 bytes.
+   * Uses direct hex conversion for performance (avoids Array.from/map/join overhead).
    */
   private getMessageId(data: ArrayBuffer): string {
-    const view = new Uint8Array(data.slice(0, 16));
-    return Array.from(view)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    const view = new Uint8Array(data, 0, Math.min(16, data.byteLength));
+    let result = "";
+    for (const byte of view) {
+      result += HEX_CHARS[byte >> 4] + HEX_CHARS[byte & 0x0f];
+    }
+    return result;
   }
 
   /**
    * Add message ID to seen set with LRU eviction.
    */
   private addSeenMessage(msgId: string): void {
-    if (this.seenMessages.size >= this.maxSeenMessages) {
+    if (this.seenMessages.size >= MAX_SEEN_MESSAGES) {
       // Remove oldest (first) entry
       const first = this.seenMessages.values().next().value;
       if (first) this.seenMessages.delete(first);
@@ -558,9 +559,9 @@ export class SyncCoordinator {
 
     this.syncInterval = setInterval(() => {
       this.syncAllPeers();
-    }, SyncCoordinator.SYNC_INTERVAL_MS);
+    }, CLOCK_SYNC_INTERVAL_MS);
 
-    log.debug("Started periodic clock sync", { intervalMs: SyncCoordinator.SYNC_INTERVAL_MS });
+    log.debug("Started periodic clock sync", { intervalMs: CLOCK_SYNC_INTERVAL_MS });
   }
 
   /**

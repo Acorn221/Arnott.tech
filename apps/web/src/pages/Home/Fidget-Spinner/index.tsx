@@ -37,6 +37,8 @@ const WELCOME_SPIN_DEBOUNCE_MS = 500;
 const WELCOME_SPIN_VELOCITY_THRESHOLD = 2;
 /** Delay before sending welcome spin (ms) - gives connection time to stabilize */
 const WELCOME_SPIN_DELAY_MS = 100;
+/** Retry delay for welcome spin broadcast (ms) */
+const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
@@ -79,9 +81,9 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   // Share current state when any peer joins (local or remote)
   const handlePeerJoin = useCallback((_peerId: string, _isLocal: boolean) => {
     // Debounce to prevent spam when many peers join at once
-    const now = Date.now();
-    if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
-    lastWelcomeSpinRef.current = now;
+    const joinTime = Date.now();
+    if (joinTime - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
+    lastWelcomeSpinRef.current = joinTime;
 
     // Small delay to ensure connection is stable before sending
     setTimeout(() => {
@@ -120,7 +122,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       // Retry once after delay for reliability (same event, same timestamp)
       setTimeout(() => {
         broadcastRef.current?.(encodeSpinnerEvent(eventToSend));
-      }, 200);
+      }, WELCOME_SPIN_RETRY_DELAY_MS);
     }, WELCOME_SPIN_DELAY_MS);
   }, []);
 
@@ -130,7 +132,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     connectionState,
     peerInfo,
   } = useSyncRoom({
-    roomId: "spinner",
     autoConnect: true,
     onMessage: handleMessage,
     onPeerJoin: handlePeerJoin,

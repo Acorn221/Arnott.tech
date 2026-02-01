@@ -48,20 +48,60 @@ class MockBroadcastChannel {
   }
 }
 
+// Mock RTCPeerConnection for happy-dom environment
+class MockRTCPeerConnection {
+  onicecandidate: ((event: { candidate: null }) => void) | null = null;
+  oniceconnectionstatechange: (() => void) | null = null;
+  onconnectionstatechange: (() => void) | null = null;
+  ondatachannel: ((event: { channel: MockRTCDataChannel }) => void) | null = null;
+  iceConnectionState = "new";
+  connectionState = "new";
+
+  createDataChannel(_label: string, _options?: unknown): MockRTCDataChannel {
+    return new MockRTCDataChannel();
+  }
+  async createOffer(): Promise<{ type: string; sdp: string }> {
+    return { type: "offer", sdp: "mock-sdp" };
+  }
+  async createAnswer(): Promise<{ type: string; sdp: string }> {
+    return { type: "answer", sdp: "mock-sdp" };
+  }
+  async setLocalDescription(_desc: unknown): Promise<void> {}
+  async setRemoteDescription(_desc: unknown): Promise<void> {}
+  async addIceCandidate(_candidate: unknown): Promise<void> {}
+  close(): void {}
+}
+
+class MockRTCDataChannel {
+  onopen: (() => void) | null = null;
+  onclose: (() => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  readyState = "open";
+  send(_data: unknown): void {}
+  close(): void {}
+}
+
 describe("SyncCoordinator", () => {
   let coordinator: SyncCoordinator;
   let originalBroadcastChannel: typeof BroadcastChannel;
+  let originalRTCPeerConnection: typeof RTCPeerConnection | undefined;
 
   beforeEach(() => {
     MockBroadcastChannel.reset();
     originalBroadcastChannel = globalThis.BroadcastChannel;
+    originalRTCPeerConnection = globalThis.RTCPeerConnection;
     globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+    globalThis.RTCPeerConnection = MockRTCPeerConnection as unknown as typeof RTCPeerConnection;
     coordinator = new SyncCoordinator();
   });
 
   afterEach(async () => {
     await coordinator.disconnect();
     globalThis.BroadcastChannel = originalBroadcastChannel;
+    if (originalRTCPeerConnection) {
+      globalThis.RTCPeerConnection = originalRTCPeerConnection;
+    }
     MockBroadcastChannel.reset();
   });
 
@@ -82,7 +122,7 @@ describe("SyncCoordinator", () => {
       const stateChanges: CoordinatorState[] = [];
       coordinator.onStateChange = (state) => stateChanges.push(state);
 
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       expect(coordinator.state).toBe("connected");
       expect(coordinator.isConnected).toBe(true);
@@ -91,24 +131,24 @@ describe("SyncCoordinator", () => {
     });
 
     it("creates BroadcastChannel for room", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       // Should have channels for sync and leader election
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room");
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner");
       expect(syncChannel).toBeDefined();
     });
 
     it("does nothing when already connected to same room", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       const channelCount = MockBroadcastChannel.instances.length;
 
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       expect(MockBroadcastChannel.instances.length).toBe(channelCount);
     });
 
     it("returns local ID from broadcast transport", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const localId = coordinator.getLocalId();
       expect(localId).toMatch(/^tab-\d+-[a-z0-9]+$/);
@@ -117,7 +157,7 @@ describe("SyncCoordinator", () => {
 
   describe("disconnect", () => {
     it("transitions to disconnected state", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       await coordinator.disconnect();
 
       expect(coordinator.state).toBe("disconnected");
@@ -125,7 +165,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("clears all peers", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       await coordinator.disconnect();
 
       expect(coordinator.peerCount).toBe(0);
@@ -133,7 +173,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("closes all channels", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       const channelCount = MockBroadcastChannel.instances.length;
 
       await coordinator.disconnect();
@@ -146,9 +186,9 @@ describe("SyncCoordinator", () => {
 
   describe("broadcast", () => {
     it("sends message via transport", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
 
       const data = new TextEncoder().encode("hello");
@@ -166,7 +206,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("marks own messages as seen (dedup)", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: ArrayBuffer[] = [];
       coordinator.onMessage = (data) => {
@@ -178,7 +218,7 @@ describe("SyncCoordinator", () => {
       coordinator.broadcast(data.buffer as ArrayBuffer);
 
       // Simulate receiving our own message back (shouldn't happen with real BC, but testing dedup)
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       syncChannel.receiveMessage({
         type: "data",
         sourceTabId: coordinator.getLocalId(),
@@ -193,14 +233,14 @@ describe("SyncCoordinator", () => {
 
   describe("receiving messages", () => {
     it("calls onMessage callback for incoming messages", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: Array<{ data: ArrayBuffer; peerId: string; timeOffset: number }> = [];
       coordinator.onMessage = (data, peerId, timeOffset) => {
         receivedMessages.push({ data, peerId, timeOffset });
       };
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const payload = new TextEncoder().encode("hello from peer");
 
       syncChannel.receiveMessage({
@@ -215,14 +255,14 @@ describe("SyncCoordinator", () => {
     });
 
     it("deduplicates messages", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: ArrayBuffer[] = [];
       coordinator.onMessage = (data) => {
         receivedMessages.push(data);
       };
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const payload = new TextEncoder().encode("same message");
 
       // Send same message twice
@@ -245,14 +285,14 @@ describe("SyncCoordinator", () => {
     });
 
     it("does not pass time-sync messages to app", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: ArrayBuffer[] = [];
       coordinator.onMessage = (data) => {
         receivedMessages.push(data);
       };
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const timeSyncMsg = JSON.stringify({ type: "time-sync-request", requestTime: 12345 });
       const payload = new TextEncoder().encode(timeSyncMsg);
 
@@ -270,11 +310,11 @@ describe("SyncCoordinator", () => {
 
   describe("peer discovery", () => {
     it("adds peer to registry when message received", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       expect(coordinator.peerCount).toBe(0);
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const payload = new TextEncoder().encode("hello");
 
       syncChannel.receiveMessage({
@@ -290,9 +330,9 @@ describe("SyncCoordinator", () => {
     });
 
     it("marks broadcast peers as local", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const payload = new TextEncoder().encode("hello");
 
       syncChannel.receiveMessage({
@@ -308,9 +348,9 @@ describe("SyncCoordinator", () => {
 
   describe("time sync", () => {
     it("responds to time-sync-request messages", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
 
       // Clear initial calls
@@ -332,9 +372,9 @@ describe("SyncCoordinator", () => {
     });
 
     it("stores time offset after sync response", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
 
       // First send a regular message to create the peer
       const regularPayload = new TextEncoder().encode("hello");
@@ -370,10 +410,10 @@ describe("SyncCoordinator", () => {
 
   describe("sendTo", () => {
     it("sends message to specific peer", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       // Create the peer first
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const payload = new TextEncoder().encode("hello");
       syncChannel.receiveMessage({
         type: "data",
@@ -393,9 +433,9 @@ describe("SyncCoordinator", () => {
     });
 
     it("does nothing for unknown peer", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
-      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
+      const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
       postMessageSpy.mockClear();
 
@@ -412,7 +452,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("returns leader status after connect", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       // After connect, should have leader election running
       // First tab should become leader
@@ -428,8 +468,8 @@ describe("SyncCoordinator", () => {
       const coord1 = new SyncCoordinator();
       const coord2 = new SyncCoordinator();
 
-      await coord1.connect("shared-room");
-      await coord2.connect("shared-room");
+      await coord1.connect();
+      await coord2.connect();
 
       const received: Array<{ data: string; peerId: string }> = [];
       coord2.onMessage = (data, peerId) => {
@@ -457,8 +497,8 @@ describe("SyncCoordinator", () => {
       const coord1 = new SyncCoordinator();
       const coord2 = new SyncCoordinator();
 
-      await coord1.connect("shared-room");
-      await coord2.connect("shared-room");
+      await coord1.connect();
+      await coord2.connect();
 
       // Send messages to trigger peer discovery
       const msg1 = new TextEncoder().encode("from 1");

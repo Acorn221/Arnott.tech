@@ -22,6 +22,26 @@ import {
   FULL_ROTATION,
 } from "@/lib/physics";
 
+/** Helper to track rotation and count complete spins */
+const trackRotationAndCountSpins = (
+  currentRotation: number,
+  lastRotation: { current: number },
+  accumulatedRotation: { current: number },
+  setSpinCount: Dispatch<SetStateAction<number>>
+): void => {
+  const deltaRotation = currentRotation - lastRotation.current;
+  accumulatedRotation.current += deltaRotation;
+
+  if (Math.abs(accumulatedRotation.current) >= FULL_ROTATION) {
+    const completeRotations = Math.floor(
+      Math.abs(accumulatedRotation.current) / FULL_ROTATION
+    );
+    setSpinCount((prev) => prev + completeRotations);
+    accumulatedRotation.current %= FULL_ROTATION;
+  }
+  lastRotation.current = currentRotation;
+};
+
 export type InteractiveSpinnerProps = ThreeElements["group"] & {
   setSpinCount: Dispatch<SetStateAction<number>>;
   /** When synced, this function computes current state from CRDT */
@@ -64,9 +84,10 @@ const InteractiveSpinner = ({
     groupRef.current.getWorldPosition(center);
     center.project(event.camera);
 
-    const rect = (
-      event.nativeEvent.target as HTMLElement
-    ).getBoundingClientRect();
+    const target = event.nativeEvent.target;
+    if (!(target instanceof HTMLElement)) return 0;
+
+    const rect = target.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -137,7 +158,11 @@ const InteractiveSpinner = ({
 
   const emitRelease = useCallback(() => {
     if (groupRef.current && isSynced) {
-      onRelease?.(groupRef.current.rotation.y, angularVelocity.current);
+      try {
+        onRelease?.(groupRef.current.rotation.y, angularVelocity.current);
+      } catch {
+        // Prevent callback errors from crashing the spinner
+      }
     }
   }, [isSynced, onRelease]);
 
@@ -199,18 +224,12 @@ const InteractiveSpinner = ({
       angularVelocity.current = state.velocity;
 
       // Track rotation for spin count
-      const currentRotation = state.rotation;
-      const deltaRotation = currentRotation - lastRotation.current;
-      accumulatedRotation.current += deltaRotation;
-
-      if (Math.abs(accumulatedRotation.current) >= FULL_ROTATION) {
-        const completeRotations = Math.floor(
-          Math.abs(accumulatedRotation.current) / FULL_ROTATION
-        );
-        setSpinCount((prev) => prev + completeRotations);
-        accumulatedRotation.current %= FULL_ROTATION;
-      }
-      lastRotation.current = currentRotation;
+      trackRotationAndCountSpins(
+        state.rotation,
+        lastRotation,
+        accumulatedRotation,
+        setSpinCount
+      );
       return;
     }
 
@@ -227,18 +246,12 @@ const InteractiveSpinner = ({
       // Use fixed timestep for consistency
       groupRef.current.rotation.y -= angularVelocity.current * FIXED_DT;
 
-      const currentRotation = groupRef.current.rotation.y;
-      const deltaRotation = currentRotation - lastRotation.current;
-      accumulatedRotation.current += deltaRotation;
-
-      if (Math.abs(accumulatedRotation.current) >= FULL_ROTATION) {
-        const completeRotations = Math.floor(
-          Math.abs(accumulatedRotation.current) / FULL_ROTATION
-        );
-        setSpinCount((prev) => prev + completeRotations);
-        accumulatedRotation.current %= FULL_ROTATION;
-      }
-      lastRotation.current = currentRotation;
+      trackRotationAndCountSpins(
+        groupRef.current.rotation.y,
+        lastRotation,
+        accumulatedRotation,
+        setSpinCount
+      );
     }
 
   });
