@@ -22,10 +22,13 @@ import { LeaderElection } from "./leader-election";
 import { BroadcastTransport } from "./transports/broadcast";
 import { SignalingTransport } from "./transports/signaling";
 import type { ITransport } from "./interfaces/transport";
-import { SYNC_ROOM_ID, type TransportType, type TransportState, type TransportConfig } from "./interfaces/types";
+import { SYNC_ROOM_ID, type TransportType, type TransportState } from "./interfaces/types";
 import { MAX_SEEN_MESSAGES, CLOCK_SYNC_INTERVAL_MS } from "./config";
 
 const log = createLogger("sync:coordinator");
+
+/** Pre-computed hex lookup table for fast byte-to-hex conversion */
+const HEX_CHARS = "0123456789abcdef";
 
 /** Coordinator connection state */
 export type CoordinatorState = "disconnected" | "connecting" | "connected" | "reconnecting";
@@ -523,12 +526,15 @@ export class SyncCoordinator {
 
   /**
    * Generate message ID from first 16 bytes.
+   * Uses direct hex conversion for performance (avoids Array.from/map/join overhead).
    */
   private getMessageId(data: ArrayBuffer): string {
-    const view = new Uint8Array(data.slice(0, 16));
-    return Array.from(view)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    const view = new Uint8Array(data, 0, Math.min(16, data.byteLength));
+    let result = "";
+    for (const byte of view) {
+      result += HEX_CHARS[byte >> 4] + HEX_CHARS[byte & 0x0f];
+    }
+    return result;
   }
 
   /**

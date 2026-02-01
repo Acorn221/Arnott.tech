@@ -22,7 +22,13 @@ export {
 export { PeerRegistry, type AddTransportResult, type RemoveTransportResult } from "./peer-registry";
 
 // Time Sync
-export { TimeSyncManager, type TimeSyncMessage, type TimeSyncResult } from "./time-sync-manager";
+export {
+  TimeSyncManager,
+  type TimeSyncMessage,
+  type TimeSyncRequest,
+  type TimeSyncResponse,
+  type TimeSyncResult,
+} from "./time-sync-manager";
 
 // Leader Election
 export { LeaderElection, type LeaderElectionOptions } from "./leader-election";
