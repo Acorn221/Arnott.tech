@@ -127,7 +127,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }
   }, []);
 
-  const { broadcast, sendTo, isConnected, peerCount, connectionState } =
+  const { broadcast, broadcastViaWebSocket, sendTo, isConnected, peerCount, wsPeerCount, connectionState } =
     useWebRTCRoom({
       roomId: "spinner",
       autoConnect: true,
@@ -170,12 +170,23 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       // 1. Broadcast to other tabs (instant, ~1ms)
       localBroadcast({ event, sourceTabId: TAB_ID });
 
-      // 2. Broadcast to WebRTC peers (cross-device)
-      if (isConnected && peerCount > 0) {
-        broadcast(encodeSpinnerEvent(event));
+      // 2. Broadcast to peers (cross-device)
+      if (!isConnected) return;
+
+      const encoded = encodeSpinnerEvent(event);
+
+      // Send to WebRTC peers (fast, P2P)
+      if (peerCount > 0) {
+        broadcast(encoded);
+      }
+
+      // Also send via WS relay if there are WS-only peers
+      // (Duplicates are fine - CRDT resolver ignores same timestamp)
+      if (wsPeerCount > peerCount) {
+        broadcastViaWebSocket(encoded);
       }
     },
-    [isConnected, peerCount, broadcast, localBroadcast],
+    [isConnected, peerCount, wsPeerCount, broadcast, broadcastViaWebSocket, localBroadcast],
   );
 
   // Compute state from current event

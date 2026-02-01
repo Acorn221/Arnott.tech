@@ -59,7 +59,7 @@ export class SignalingRoom extends DurableObject<Env> {
 
     // Set up message handler
     server.addEventListener("message", (event) => {
-      this.handleMessage(peerId, event.data as string);
+      this.handleMessage(peerId, event.data as string | ArrayBuffer);
     });
 
     // Set up close handler
@@ -86,7 +86,22 @@ export class SignalingRoom extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private handleMessage(fromPeerId: string, data: string): void {
+  private handleMessage(fromPeerId: string, data: string | ArrayBuffer): void {
+    // Binary = spinner data, broadcast to all other peers
+    if (data instanceof ArrayBuffer) {
+      for (const [peerId, session] of this.sessions) {
+        if (peerId !== fromPeerId) {
+          try {
+            session.ws.send(data);
+          } catch {
+            // Ignore send errors
+          }
+        }
+      }
+      return;
+    }
+
+    // JSON = signaling, route to specific peer
     let msg: Signal | { type: string };
     try {
       msg = JSON.parse(data);

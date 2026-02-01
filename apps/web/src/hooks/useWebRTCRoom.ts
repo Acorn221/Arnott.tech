@@ -85,9 +85,11 @@ export interface UseWebRTCRoomReturn {
   join: () => Promise<void>;
   leave: () => Promise<void>;
   broadcast: (data: unknown) => void;
+  broadcastViaWebSocket: (data: ArrayBuffer) => void;
   sendTo: (peerId: string, data: unknown) => void;
   isConnected: boolean;
   peerCount: number;
+  wsPeerCount: number;
   peerId: string | null;
   connectionState: ConnectionState;
   reconnectAttempt: number;
@@ -109,6 +111,7 @@ export function useWebRTCRoom(
   const [myPeerId, setMyPeerId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [peerCount, setPeerCount] = useState(0);
+  const [wsPeerCount, setWsPeerCount] = useState(0);
   const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
 
@@ -360,6 +363,7 @@ export function useWebRTCRoom(
     }
     peerConnectionsRef.current.clear();
     setPeerCount(0);
+    setWsPeerCount(0);
   }, []);
 
   // Attempt to reconnect with exponential backoff
@@ -419,6 +423,13 @@ export function useWebRTCRoom(
       };
 
       ws.onmessage = async (event) => {
+        // Binary data = relayed spinner event from another peer
+        if (event.data instanceof ArrayBuffer) {
+          optionsRef.current.onMessage?.("ws-relay", event.data);
+          return;
+        }
+
+        // JSON = signaling message
         let data: ServerMessage;
         try {
           data = JSON.parse(event.data as string) as ServerMessage;
@@ -431,6 +442,7 @@ export function useWebRTCRoom(
           myPeerIdRef.current = peerId;
           setMyPeerId(peerId);
           setIsConnected(true);
+          setWsPeerCount(peers.length);
           setReconnectAttempt(0);
           updateConnectionState('connected');
 
@@ -443,8 +455,10 @@ export function useWebRTCRoom(
           }
         } else if (data.type === "peer-joined") {
           // New peer joined - they will initiate the connection to us
+          setWsPeerCount((c) => c + 1);
         } else if (data.type === "peer-left") {
           handlePeerLeft((data as PeerMessage).peerId);
+          setWsPeerCount((c) => Math.max(0, c - 1));
         } else if (data.type === "offer" || data.type === "answer" || data.type === "ice") {
           if (myPeerIdRef.current) {
             await handleSignal(data);
@@ -516,6 +530,13 @@ export function useWebRTCRoom(
     const peerConn = peerConnectionsRef.current.get(peerId);
     if (peerConn?.dataChannel?.readyState === "open") {
       peerConn.dataChannel.send(JSON.stringify(data));
+    }
+  }, []);
+
+  // Send binary data via WebSocket (fallback when WebRTC unavailable)
+  const broadcastViaWebSocket = useCallback((data: ArrayBuffer) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(data);
     }
   }, []);
 
@@ -597,9 +618,11 @@ export function useWebRTCRoom(
     join,
     leave,
     broadcast,
+    broadcastViaWebSocket,
     sendTo,
     isConnected,
     peerCount,
+    wsPeerCount,
     peerId: myPeerId,
     connectionState,
     reconnectAttempt,
