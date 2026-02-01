@@ -84,23 +84,26 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
     lastWelcomeSpinRef.current = now;
 
-    // If we have an existing event, re-broadcast it to the new peer
-    // This shares our current state without creating a new timestamp
-    if (currentEventRef.current) {
-      broadcastRef.current?.(encodeSpinnerEvent(currentEventRef.current));
-      return;
-    }
+    // Defer broadcast to next microtask to ensure broadcastRef is set
+    // (handles race condition during initial connection)
+    queueMicrotask(() => {
+      // If we have an existing event, re-broadcast it to the new peer
+      if (currentEventRef.current) {
+        broadcastRef.current?.(encodeSpinnerEvent(currentEventRef.current));
+        return;
+      }
 
-    // If no current state, send a welcome spin
-    const welcomeEvent: SpinnerEvent = {
-      type: "release",
-      timestamp: now,
-      rotation: 0,
-      velocity: WELCOME_SPIN_VELOCITY,
-    };
+      // If no current state, send a welcome spin
+      const welcomeEvent: SpinnerEvent = {
+        type: "release",
+        timestamp: performance.now(),
+        rotation: 0,
+        velocity: WELCOME_SPIN_VELOCITY,
+      };
 
-    currentEventRef.current = welcomeEvent;
-    broadcastRef.current?.(encodeSpinnerEvent(welcomeEvent));
+      currentEventRef.current = welcomeEvent;
+      broadcastRef.current?.(encodeSpinnerEvent(welcomeEvent));
+    });
   }, []);
 
   const {

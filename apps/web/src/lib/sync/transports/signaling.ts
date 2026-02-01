@@ -522,26 +522,24 @@ export class SignalingTransport implements ITransport {
 
   /**
    * Broadcast data to all reachable peers.
-   * Uses WebRTC data channels when available, falls back to WebSocket relay.
+   * Uses both WebRTC data channels AND WebSocket relay for reliability.
+   * (WebRTC can be unreliable on some mobile browsers like Safari on iOS)
    */
   broadcast(data: ArrayBuffer): void {
     if (this._state !== "connected") {
       return;
     }
 
-    let hasWsOnlyPeers = false;
-
     // Send to peers with WebRTC data channels
     for (const [, peer] of this.peers) {
       if (peer.rtcConnected && peer.dataChannel?.readyState === "open") {
         peer.dataChannel.send(data);
-      } else {
-        hasWsOnlyPeers = true;
       }
     }
 
-    // Send via WebSocket relay for peers without WebRTC
-    if (hasWsOnlyPeers && this.ws?.readyState === WebSocket.OPEN) {
+    // Always also send via WebSocket relay for reliability
+    // Server will deduplicate if peer receives via both channels
+    if (this.peers.size > 0 && this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(data);
     }
   }
