@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "composite": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "strict": true
-  },
-  "include": ["vite.config.ts", "eslint.config.js", "prettier.config.js", "tailwind.config.js"]
-}

@@ -1,0 +1,11 @@
+{
+  "name": "@arnott/typescript-config",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./react.json": "./react.json",
+    "./worker.json": "./worker.json"
+  }
+}

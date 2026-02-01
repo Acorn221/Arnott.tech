@@ -1,0 +1,15 @@
+name = "j4a-portfolio"
+compatibility_date = "2025-01-31"
+compatibility_flags = ["nodejs_compat"]
+
+main = "packages/worker/src/index.ts"
+assets = { directory = "apps/web/dist" }
+
+# Durable Object for WebSocket signaling
+[[durable_objects.bindings]]
+name = "SIGNALING_ROOM"
+class_name = "SignalingRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SignalingRoom"]
