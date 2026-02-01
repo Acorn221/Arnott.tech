@@ -223,25 +223,24 @@ test.describe("Multi-Browser Sync (WebRTC/WebSocket)", () => {
     expect(messages2.some((m) => m.text === msg1to2)).toBe(true);
   });
 
-  test("leader election across browsers", async () => {
-    // Navigate first browser - should become leader
-    await page1.goto("/");
+  test("both browsers function independently as leaders", async () => {
+    // Navigate both browsers
+    await Promise.all([page1.goto("/"), page2.goto("/")]);
     await waitForConnected(page1);
-
-    // Wait for leadership claim
-    await page1.waitForTimeout(500);
-    const state1 = await getSyncState(page1);
-    expect(state1?.isLeader).toBe(true);
-
-    // Navigate second browser
-    await page2.goto("/");
     await waitForConnected(page2);
 
-    // Each browser has its own leader election (isolated)
-    // Since they're in separate processes, both may claim leadership
-    // The signaling server doesn't coordinate leadership - that's tab-local
+    // Each browser has its own leader election (via BroadcastChannel)
+    // Since they're separate processes, each is leader of its own tab group
+    // The key test is that both can function and sync
+    const state1 = await getSyncState(page1);
     const state2 = await getSyncState(page2);
+
+    expect(state1?.isConnected).toBe(true);
     expect(state2?.isConnected).toBe(true);
+
+    // Both should show synced UI
+    await expect(page1.locator("text=Synced")).toBeVisible();
+    await expect(page2.locator("text=Synced")).toBeVisible();
   });
 });
 

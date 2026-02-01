@@ -40,3 +40,4 @@ lerna-debug.log*
 
 # Example files
 example
+apps/web/playwright-report/index.html
