@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi, type MockInstance } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { BroadcastTransport } from "../transports/broadcast";
 import type { TransportState } from "../interfaces/types";
 
