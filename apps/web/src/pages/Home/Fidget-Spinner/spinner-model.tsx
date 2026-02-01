@@ -96,12 +96,13 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
     });
   }, [isXray]);
 
-  // Apply slight offset animation
-  useFrame((state) => {
+  // Apply slight offset animation (synced across tabs via Date.now)
+  useFrame(() => {
     if (groupRef.current) {
       const maxOffset = 0.01; // Maximum offset in radians (about 3 degrees)
-      const offsetX = Math.sin(state.clock.elapsedTime * 2) * maxOffset;
-      const offsetY = -Math.cos(state.clock.elapsedTime * 2) * maxOffset;
+      const time = Date.now() / 1000; // Convert ms to seconds for sync across tabs
+      const offsetX = Math.sin(time * 2) * maxOffset;
+      const offsetY = -Math.cos(time * 2) * maxOffset;
 
       groupRef.current.rotation.z = offsetY;
       groupRef.current.rotation.x = offsetX;
