@@ -25,6 +25,12 @@ export const TRANSPORT_PRIORITY: Record<TransportType, number> = {
 };
 
 /**
+ * Default room ID for sync. Since there's only one room (the spinner),
+ * this is used as the default everywhere.
+ */
+export const SYNC_ROOM_ID = "spinner";
+
+/**
  * Peer information stored in registry.
  */
 export interface Peer {
@@ -48,8 +54,8 @@ export interface Peer {
  * Configuration for transport connection.
  */
 export interface TransportConfig {
-  /** Room ID to connect to */
-  roomId: string;
+  /** Room ID to connect to (default: SYNC_ROOM_ID) */
+  roomId?: string;
 
   /** Optional signaling server URL (for WebRTC/WebSocket) */
   signalingUrl?: string;

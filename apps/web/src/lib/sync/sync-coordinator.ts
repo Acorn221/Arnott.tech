@@ -22,7 +22,7 @@ import { LeaderElection } from "./leader-election";
 import { BroadcastTransport } from "./transports/broadcast";
 import { SignalingTransport } from "./transports/signaling";
 import type { ITransport } from "./interfaces/transport";
-import type { TransportType, TransportState, TransportConfig } from "./interfaces/types";
+import { SYNC_ROOM_ID, type TransportType, type TransportState, type TransportConfig } from "./interfaces/types";
 
 const log = createLogger("sync:coordinator");
 
@@ -69,7 +69,6 @@ export class SyncCoordinator {
 
   // --- State ---
   private _state: CoordinatorState = "disconnected";
-  private roomId: string | null = null;
   private options: {
     enableBroadcast: boolean;
     enableSignaling: boolean;
@@ -176,14 +175,13 @@ export class SyncCoordinator {
   // --- Connection lifecycle ---
 
   /**
-   * Connect to a sync room.
+   * Connect to sync.
    */
-  async connect(roomId: string): Promise<void> {
-    if (this._state === "connected" && this.roomId === roomId) {
+  async connect(): Promise<void> {
+    if (this._state === "connected") {
       return;
     }
 
-    this.roomId = roomId;
     this.setState("connecting");
 
     try {
@@ -191,7 +189,7 @@ export class SyncCoordinator {
       if (this.options.enableBroadcast) {
         this.broadcastTransport = new BroadcastTransport();
         this.wireTransport(this.broadcastTransport);
-        await this.broadcastTransport.connect({ roomId });
+        await this.broadcastTransport.connect({});
         this.transports.set("broadcast", this.broadcastTransport);
       }
 
@@ -203,7 +201,7 @@ export class SyncCoordinator {
 
       // Start leader election (for remote sync)
       const tabId = this.broadcastTransport?.getLocalId() ?? `tab-${Date.now()}`;
-      this.leader = new LeaderElection({ roomId, tabId });
+      this.leader = new LeaderElection({ roomId: SYNC_ROOM_ID, tabId });
       this.leader.onBecomeLeader = () => {
         log.debug("Became leader");
         // Connect signaling for remote sync (only leader connects)
@@ -245,7 +243,6 @@ export class SyncCoordinator {
     this.registry.clear();
     this.timeSync.clear();
     this.seenMessages.clear();
-    this.roomId = null;
     this.setState("disconnected");
   }
 
@@ -253,7 +250,7 @@ export class SyncCoordinator {
    * Connect to signaling server (called when becoming leader).
    */
   private async connectSignaling(): Promise<void> {
-    if (this.signalingTransport || !this.roomId) {
+    if (this.signalingTransport) {
       return;
     }
 
@@ -262,7 +259,6 @@ export class SyncCoordinator {
       this.signalingTransport = new SignalingTransport();
       this.wireTransport(this.signalingTransport);
       await this.signalingTransport.connect({
-        roomId: this.roomId,
         signalingUrl: this.options.signalingUrl,
         autoReconnect: this.options.autoReconnect,
       });

@@ -9,7 +9,7 @@ export type {
   Peer,
 } from "./interfaces/types";
 export type { ITransport } from "./interfaces/transport";
-export { TRANSPORT_PRIORITY, getBestTransport } from "./interfaces/types";
+export { TRANSPORT_PRIORITY, getBestTransport, SYNC_ROOM_ID } from "./interfaces/types";
 
 // Coordinator
 export {

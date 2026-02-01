@@ -41,8 +41,6 @@ declare global {
 const log = createLogger("sync:hook");
 
 export interface UseSyncRoomOptions {
-  /** Room ID to join */
-  roomId: string;
   /** Auto-connect on mount (default: false) */
   autoConnect?: boolean;
   /** Message received callback (data, peerId, timeOffset) */
@@ -94,7 +92,7 @@ export interface UseSyncRoomReturn {
 }
 
 export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
-  const { roomId, autoConnect = false, onConnectionStateChange } = options;
+  const { autoConnect = false, onConnectionStateChange } = options;
 
   // State
   const [isConnected, setIsConnected] = useState(false);
@@ -201,11 +199,11 @@ export function useSyncRoom(options: UseSyncRoomOptions): UseSyncRoomReturn {
 
   // Connect
   const connect = useCallback(async () => {
-    log.debug("Connecting", { roomId });
+    log.debug("Connecting");
     const coordinator = getCoordinator();
-    await coordinator.connect(roomId);
-    log.debug("Connected", { roomId, state: coordinator.state });
-  }, [getCoordinator, roomId]);
+    await coordinator.connect();
+    log.debug("Connected", { state: coordinator.state });
+  }, [getCoordinator]);
 
   // Disconnect
   const disconnect = useCallback(async () => {

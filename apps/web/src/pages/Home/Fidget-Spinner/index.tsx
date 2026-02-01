@@ -130,7 +130,6 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     connectionState,
     peerInfo,
   } = useSyncRoom({
-    roomId: "spinner",
     autoConnect: true,
     onMessage: handleMessage,
     onPeerJoin: handlePeerJoin,

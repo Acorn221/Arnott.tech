@@ -82,7 +82,7 @@ describe("SyncCoordinator", () => {
       const stateChanges: CoordinatorState[] = [];
       coordinator.onStateChange = (state) => stateChanges.push(state);
 
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       expect(coordinator.state).toBe("connected");
       expect(coordinator.isConnected).toBe(true);
@@ -91,7 +91,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("creates BroadcastChannel for room", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       // Should have channels for sync and leader election
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room");
@@ -99,16 +99,16 @@ describe("SyncCoordinator", () => {
     });
 
     it("does nothing when already connected to same room", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       const channelCount = MockBroadcastChannel.instances.length;
 
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       expect(MockBroadcastChannel.instances.length).toBe(channelCount);
     });
 
     it("returns local ID from broadcast transport", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const localId = coordinator.getLocalId();
       expect(localId).toMatch(/^tab-\d+-[a-z0-9]+$/);
@@ -117,7 +117,7 @@ describe("SyncCoordinator", () => {
 
   describe("disconnect", () => {
     it("transitions to disconnected state", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       await coordinator.disconnect();
 
       expect(coordinator.state).toBe("disconnected");
@@ -125,7 +125,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("clears all peers", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       await coordinator.disconnect();
 
       expect(coordinator.peerCount).toBe(0);
@@ -133,7 +133,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("closes all channels", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
       const channelCount = MockBroadcastChannel.instances.length;
 
       await coordinator.disconnect();
@@ -146,7 +146,7 @@ describe("SyncCoordinator", () => {
 
   describe("broadcast", () => {
     it("sends message via transport", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
@@ -166,7 +166,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("marks own messages as seen (dedup)", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: ArrayBuffer[] = [];
       coordinator.onMessage = (data) => {
@@ -193,7 +193,7 @@ describe("SyncCoordinator", () => {
 
   describe("receiving messages", () => {
     it("calls onMessage callback for incoming messages", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: Array<{ data: ArrayBuffer; peerId: string; timeOffset: number }> = [];
       coordinator.onMessage = (data, peerId, timeOffset) => {
@@ -215,7 +215,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("deduplicates messages", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: ArrayBuffer[] = [];
       coordinator.onMessage = (data) => {
@@ -245,7 +245,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("does not pass time-sync messages to app", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const receivedMessages: ArrayBuffer[] = [];
       coordinator.onMessage = (data) => {
@@ -270,7 +270,7 @@ describe("SyncCoordinator", () => {
 
   describe("peer discovery", () => {
     it("adds peer to registry when message received", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       expect(coordinator.peerCount).toBe(0);
 
@@ -290,7 +290,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("marks broadcast peers as local", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
       const payload = new TextEncoder().encode("hello");
@@ -308,7 +308,7 @@ describe("SyncCoordinator", () => {
 
   describe("time sync", () => {
     it("responds to time-sync-request messages", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
@@ -332,7 +332,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("stores time offset after sync response", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
 
@@ -370,7 +370,7 @@ describe("SyncCoordinator", () => {
 
   describe("sendTo", () => {
     it("sends message to specific peer", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       // Create the peer first
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
@@ -393,7 +393,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("does nothing for unknown peer", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-test-room")!;
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
@@ -412,7 +412,7 @@ describe("SyncCoordinator", () => {
     });
 
     it("returns leader status after connect", async () => {
-      await coordinator.connect("test-room");
+      await coordinator.connect();
 
       // After connect, should have leader election running
       // First tab should become leader
@@ -428,8 +428,8 @@ describe("SyncCoordinator", () => {
       const coord1 = new SyncCoordinator();
       const coord2 = new SyncCoordinator();
 
-      await coord1.connect("shared-room");
-      await coord2.connect("shared-room");
+      await coord1.connect();
+      await coord2.connect();
 
       const received: Array<{ data: string; peerId: string }> = [];
       coord2.onMessage = (data, peerId) => {
@@ -457,8 +457,8 @@ describe("SyncCoordinator", () => {
       const coord1 = new SyncCoordinator();
       const coord2 = new SyncCoordinator();
 
-      await coord1.connect("shared-room");
-      await coord2.connect("shared-room");
+      await coord1.connect();
+      await coord2.connect();
 
       // Send messages to trigger peer discovery
       const msg1 = new TextEncoder().encode("from 1");
