@@ -333,12 +333,36 @@ export class SyncCoordinator {
       this.sendTimeSync(peerId);
     }
 
-    // Relay to other transports if needed (future: for remote sync)
-    // this.relayIfNeeded(transportType, peerId, data);
+    // Relay to other transports
+    // Remote message (WebRTC) → relay to local tabs (Broadcast)
+    // Local message (Broadcast) → relay to remote peers (WebRTC) if leader
+    this.relayToOtherTransports(transportType, data);
 
     // Notify app
     const timeOffset = this.timeSync.getOffset(peerId);
     this.onMessage?.(data, peerId, timeOffset);
+  }
+
+  /**
+   * Relay message to other transports.
+   * - WebRTC message → relay to BroadcastChannel (local tabs)
+   * - BroadcastChannel message → relay to WebRTC (remote peers) if leader
+   */
+  private relayToOtherTransports(sourceTransport: TransportType, data: ArrayBuffer): void {
+    for (const [transportType, transport] of this.transports) {
+      // Don't relay back to source transport
+      if (transportType === sourceTransport) {
+        continue;
+      }
+
+      // Only relay to connected transports
+      if (transport.state !== "connected") {
+        continue;
+      }
+
+      log.debug("Relaying message", { from: sourceTransport, to: transportType });
+      transport.broadcast(data);
+    }
   }
 
   /**
