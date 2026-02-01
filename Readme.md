@@ -1,1 +1,1 @@
-This is my personal website! Check it out [here](https://arnott.tech)
+This is my personal website! Check it out [here](https://a.rno.tt)
