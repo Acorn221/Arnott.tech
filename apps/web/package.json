@@ -15,6 +15,7 @@
     "@animxyz/core": "^0.6.6",
     "@animxyz/react": "^0.6.7",
     "@arnott/api": "workspace:*",
+    "@arnott/logger": "workspace:*",
     "@arnott/shared": "workspace:*",
     "@babel/core": "^7.28.5",
     "@egjs/react-flicking": "^4.15.0",
