@@ -31,6 +31,32 @@ function encodeTimeSyncMessage(msg: TimeSyncMessage): ArrayBuffer {
   return new TextEncoder().encode(JSON.stringify(msg)).buffer;
 }
 
+/** Type guard for TimeSyncRequest */
+function isTimeSyncRequest(msg: unknown): msg is TimeSyncRequest {
+  return (
+    typeof msg === "object" &&
+    msg !== null &&
+    "type" in msg &&
+    msg.type === "time-sync-request" &&
+    "requestTime" in msg &&
+    typeof msg.requestTime === "number"
+  );
+}
+
+/** Type guard for TimeSyncResponse */
+function isTimeSyncResponse(msg: unknown): msg is TimeSyncResponse {
+  return (
+    typeof msg === "object" &&
+    msg !== null &&
+    "type" in msg &&
+    msg.type === "time-sync-response" &&
+    "requestTime" in msg &&
+    typeof msg.requestTime === "number" &&
+    "responseTime" in msg &&
+    typeof msg.responseTime === "number"
+  );
+}
+
 /** Time-sync request message (initiator) */
 export interface TimeSyncRequest {
   type: "time-sync-request";
@@ -118,14 +144,8 @@ export class TimeSyncManager {
 
     try {
       const text = new TextDecoder().decode(data);
-      const msg = JSON.parse(text);
-      return (
-        (msg?.type === "time-sync-request" &&
-          typeof msg.requestTime === "number") ||
-        (msg?.type === "time-sync-response" &&
-          typeof msg.requestTime === "number" &&
-          typeof msg.responseTime === "number")
-      );
+      const msg: unknown = JSON.parse(text);
+      return isTimeSyncRequest(msg) || isTimeSyncResponse(msg);
     } catch {
       return false;
     }
@@ -140,13 +160,10 @@ export class TimeSyncManager {
   handleMessage(peerId: string, data: ArrayBuffer): TimeSyncResult | null {
     try {
       const text = new TextDecoder().decode(data);
-      const msg = JSON.parse(text);
+      const msg: unknown = JSON.parse(text);
 
       // Handle sync request - respond with our time
-      if (
-        msg.type === "time-sync-request" &&
-        typeof msg.requestTime === "number"
-      ) {
+      if (isTimeSyncRequest(msg)) {
         const responseTime = performance.now();
 
         // Create response with both times
@@ -191,11 +208,7 @@ export class TimeSyncManager {
       }
 
       // Handle sync response - calculate RTT-compensated offset
-      if (
-        msg.type === "time-sync-response" &&
-        typeof msg.requestTime === "number" &&
-        typeof msg.responseTime === "number"
-      ) {
+      if (isTimeSyncResponse(msg)) {
         const receiveTime = performance.now(); // T_a2
         const requestTime = msg.requestTime; // T_a1 (echoed)
         const responseTime = msg.responseTime; // T_b1
