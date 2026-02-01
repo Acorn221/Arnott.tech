@@ -12,9 +12,18 @@ import { test, expect, chromium, type Browser, type Page } from "@playwright/tes
  * 6. Mixed transport room - messages reach everyone
  */
 
-// Helper to get sync state
+// Helper to get sync state (query coordinator directly for live data)
 async function getSyncState(page: Page) {
-  return page.evaluate(() => window.__sync_state__);
+  return page.evaluate(() => {
+    const coordinator = window.__sync_coordinator__;
+    if (!coordinator) return window.__sync_state__;
+    return {
+      isConnected: coordinator.isConnected,
+      peerCount: coordinator.peerCount,
+      isLeader: coordinator.isLeader,
+      localId: coordinator.getLocalId(),
+    };
+  });
 }
 
 // Helper to wait for connected
@@ -26,12 +35,14 @@ async function waitForConnected(page: Page, timeout = 15000) {
   return getSyncState(page);
 }
 
-// Helper to wait for peer count
+// Helper to wait for peer count (query coordinator directly)
 async function waitForPeerCount(page: Page, count: number, timeout = 20000) {
   await page.waitForFunction(
-    (expected) =>
-      window.__sync_state__?.isConnected === true &&
-      window.__sync_state__?.peerCount >= expected,
+    (expected) => {
+      const coordinator = window.__sync_coordinator__;
+      if (!coordinator) return false;
+      return coordinator.isConnected && coordinator.peerCount >= expected;
+    },
     count,
     { timeout }
   );

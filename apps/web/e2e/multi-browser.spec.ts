@@ -12,9 +12,18 @@ import { test, expect, chromium, type Browser, type Page } from "@playwright/tes
  * - Signaling server running at ws://localhost:8787/api/signal/ws
  */
 
-// Helper to get sync state from page
+// Helper to get sync state from page (query coordinator directly for live data)
 async function getSyncState(page: Page) {
-  return page.evaluate(() => window.__sync_state__);
+  return page.evaluate(() => {
+    const coordinator = window.__sync_coordinator__;
+    if (!coordinator) return window.__sync_state__;
+    return {
+      isConnected: coordinator.isConnected,
+      peerCount: coordinator.peerCount,
+      isLeader: coordinator.isLeader,
+      localId: coordinator.getLocalId(),
+    };
+  });
 }
 
 // Helper to wait for connected state
@@ -26,12 +35,14 @@ async function waitForConnected(page: Page, timeout = 15000) {
   return getSyncState(page);
 }
 
-// Helper to wait for peer count
+// Helper to wait for peer count (query coordinator directly)
 async function waitForPeerCount(page: Page, count: number, timeout = 20000) {
   await page.waitForFunction(
-    (expected) =>
-      window.__sync_state__?.isConnected === true &&
-      window.__sync_state__?.peerCount >= expected,
+    (expected) => {
+      const coordinator = window.__sync_coordinator__;
+      if (!coordinator) return false;
+      return coordinator.isConnected && coordinator.peerCount >= expected;
+    },
     count,
     { timeout }
   );

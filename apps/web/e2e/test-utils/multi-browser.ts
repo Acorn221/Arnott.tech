@@ -81,6 +81,7 @@ export async function waitForConnected(
 
 /**
  * Wait for a specific number of peers to be connected.
+ * Queries coordinator directly for live peer count.
  */
 export async function waitForPeerCount(
   page: Page,
@@ -88,14 +89,25 @@ export async function waitForPeerCount(
   timeout = 15000
 ): Promise<SyncTestState> {
   await page.waitForFunction(
-    (expected) =>
-      window.__sync_state__?.isConnected === true &&
-      window.__sync_state__?.peerCount >= expected,
+    (expected) => {
+      const coordinator = window.__sync_coordinator__;
+      if (!coordinator) return false;
+      return coordinator.isConnected && coordinator.peerCount >= expected;
+    },
     count,
     { timeout }
   );
 
-  const state = await page.evaluate(() => window.__sync_state__);
+  const state = await page.evaluate(() => {
+    const coordinator = window.__sync_coordinator__;
+    if (!coordinator) return window.__sync_state__;
+    return {
+      isConnected: coordinator.isConnected,
+      peerCount: coordinator.peerCount,
+      isLeader: coordinator.isLeader,
+      localId: coordinator.getLocalId(),
+    };
+  });
   if (!state) {
     throw new Error("Sync state not available");
   }

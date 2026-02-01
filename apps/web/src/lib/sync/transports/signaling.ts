@@ -243,12 +243,14 @@ export class SignalingTransport implements ITransport {
 
     if (msg.type === "welcome") {
       const { peerId, peers } = msg;
+      log.debug("Received welcome", { peerId, peers, peerCount: peers.length });
       this.myPeerId = peerId;
       this.reconnectAttempt = 0;
       this.setState("connected");
 
       // Report all existing peers as reachable (remote, not local)
       for (const remotePeerId of peers) {
+        log.debug("Adding peer from welcome", { remotePeerId });
         this.peers.set(remotePeerId, this.createPeerConnection(remotePeerId));
         this.onPeerReachable?.(remotePeerId, false);
       }
@@ -263,6 +265,7 @@ export class SignalingTransport implements ITransport {
       resolveConnect?.();
     } else if (msg.type === "peer-joined") {
       const { peerId } = msg;
+      log.debug("Peer joined", { peerId });
       this.peers.set(peerId, this.createPeerConnection(peerId));
       this.onPeerReachable?.(peerId, false);
     } else if (msg.type === "peer-left") {

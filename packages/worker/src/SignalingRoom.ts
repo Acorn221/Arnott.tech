@@ -40,6 +40,8 @@ export class SignalingRoom extends DurableObject<Env> {
     // Get existing peer list BEFORE adding new peer
     const existingPeers = [...this.sessions.keys()];
 
+    console.log(`[SignalingRoom] New connection: roomId=${roomId}, peerId=${peerId}, existingPeers=[${existingPeers.join(", ")}]`);
+
     // Create WebSocket pair
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
@@ -69,13 +71,12 @@ export class SignalingRoom extends DurableObject<Env> {
     });
 
     // Send welcome message
-    server.send(JSON.stringify({
-      type: "welcome",
-      peerId,
-      peers: existingPeers,
-    }));
+    const welcomeMsg = { type: "welcome", peerId, peers: existingPeers };
+    console.log(`[SignalingRoom] Sending welcome:`, JSON.stringify(welcomeMsg));
+    server.send(JSON.stringify(welcomeMsg));
 
     // Notify existing peers
+    console.log(`[SignalingRoom] Broadcasting peer-joined to ${this.sessions.size - 1} peers`);
     this.broadcast({ type: "peer-joined", peerId }, peerId);
 
     return new Response(null, { status: 101, webSocket: client });
