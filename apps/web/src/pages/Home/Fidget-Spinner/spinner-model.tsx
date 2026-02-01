@@ -7,6 +7,11 @@ interface SpinnerModelProps {
   isXray: boolean;
 }
 
+/** Maximum wobble offset in radians (about 0.5 degrees) */
+const MAX_WOBBLE_OFFSET = 0.01;
+/** Wobble animation frequency multiplier */
+const WOBBLE_FREQUENCY = 2;
+
 /** Material keys from the fidget spinner GLTF model (based on vertex colors) */
 type SpinnerMaterialKey =
   | "0.000000_0.000000_0.000000_0.000000_0.000000" // Amoungi + Text
@@ -122,10 +127,9 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
   // Apply slight offset animation (synced across tabs via Date.now)
   useFrame(() => {
     if (groupRef.current) {
-      const maxOffset = 0.01; // Maximum offset in radians (about 3 degrees)
       const time = Date.now() / 1000; // Convert ms to seconds for sync across tabs
-      const offsetX = Math.sin(time * 2) * maxOffset;
-      const offsetY = -Math.cos(time * 2) * maxOffset;
+      const offsetX = Math.sin(time * WOBBLE_FREQUENCY) * MAX_WOBBLE_OFFSET;
+      const offsetY = -Math.cos(time * WOBBLE_FREQUENCY) * MAX_WOBBLE_OFFSET;
 
       groupRef.current.rotation.z = offsetY;
       groupRef.current.rotation.x = offsetX;

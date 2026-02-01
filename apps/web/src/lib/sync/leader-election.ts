@@ -112,7 +112,9 @@ export class LeaderElection {
       this._isLeader = false;
       this.startWatchdog();
       log.debug("Became follower", { leaderId: this._leaderId });
-      this.onBecomeFollower?.(this._leaderId!);
+      if (this._leaderId !== null) {
+        this.onBecomeFollower?.(this._leaderId);
+      }
     } else {
       await this.claimLeadership();
     }

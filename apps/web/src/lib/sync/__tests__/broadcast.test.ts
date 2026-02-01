@@ -92,7 +92,7 @@ describe("BroadcastTransport", () => {
 
     it("returns false when BroadcastChannel is undefined", () => {
       const saved = globalThis.BroadcastChannel;
-      // @ts-ignore - intentionally setting to undefined
+      // @ts-expect-error - intentionally setting to undefined for test
       globalThis.BroadcastChannel = undefined;
 
       const newTransport = new BroadcastTransport();
