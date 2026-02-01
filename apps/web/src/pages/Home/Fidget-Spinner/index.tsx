@@ -113,13 +113,11 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     broadcast,
     sendTo,
     isConnected,
-    peerCount,
     connectionState,
     setTimeOffset,
   } = useSyncRoom({
     roomId: "spinner",
     autoConnect: true,
-    autoReconnect: true,
     onMessage: handleMessage,
     onPeerConnect: handlePeerConnect,
   });
@@ -194,10 +192,10 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       <div className="flex w-full justify-center align-middle gap-4 items-center">
         <div className="m-auto flex items-center gap-4">
           <span>Spins: {spinCount}</span>
-          {peerCount > 0 && (
+          {isConnected && (
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-500" />
-              {peerCount + 1} online
+              Synced
             </span>
           )}
         </div>

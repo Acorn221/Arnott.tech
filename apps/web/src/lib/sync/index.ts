@@ -3,20 +3,22 @@ export type { StateComputer, ConflictResolver } from "./types";
 
 // Transport layer
 export {
-  TransportManager,
+  TransportFacade,
   BroadcastTransport,
   SignalingTransport,
-  LeaderElection,
+  WorkerTransport,
+  FallbackCoordinator,
   type Transport,
   type TransportState,
   type TransportType,
-  type TransportManagerOptions,
+  type TransportFacadeOptions,
   type SyncMessage,
   type MessageSource,
   type PeerInfo,
   type SignalingTransportOptions,
-  type LeaderRole,
-  type LeaderElectionConfig,
+  type TabToWorkerMessage,
+  type WorkerToTabMessage,
+  type WorkerState,
 } from "./transport";
 
 // Hooks

@@ -10,12 +10,23 @@ export type {
   PeerInfo,
 } from "./types";
 
-// Transports
+export type {
+  TabToWorkerMessage,
+  WorkerToTabMessage,
+  WorkerState,
+} from "./worker-types";
+
+// Main facade (use this)
+export {
+  TransportFacade,
+  type TransportFacadeOptions,
+} from "./transport-facade";
+
+// Individual transports (for advanced use)
 export { BroadcastTransport } from "./broadcast-transport";
-export { SignalingTransport, type SignalingTransportOptions } from "./signaling-transport";
-
-// Leader Election
-export { LeaderElection, type LeaderRole, type LeaderElectionConfig } from "./leader-election";
-
-// Manager
-export { TransportManager } from "./transport-manager";
+export {
+  SignalingTransport,
+  type SignalingTransportOptions,
+} from "./signaling-transport";
+export { WorkerTransport } from "./worker-transport";
+export { FallbackCoordinator } from "./fallback-coordinator";
