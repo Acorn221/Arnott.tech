@@ -85,10 +85,17 @@ export class SignalingRoom extends DurableObject<Env> {
     // Binary = spinner data, broadcast to all other peers
     // Use typeof check for robustness (instanceof can fail across realms)
     if (typeof data !== "string") {
+      // Wrap binary with 8-byte sender ID header so clients know who sent it
+      const payload = data instanceof ArrayBuffer ? new Uint8Array(data) : new TextEncoder().encode(String(data));
+      const header = new TextEncoder().encode(fromPeerId.padEnd(8, '\0'));
+      const wrapped = new Uint8Array(8 + payload.byteLength);
+      wrapped.set(header, 0);
+      wrapped.set(payload, 8);
+
       for (const [peerId, session] of this.sessions) {
         if (peerId !== fromPeerId) {
           try {
-            session.ws.send(data);
+            session.ws.send(wrapped.buffer);
           } catch (e) {
             console.error(`[SignalingRoom] Failed to relay to ${peerId}:`, e);
           }
@@ -117,6 +124,21 @@ export class SignalingRoom extends DurableObject<Env> {
           sdp: signal.sdp,
           candidate: signal.candidate,
         }));
+      }
+    }
+
+    // Targeted WebSocket relay (for sendTo fallback when WebRTC unavailable)
+    if (msg.type === "relay-to") {
+      const { to, payload } = msg as { type: string; to: string; payload: string };
+      const target = this.sessions.get(to);
+      if (target) {
+        // Decode base64 payload and wrap with sender ID header
+        const payloadBytes = Uint8Array.from(atob(payload), c => c.charCodeAt(0));
+        const header = new TextEncoder().encode(fromPeerId.padEnd(8, '\0'));
+        const wrapped = new Uint8Array(8 + payloadBytes.length);
+        wrapped.set(header, 0);
+        wrapped.set(payloadBytes, 8);
+        target.ws.send(wrapped.buffer);
       }
     }
   }

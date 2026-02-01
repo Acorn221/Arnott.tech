@@ -50,6 +50,7 @@ interface PeerState {
   remoteDescriptionSet: boolean;
   pendingCandidates: RTCIceCandidateInit[];
   timeOffset: number;
+  rtcTimeout: number | null;
 }
 
 /** Signaling messages from server */
@@ -223,14 +224,19 @@ export class SignalingTransport implements Transport {
     resolveConnect?: () => void
   ): Promise<void> {
     // Binary data = relayed from another peer via WebSocket
-    if (event.data instanceof ArrayBuffer) {
+    // Server wraps with 8-byte sender ID header
+    if (event.data instanceof ArrayBuffer && event.data.byteLength > 8) {
+      const view = new Uint8Array(event.data);
+      const senderId = new TextDecoder().decode(view.slice(0, 8)).replace(/\0/g, '');
+      const payload = event.data.slice(8);
+
       this.onMessage?.({
-        data: event.data,
+        data: payload,
         source: {
           transport: "websocket",
-          peerId: "ws-relay",
+          peerId: senderId,  // Actual sender, not "ws-relay"
           isLocalTab: false,
-          timeOffset: 0,
+          timeOffset: this.peers.get(senderId)?.timeOffset ?? 0,
         },
         receivedAt: performance.now(),
       });
@@ -255,9 +261,10 @@ export class SignalingTransport implements Transport {
       this.reconnectAttempt = 0;
       this.setState("connected");
 
-      // Track all existing peers
+      // Track all existing peers and fire onPeerConnect immediately (reachable via WS)
       for (const remotePeerId of peers) {
         this.peers.set(remotePeerId, this.createPeerState(remotePeerId));
+        this.onPeerConnect?.(remotePeerId);
       }
 
       // Initiate WebRTC connections if enabled
@@ -270,9 +277,10 @@ export class SignalingTransport implements Transport {
       resolveConnect?.();
     } else if (msg.type === "peer-joined") {
       const { peerId } = msg;
-      // Add peer but don't call onPeerConnect yet - wait for data channel
-      // The new peer will initiate WebRTC to us
+      // Add peer and fire onPeerConnect immediately (reachable via WS)
+      // WebRTC will be established in the background for better performance
       this.peers.set(peerId, this.createPeerState(peerId));
+      this.onPeerConnect?.(peerId);
     } else if (msg.type === "peer-left") {
       const { peerId } = msg;
       this.removePeer(peerId);
@@ -290,12 +298,16 @@ export class SignalingTransport implements Transport {
       remoteDescriptionSet: false,
       pendingCandidates: [],
       timeOffset: 0,
+      rtcTimeout: null,
     };
   }
 
   private removePeer(peerId: string): void {
     const peer = this.peers.get(peerId);
     if (peer) {
+      if (peer.rtcTimeout) {
+        clearTimeout(peer.rtcTimeout);
+      }
       peer.dataChannel?.close();
       peer.rtcConnection?.close();
       this.peers.delete(peerId);
@@ -308,6 +320,16 @@ export class SignalingTransport implements Transport {
     if (!peer || peer.rtcConnection) return;
 
     this.setupRTCConnection(peer, true);
+
+    // Set timeout to clean up stalled WebRTC connections
+    peer.rtcTimeout = window.setTimeout(() => {
+      if (!peer.rtcConnected) {
+        rtcLog.debug("WebRTC timeout, using WS relay", { peerId: remotePeerId });
+        peer.rtcConnection?.close();
+        peer.rtcConnection = null;
+        peer.dataChannel = null;
+      }
+    }, 10000);
 
     try {
       const offer = await peer.rtcConnection!.createOffer();
@@ -360,7 +382,12 @@ export class SignalingTransport implements Transport {
       channel.onopen = () => {
         peer.dataChannel = channel;
         peer.rtcConnected = true;
-        this.onPeerConnect?.(peer.id);
+        // onPeerConnect already fired on peer-joined/welcome (WS reachable)
+        // Clear any pending RTC timeout
+        if (peer.rtcTimeout) {
+          clearTimeout(peer.rtcTimeout);
+          peer.rtcTimeout = null;
+        }
       };
 
       channel.onclose = () => {
@@ -512,6 +539,9 @@ export class SignalingTransport implements Transport {
     }
 
     for (const [, peer] of this.peers) {
+      if (peer.rtcTimeout) {
+        clearTimeout(peer.rtcTimeout);
+      }
       peer.dataChannel?.close();
       peer.rtcConnection?.close();
     }
@@ -555,11 +585,20 @@ export class SignalingTransport implements Transport {
 
   sendTo(peerId: string, data: ArrayBuffer | string): void {
     const peer = this.peers.get(peerId);
+
+    // Prefer WebRTC
     if (peer?.rtcConnected && peer.dataChannel?.readyState === "open") {
-      // RTCDataChannel.send accepts both string and ArrayBuffer
       peer.dataChannel.send(data as string & ArrayBuffer);
+      return;
     }
-    // No WebSocket fallback for sendTo - it's for targeted messages
+
+    // Fallback to WebSocket targeted relay
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      const payload = data instanceof ArrayBuffer
+        ? btoa(String.fromCharCode(...new Uint8Array(data)))
+        : btoa(data);
+      this.ws.send(JSON.stringify({ type: "relay-to", to: peerId, payload }));
+    }
   }
 
   private setState(state: TransportState): void {

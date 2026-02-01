@@ -39,6 +39,13 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   const handleMessage = useCallback((msg: SyncMessage) => {
     const { data, source } = msg;
 
+    console.log("[Spinner] handleMessage", {
+      dataType: typeof data,
+      isArrayBuffer: data instanceof ArrayBuffer,
+      constructorName: data?.constructor?.name,
+      source: source.transport,
+    });
+
     // Binary = spinner event (fast path)
     if (data instanceof ArrayBuffer) {
       const event = decodeSpinnerEvent(data);

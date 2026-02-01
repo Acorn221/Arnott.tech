@@ -3,7 +3,10 @@
  * Fastest transport (~1ms latency) but only works within same browser.
  */
 
+import { createLogger } from "@arnott/logger";
 import type { Transport, TransportState, SyncMessage } from "./types";
+
+const log = createLogger("sync:broadcast");
 
 /** Generate unique tab ID */
 function generateTabId(): string {
@@ -59,13 +62,24 @@ export class BroadcastTransport implements Transport {
     this.roomId = roomId;
     this.setState("connecting");
 
-    this.channel = new BroadcastChannel(`sync-${roomId}`);
+    const channelName = `sync-${roomId}`;
+    log.debug("Opening channel", { channelName, tabId: this.tabId });
+    this.channel = new BroadcastChannel(channelName);
 
     this.channel.onmessage = (event: MessageEvent<BroadcastMessage>) => {
       const msg = event.data;
+      const payload = msg.payload;
+      log.debug("Received message", {
+        from: msg.sourceTabId,
+        myTabId: this.tabId,
+        payloadType: typeof payload,
+        isArrayBuffer: payload instanceof ArrayBuffer,
+        constructorName: payload?.constructor?.name,
+      });
 
       // Skip messages from self
       if (msg.sourceTabId === this.tabId) {
+        log.debug("Skipping self message");
         return;
       }
 
@@ -99,6 +113,7 @@ export class BroadcastTransport implements Transport {
 
   broadcast(data: ArrayBuffer | string): void {
     if (this._state !== "connected" || !this.channel) {
+      log.debug("Broadcast skipped - not connected", { state: this._state, hasChannel: !!this.channel });
       return;
     }
 
@@ -108,6 +123,7 @@ export class BroadcastTransport implements Transport {
       timestamp: performance.now(),
     };
 
+    log.debug("Broadcasting", { tabId: this.tabId, payloadType: typeof data, isArrayBuffer: data instanceof ArrayBuffer });
     this.channel.postMessage(message);
   }
 

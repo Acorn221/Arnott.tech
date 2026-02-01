@@ -73,7 +73,16 @@ export class FallbackCoordinator implements Transport {
 
     try {
       // 1. Connect BroadcastChannel for local sync
-      this.broadcastTransport.onMessage = (msg) => this.onMessage?.(msg);
+      this.broadcastTransport.onMessage = (msg) => {
+        // Notify app layer
+        this.onMessage?.(msg);
+
+        // RELAY: If leader, forward local tab messages to remote peers
+        if (this._isLeader && this.signaling?.state === "connected") {
+          log.debug("Relaying local→remote", { from: msg.source.peerId });
+          this.signaling.broadcast(msg.data as ArrayBuffer | string);
+        }
+      };
       await this.broadcastTransport.connect(roomId);
 
       // 2. Set up leader election channel
@@ -131,6 +140,12 @@ export class FallbackCoordinator implements Transport {
   }
 
   broadcast(data: ArrayBuffer | string): void {
+    log.debug("Broadcast called", {
+      isLeader: this._isLeader,
+      broadcastState: this.broadcastTransport.state,
+      signalingState: this.signaling?.state
+    });
+
     // Always send to local tabs
     if (this.broadcastTransport.state === "connected") {
       this.broadcastTransport.broadcast(data);
@@ -210,7 +225,16 @@ export class FallbackCoordinator implements Transport {
       autoReconnect: true,
     });
 
-    this.signaling.onMessage = (msg) => this.onMessage?.(msg);
+    this.signaling.onMessage = (msg) => {
+      // Notify app layer
+      this.onMessage?.(msg);
+
+      // RELAY: Forward remote messages to local tabs
+      if (this.broadcastTransport.state === "connected") {
+        log.debug("Relaying remote→local", { from: msg.source.peerId });
+        this.broadcastTransport.broadcast(msg.data as ArrayBuffer | string);
+      }
+    };
     this.signaling.onPeerConnect = (peerId) => this.onPeerConnect?.(peerId);
     this.signaling.onPeerDisconnect = (peerId) => this.onPeerDisconnect?.(peerId);
 
