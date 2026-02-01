@@ -74,30 +74,28 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     [],
   );
 
-  // Trigger a welcome spin when a remote peer joins
+  // Share current state when a remote peer joins
   const handlePeerJoin = useCallback((_peerId: string, isLocal: boolean) => {
-    // Only trigger for remote peers (not local tabs)
+    // Only share state with remote peers (not local tabs)
     if (isLocal) return;
 
     // Debounce to prevent spam
     const now = performance.now();
     if (now - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
-
-    // Get current spinner state
-    const currentState = currentEventRef.current
-      ? spinnerStateComputer.compute(currentEventRef.current, now)
-      : spinnerStateComputer.initialState();
-
-    // Only spin if nearly stopped
-    if (Math.abs(currentState.velocity) > WELCOME_SPIN_VELOCITY_THRESHOLD) return;
-
     lastWelcomeSpinRef.current = now;
 
-    // Create and broadcast welcome spin event
+    // If we have an existing event, re-broadcast it to the new peer
+    // This shares our current state without creating a new timestamp
+    if (currentEventRef.current) {
+      broadcastRef.current?.(encodeSpinnerEvent(currentEventRef.current));
+      return;
+    }
+
+    // If no current state, send a welcome spin
     const welcomeEvent: SpinnerEvent = {
       type: "release",
       timestamp: now,
-      rotation: currentState.rotation,
+      rotation: 0,
       velocity: WELCOME_SPIN_VELOCITY,
     };
 
