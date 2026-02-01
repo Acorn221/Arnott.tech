@@ -2,6 +2,9 @@
  * 8-bit retro sound effects for the slot machine
  * Generated using Web Audio API - no external files needed!
  */
+import { createLogger } from "@arnott/logger";
+
+const log = createLogger("ui:sounds");
 
 class RetroSoundManager {
   private audioContext: AudioContext | null = null;
@@ -53,8 +56,8 @@ class RetroSoundManager {
 
       oscillator.start(ctx.currentTime);
       oscillator.stop(ctx.currentTime + duration);
-    } catch {
-      // Ignore audio errors (user hasn't interacted yet, etc.)
+    } catch (err) {
+      log.debug("Audio playback failed (user may not have interacted yet)", { error: err });
     }
   }
 

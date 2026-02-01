@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { XyzTransition } from "@animxyz/react";
 import { Skull } from "lucide-react";
+import { createLogger } from "@arnott/logger";
+
+const log = createLogger("ui:crash-pc");
 
 type Status = "idle" | "loading" | "rip";
 
@@ -104,7 +107,7 @@ export function CrashProjectCard() {
 
       setStatus("rip");
     } catch (error) {
-      console.error("Failed to crash:", error);
+      log.error("Failed to crash GPU", { error });
       alert(
         `Crash failed: ${error instanceof Error ? error.message : String(error)}`,
       );

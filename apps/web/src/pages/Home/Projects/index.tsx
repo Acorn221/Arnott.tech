@@ -4,7 +4,10 @@ import { ImFirefox } from "react-icons/im";
 import { BiLinkExternal } from "react-icons/bi";
 import ReactGA from "react-ga4";
 import { useEffect, useState } from "react";
+import { createLogger } from "@arnott/logger";
 import Text from "@/misc/Text";
+
+const log = createLogger("ui:projects");
 import TechStackSlotMachine from "../TechStackSlotMachine";
 import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
 import { GiArchiveResearch } from "react-icons/gi";
@@ -32,7 +35,7 @@ const Projects = () => {
         // Set referrer source to hostname
         setReferrerSource(hostname);
       } catch (e) {
-        console.error("Error parsing referrer:", e);
+        log.warn("Failed to parse referrer URL", { referrer: document.referrer, error: e });
       }
     }
   }, []);

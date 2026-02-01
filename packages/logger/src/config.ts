@@ -41,7 +41,7 @@ export function isNamespaceEnabled(
 }
 
 function getInitialLevel(): LogLevel {
-  if (typeof import.meta !== "undefined" && import.meta.env) {
+  if (import.meta.env) {
     const envLevel = import.meta.env.VITE_LOG_LEVEL as LogLevel | undefined;
     if (envLevel && envLevel in LOG_LEVELS) {
       return envLevel;
@@ -52,7 +52,7 @@ function getInitialLevel(): LogLevel {
 }
 
 function getInitialNamespaces(): Set<string> {
-  if (typeof import.meta !== "undefined" && import.meta.env) {
+  if (import.meta.env) {
     const debug = import.meta.env.VITE_DEBUG as string | undefined;
     if (debug) {
       return parseNamespacePatterns(debug);

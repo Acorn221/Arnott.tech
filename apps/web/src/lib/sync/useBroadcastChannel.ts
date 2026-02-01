@@ -1,4 +1,7 @@
 import { useRef, useCallback, useEffect } from 'react';
+import { createLogger } from "@arnott/logger";
+
+const log = createLogger("sync:broadcast");
 
 export interface UseBroadcastChannelOptions<T = unknown> {
   channelName: string;
@@ -58,8 +61,8 @@ export function useBroadcastChannel<T = unknown>(
     };
 
     // Handle errors
-    channelRef.current.onmessageerror = () => {
-      // Message couldn't be deserialized, ignore
+    channelRef.current.onmessageerror = (event) => {
+      log.debug("Failed to deserialize broadcast message", { event });
     };
 
     return () => {
@@ -72,8 +75,8 @@ export function useBroadcastChannel<T = unknown>(
     if (channelRef.current && enabled) {
       try {
         channelRef.current.postMessage(data);
-      } catch {
-        // Message couldn't be serialized, ignore
+      } catch (err) {
+        log.debug("Failed to serialize broadcast message", { error: err });
       }
     }
   }, [enabled]);

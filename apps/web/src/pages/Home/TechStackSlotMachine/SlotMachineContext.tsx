@@ -10,6 +10,9 @@ import {
   useEffect,
 } from "react";
 import type * as THREE from "three";
+import { createLogger } from "@arnott/logger";
+
+const log = createLogger("ui:slot-machine");
 import { type AnimatedGlowBorderMaterial } from "./display-border-material";
 import { type DynamicDisplayPlate } from "./display-plate";
 import { type AnimatedFaceplateMaterial } from "./faceplate-material";
@@ -367,8 +370,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
             await navigator.share(shareData);
             return;
           }
-        } catch {
-          // Fall through to text-only share
+        } catch (err) {
+          log.debug("Failed to share with screenshot, falling back to text", { error: err });
         }
       }
 
@@ -382,8 +385,8 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       // Desktop - open share dialog with screenshot
       onShareDialog(lastResult);
     } else {
-      // Fallback - log to console
-      console.log(text);
+      // Fallback - log share text
+      log.info("Share result (no share dialog available)", { text });
     }
   }, [lastResult, onShareDialog, captureScreenshot]);
 

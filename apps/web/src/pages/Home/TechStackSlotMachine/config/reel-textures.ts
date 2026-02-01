@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { createLogger } from "@arnott/logger";
 import {
   type Technology,
   BACKEND_TECHNOLOGIES,
@@ -6,6 +7,8 @@ import {
   DATABASE_TECHNOLOGIES,
   type ReelCategory,
 } from "./technologies";
+
+const log = createLogger("ui:reel-textures");
 
 // ============================================================================
 // Types
@@ -63,7 +66,7 @@ const preloadImages = async (
             resolve();
           };
           img.onerror = () => {
-            console.warn(`Failed to load icon for ${tech.name}`);
+            log.warn("Failed to load tech icon", { techName: tech.name, icon: tech.icon });
             resolve();
           };
         }),

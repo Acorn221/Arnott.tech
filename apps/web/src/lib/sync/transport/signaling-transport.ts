@@ -7,7 +7,11 @@
  * - WebSocket relay is used as fallback when WebRTC fails
  */
 
+import { createLogger } from "@arnott/logger";
 import type { Transport, TransportState, SyncMessage, TransportType } from "./types";
+
+const log = createLogger("sync:signaling");
+const rtcLog = createLogger("sync:webrtc");
 
 // Use VITE_API_URL in production, empty string (relative) in dev
 const API_BASE = import.meta.env.VITE_API_URL || "";
@@ -240,7 +244,8 @@ export class SignalingTransport implements Transport {
     let msg: ServerMessage;
     try {
       msg = JSON.parse(event.data) as ServerMessage;
-    } catch {
+    } catch (err) {
+      log.debug("Failed to parse server message", { error: err });
       return;
     }
 
@@ -308,8 +313,8 @@ export class SignalingTransport implements Transport {
       const offer = await peer.rtcConnection!.createOffer();
       await peer.rtcConnection!.setLocalDescription(offer);
       this.sendSignal("offer", remotePeerId, { sdp: offer.sdp });
-    } catch {
-      // WebRTC failed - peer will use WebSocket relay
+    } catch (err) {
+      rtcLog.debug("WebRTC offer failed, using WS relay", { peerId: remotePeerId, error: err });
     }
   }
 
@@ -358,7 +363,8 @@ export class SignalingTransport implements Transport {
         } else {
           try {
             data = JSON.parse(event.data);
-          } catch {
+          } catch (err) {
+            rtcLog.debug("Failed to parse data channel message, using raw", { error: err });
             data = event.data;
           }
         }
@@ -413,8 +419,8 @@ export class SignalingTransport implements Transport {
         const answer = await peer.rtcConnection!.createAnswer();
         await peer.rtcConnection!.setLocalDescription(answer);
         this.sendSignal("answer", from, { sdp: answer.sdp });
-      } catch {
-        // Offer handling failed
+      } catch (err) {
+        rtcLog.debug("Failed to handle offer", { peerId: from, error: err });
       }
     } else if (type === "answer") {
       if (peer.rtcConnection) {
@@ -422,16 +428,16 @@ export class SignalingTransport implements Transport {
           await peer.rtcConnection.setRemoteDescription({ type: "answer", sdp });
           peer.remoteDescriptionSet = true;
           await this.processPendingCandidates(peer);
-        } catch {
-          // Answer handling failed
+        } catch (err) {
+          rtcLog.debug("Failed to handle answer", { peerId: from, error: err });
         }
       }
     } else if (type === "ice" && candidate) {
       if (peer.remoteDescriptionSet && peer.rtcConnection) {
         try {
           await peer.rtcConnection.addIceCandidate(candidate);
-        } catch {
-          // ICE candidate failed
+        } catch (err) {
+          rtcLog.debug("Failed to add ICE candidate", { peerId: from, error: err });
         }
       } else {
         peer.pendingCandidates.push(candidate);
@@ -444,8 +450,8 @@ export class SignalingTransport implements Transport {
       for (const candidate of peer.pendingCandidates) {
         try {
           await peer.rtcConnection.addIceCandidate(candidate);
-        } catch {
-          // Ignore candidate errors
+        } catch (err) {
+          rtcLog.debug("Failed to add pending ICE candidate", { peerId: peer.id, error: err });
         }
       }
       peer.pendingCandidates = [];
