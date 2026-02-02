@@ -45,6 +45,10 @@ export const Shop: FC = () => {
     if (upgrade.id === "theoMode") {
       return isStimulationPage && stimulationMaxed;
     }
+    // FTX mode shows alongside auto spin (after stimulation mode is maxed)
+    if (upgrade.id === "ftxMode") {
+      return isStimulationPage && stimulationMaxed;
+    }
     // Continue on Desktop only shows on mobile after all upgrades are maxed
     if (upgrade.id === "continueOnDesktop") {
       return isMobile && allMaxed;

@@ -6,6 +6,7 @@ import {
   RotateCw,
   Share2,
   Tv,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -66,6 +67,14 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: Tv,
     costs: [1000000],
     effect: (level) => (level > 0 ? 2 : 1), // 2x multiplier when unlocked
+  },
+  {
+    id: "ftxMode",
+    name: "Invest in FTX",
+    description: "Invest 2M spins, sell before the crash!",
+    icon: TrendingUp,
+    costs: [3000000],
+    effect: (level) => (level > 0 ? 1 : 0),
   },
   {
     id: "continueOnDesktop",

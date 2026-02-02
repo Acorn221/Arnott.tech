@@ -5,6 +5,7 @@ import {
   selectStimulationUnlocked,
   selectSpinCount,
   selectTheoModeUnlocked,
+  selectFtxModeUnlocked,
   restoreState,
 } from "@/store/slices/gameSlice";
 import { decodeGameState } from "@/lib/stateCodec";
@@ -12,13 +13,16 @@ import FidgetSpinner from "@/components/game/FidgetSpinner";
 import SlotMachine from "@/components/game/SlotMachine";
 import Shop from "@/components/game/Shop";
 import TheoVideo from "@/components/game/TheoVideo";
+import FTXInvestment from "@/components/game/FTXInvestment";
 
 const StimulationSpinner: FC = () => {
   const dispatch = useAppDispatch();
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);
   const theoModeUnlocked = useAppSelector(selectTheoModeUnlocked);
+  const ftxModeUnlocked = useAppSelector(selectFtxModeUnlocked);
   const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
+  const [ftxClosed, setFtxClosed] = useState(false);
 
   // Check for state param and restore before deciding to redirect
   useEffect(() => {
@@ -48,7 +52,7 @@ const StimulationSpinner: FC = () => {
   return (
     <div className="min-h-screen bg-black text-white lg:h-screen lg:overflow-hidden lg:relative">
       {/* Mobile: scrollable layout */}
-      <div className="lg:hidden flex flex-col items-center py-8 gap-8">
+      <div className="lg:hidden flex flex-col items-center py-8 gap-8 px-4">
         {theoModeUnlocked && <TheoVideo />}
         <div className="text-4xl font-bold text-center">
           {spinCount.toLocaleString()} <span className="text-zinc-400 text-2xl">spins</span>
@@ -60,6 +64,9 @@ const StimulationSpinner: FC = () => {
           className="w-full max-w-[500px] h-[300px]"
         />
         <Shop />
+        {ftxModeUnlocked && !ftxClosed && (
+          <FTXInvestment className="w-full max-w-[400px]" onClose={() => setFtxClosed(true)} />
+        )}
         <SlotMachine className="w-full max-w-[500px] h-[350px]" />
       </div>
 
@@ -85,6 +92,13 @@ const StimulationSpinner: FC = () => {
           />
           <Shop />
         </div>
+
+        {/* FTX Investment - bottom left */}
+        {ftxModeUnlocked && !ftxClosed && (
+          <div className="absolute bottom-4 left-4 z-10">
+            <FTXInvestment onClose={() => setFtxClosed(true)} />
+          </div>
+        )}
 
         {/* SlotMachine - bottom right */}
         <div className="absolute bottom-4 right-4 w-[500px] h-[450px]">

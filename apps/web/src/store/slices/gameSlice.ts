@@ -94,6 +94,8 @@ export const selectAutoSpinLevel = (state: RootState) =>
   state.game.upgrades["autoSpin"] ?? 0;
 export const selectTheoModeUnlocked = (state: RootState) =>
   (state.game.upgrades["theoMode"] ?? 0) > 0;
+export const selectFtxModeUnlocked = (state: RootState) =>
+  (state.game.upgrades["ftxMode"] ?? 0) > 0;
 export const selectUpgrades = (state: RootState) => state.game.upgrades;
 
 export default gameSlice.reducer;

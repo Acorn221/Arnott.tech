@@ -11,6 +11,7 @@ const UPGRADE_ORDER = [
   "stimulationMode",
   "autoSpin",
   "theoMode",
+  "ftxMode",
 ];
 
 // Simple checksum - not secure, just deters casual editing
