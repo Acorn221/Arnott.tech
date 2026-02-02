@@ -40,6 +40,8 @@ export class DynamicDisplayPlate {
 
   private scoreLabel = "";
 
+  private spinsWon: number | null = null;
+
   constructor(config: Partial<DisplayPlateConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
 
@@ -77,11 +79,12 @@ export class DynamicDisplayPlate {
     this.render();
   }
 
-  /** Show a score result with styling - score+emoji on left, label on right */
-  showScore(score: number, label: string, color: string, emoji: string): void {
+  /** Show a score result with styling - score+emoji on left, label/spins on right */
+  showScore(score: number, label: string, color: string, emoji: string, spinsWon?: number): void {
     this.isScoreMode = true;
     this.scoreValue = score;
     this.scoreLabel = label;
+    this.spinsWon = spinsWon ?? null;
     this.config.textColor = color;
     this.config.emoji = emoji;
 
@@ -99,13 +102,14 @@ export class DynamicDisplayPlate {
   }
 
   /** Reset to default spin message */
-  reset(): void {
+  reset(gamblingEnabled = false, spinCost = 10): void {
     this.isScoreMode = false;
-    this.config.text = "SPIN TO WIN!";
+    this.spinsWon = null;
+    this.config.text = gamblingEnabled ? `COST: ${spinCost} SPINS` : "SPIN TO WIN!";
     this.config.subText = "";
-    this.config.textColor = "#FFFFFF";
+    this.config.textColor = gamblingEnabled ? "#FFD700" : "#FFFFFF";
     this.config.subTextColor = "#888888";
-    this.config.fontSize = 58;
+    this.config.fontSize = gamblingEnabled ? 48 : 58;
     this.config.emoji = "";
     this.material.emissiveIntensity = 0;
     this.render();
@@ -135,32 +139,47 @@ export class DynamicDisplayPlate {
     ctx.fillRect(0, 0, width, height);
 
     if (this.isScoreMode) {
-      // Score mode: emoji + score on left, label on right
-      const { emoji } = this.config;
-      const scoreText = `${this.scoreValue}`;
+      if (this.spinsWon !== null) {
+        // Gambling mode: show spins won centered and large
+        ctx.save();
+        ctx.font = `bold 64px ${fontFamily}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 3;
+        ctx.fillStyle = this.spinsWon > 0 ? "#00FF88" : "#FF4444";
+        const text = this.spinsWon > 0 ? `+${this.spinsWon.toLocaleString()}` : "0 SPINS";
+        ctx.fillText(text, width / 2, height / 2);
+        ctx.restore();
+      } else {
+        // Normal mode: emoji + score on left, label on right
+        const { emoji } = this.config;
+        const scoreText = `${this.scoreValue}`;
 
-      // Left side: emoji + score (smaller to fit)
-      ctx.save();
-      ctx.font = `bold 52px ${fontFamily}`;
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(0,0,0,0.5)";
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetY = 2;
-      ctx.fillStyle = textColor;
-      ctx.fillText(`${emoji} ${scoreText}`, 16, height / 2);
-      ctx.restore();
+        // Left side: emoji + score
+        ctx.save();
+        ctx.font = `bold 52px ${fontFamily}`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetY = 2;
+        ctx.fillStyle = textColor;
+        ctx.fillText(`${emoji} ${scoreText}`, 16, height / 2);
+        ctx.restore();
 
-      // Right side: label (smaller)
-      ctx.save();
-      ctx.font = `bold 28px ${fontFamily}`;
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(0,0,0,0.3)";
-      ctx.shadowBlur = 2;
-      ctx.fillStyle = textColor;
-      ctx.fillText(this.scoreLabel, width - 16, height / 2);
-      ctx.restore();
+        // Right side: label
+        ctx.save();
+        ctx.font = `bold 28px ${fontFamily}`;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.3)";
+        ctx.shadowBlur = 2;
+        ctx.fillStyle = textColor;
+        ctx.fillText(this.scoreLabel, width - 16, height / 2);
+        ctx.restore();
+      }
     } else {
       // Normal mode: centered text
       const { text, fontSize } = this.config;

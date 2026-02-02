@@ -29,6 +29,7 @@ import {
   getScoreMessage,
 } from "./config/scoring";
 import { soundManager } from "./sounds";
+import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
 
 // Share button material type
 export interface ShareButtonMaterial {
@@ -147,6 +148,7 @@ interface SlotMachineProviderProps {
   captureScreenshot?: () => string | null;
   onAttemptSpin?: () => boolean;
   onSpinComplete?: (score: number) => void;
+  gamblingEnabled?: boolean;
 }
 
 export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
@@ -155,6 +157,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   captureScreenshot,
   onAttemptSpin,
   onSpinComplete,
+  gamblingEnabled,
 }) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -325,14 +328,16 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       soundManager.playLose();
     }
 
-    // Update display plate with score
+    // Update display plate with score (and spins won if gambling)
+    const spinsWon = gamblingEnabled ? calculateSpinsWon(score.score) : undefined;
     displayPlateRef.current?.showScore(
       score.score,
       score.label,
       score.color,
       score.emoji,
+      spinsWon,
     );
-  }, [onSpinComplete]);
+  }, [onSpinComplete, gamblingEnabled]);
 
   // Share the result
   const shareResult = useCallback(async () => {
@@ -448,6 +453,13 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   useEffect(() => {
     void initializeReels();
   }, [initializeReels]);
+
+  // Update display plate when gambling mode changes
+  useEffect(() => {
+    if (displayPlateRef.current && !isSpinningRef.current && !lastResult) {
+      displayPlateRef.current.reset(gamblingEnabled, SPIN_COST);
+    }
+  }, [gamblingEnabled, lastResult]);
 
   const value = useMemo<SlotMachineContextValue>(
     () => ({

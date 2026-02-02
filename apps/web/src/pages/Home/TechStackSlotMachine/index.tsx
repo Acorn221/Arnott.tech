@@ -113,13 +113,7 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   }, []);
 
   return (
-    <div {...props} className={`relative ${props.className ?? ""}`}>
-      {/* Cost indicator when gambling is unlocked */}
-      {gamblingUnlocked && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-black/80 px-3 py-1 rounded text-xs text-amber-400 font-medium">
-          Cost: {SPIN_COST} spins per pull
-        </div>
-      )}
+    <div {...props}>
       <Canvas
         ref={canvasRef}
         camera={{
@@ -138,6 +132,7 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
           captureScreenshot={captureScreenshot}
           onAttemptSpin={gamblingUnlocked ? handleAttemptSpin : undefined}
           onSpinComplete={gamblingUnlocked ? handleSpinComplete : undefined}
+          gamblingEnabled={gamblingUnlocked}
         >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 
