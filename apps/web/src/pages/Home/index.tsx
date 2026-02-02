@@ -15,6 +15,7 @@ import { getEmail } from "./util/misc";
 import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
 import FidgetSpinner from "./Fidget-Spinner";
 import Shop from "./Fidget-Spinner/Shop";
+import StickySpinBalance from "./Fidget-Spinner/StickySpinBalance";
 
 const txt = Text.home;
 
@@ -79,6 +80,7 @@ const Home = () => {
 
   return (
     <div className="h-full text-white">
+      <StickySpinBalance />
       <XyzTransition appear xyz={`${fadeAnimation} down-2`}>
         <div className="text-5xl text-center py-5 h-[10vh] min-h-[2em] min-w-fit">
           {txt.title}

@@ -114,10 +114,10 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
 
   return (
     <div {...props} className={`relative ${props.className ?? ""}`}>
-      {/* Spin balance display - only show when gambling is unlocked */}
+      {/* Cost indicator when gambling is unlocked */}
       {gamblingUnlocked && (
-        <div className="absolute top-2 left-2 z-10 bg-black/70 px-3 py-1 rounded text-sm text-white">
-          {spinCount} spins (Cost: {SPIN_COST})
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-black/80 px-3 py-1 rounded text-xs text-amber-400 font-medium">
+          Cost: {SPIN_COST} spins per pull
         </div>
       )}
       <Canvas
