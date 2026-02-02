@@ -3,6 +3,7 @@ import { spinnerRouter } from "./spinner.js";
 
 /**
  * Root router for all tRPC procedures
+ * note: Not in use
  */
 export const appRouter = router({
   spinner: spinnerRouter,
