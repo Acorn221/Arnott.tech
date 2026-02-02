@@ -50,7 +50,7 @@ const WELCOME_SPIN_DELAY_MS = 100;
 const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 
 /** Cooldown after user spin before auto-spin kicks in (ms) */
-const AUTO_SPIN_COOLDOWN = 10000;
+const AUTO_SPIN_COOLDOWN = 5000;
 /** Auto spin intervals by level (ms) - faster at higher levels */
 const AUTO_SPIN_INTERVALS = [1000, 800, 650, 500, 400, 300, 200, 150];
 /** Auto spin velocity boosts by level (radians/second) - top 3 levels exceed manual spinning */
@@ -85,6 +85,17 @@ const FidgetSpinner: FC<FidgetSpinnerProps> = ({
   const lastUserSpinRef = useRef(0);
   // Visual pulse when auto-spin triggers
   const [autoSpinPulse, setAutoSpinPulse] = useState(false);
+  // Track previous auto-spin level to detect upgrades
+  const prevAutoSpinLevelRef = useRef(autoSpinLevel);
+
+  // Reset cooldown and trigger immediate spin when auto-spin is upgraded
+  useEffect(() => {
+    if (autoSpinLevel > prevAutoSpinLevelRef.current && enableAutoSpin) {
+      // Reset cooldown so auto-spin starts immediately
+      lastUserSpinRef.current = 0;
+    }
+    prevAutoSpinLevelRef.current = autoSpinLevel;
+  }, [autoSpinLevel, enableAutoSpin]);
 
   // Wrapper for InteractiveSpinner compatibility
   const setSpinCount = useCallback(
@@ -286,12 +297,15 @@ const FidgetSpinner: FC<FidgetSpinnerProps> = ({
       const state = computeState(Date.now());
       // Boost velocity in the current direction, or start spinning if stopped
       const currentVelocity = state.velocity || 0;
+      const wasStatic = Math.abs(currentVelocity) < 1;
       const newVelocity = currentVelocity + velocityBoost * (currentVelocity >= 0 ? 1 : -1);
       autoSpinBoost(state.rotation, newVelocity);
 
-      // Trigger visual pulse
-      setAutoSpinPulse(true);
-      setTimeout(() => setAutoSpinPulse(false), 300);
+      // Only show wind animation when going from static to spinning
+      if (wasStatic) {
+        setAutoSpinPulse(true);
+        setTimeout(() => setAutoSpinPulse(false), 500);
+      }
     }, spinInterval);
 
     return () => clearInterval(interval);

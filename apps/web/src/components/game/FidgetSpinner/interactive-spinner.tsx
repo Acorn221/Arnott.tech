@@ -14,6 +14,7 @@ import {
   useFrame,
 } from "@react-three/fiber";
 import SpinnerModel from "./spinner-model";
+import AutoSpinEffect from "./AutoSpinEffect";
 import type { SpinnerState } from "./spinner-codec";
 import {
   FRICTION_BASE,
@@ -302,16 +303,8 @@ const InteractiveSpinner = ({
       onPointerUp={handlePointerUp}
     >
       <SpinnerModel isXray={isXray} rgbLevel={rgbLevel} />
-      {/* Auto-spin pulse glow effect */}
-      {autoSpinPulse && (
-        <pointLight
-          position={[0, 0.02, 0]}
-          intensity={3}
-          distance={0.15}
-          color="#00ffaa"
-          decay={2}
-        />
-      )}
+      {/* Auto-spin wind burst effect - counter-rotates to stay fixed in world space */}
+      <AutoSpinEffect active={autoSpinPulse} parentRef={groupRef} />
     </group>
   );
 };
