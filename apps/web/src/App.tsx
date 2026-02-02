@@ -22,7 +22,7 @@ const DevKeyboardShortcuts = () => {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "=") {
-        dispatch(addSpins(1_000_000));
+        dispatch(addSpins(1_000_000_000));
       }
     };
 
