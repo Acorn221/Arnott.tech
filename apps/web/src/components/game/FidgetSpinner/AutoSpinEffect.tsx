@@ -19,7 +19,7 @@ const PARTICLE_LIFETIME = 0.4; // seconds
 const AutoSpinEffect = ({ active, parentRef }: AutoSpinEffectProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const particlesRef = useRef<THREE.InstancedMesh>(null);
-  const startTimeRef = useRef(0);
+  const startTimeRef = useRef(PARTICLE_LIFETIME + 1); // Start past lifetime so no animation on load
   const wasActive = useRef(false);
 
   // Create a simple elongated shape for speed lines
