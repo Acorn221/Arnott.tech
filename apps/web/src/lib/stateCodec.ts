@@ -10,6 +10,7 @@ const UPGRADE_ORDER = [
   "gamblingMode",
   "stimulationMode",
   "autoSpin",
+  "theoMode",
 ];
 
 // Simple checksum - not secure, just deters casual editing

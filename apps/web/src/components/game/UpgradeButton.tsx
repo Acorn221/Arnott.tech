@@ -82,11 +82,11 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
     return (
       <button
         onClick={handlePurchase}
-        className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all min-w-[100px] bg-blue-700 hover:bg-blue-600 cursor-pointer"
+        className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all w-[160px] bg-blue-700 hover:bg-blue-600 cursor-pointer"
         title={upgrade.description}
       >
         <Icon className="w-8 h-8" />
-        <span className="text-sm font-medium">{upgrade.name}</span>
+        <span className="text-sm font-medium text-center leading-tight">{upgrade.name}</span>
         <span className="text-xs text-gray-300">{upgrade.description}</span>
       </button>
     );
@@ -97,7 +97,7 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
       onClick={handlePurchase}
       disabled={!canAfford}
       className={`
-        flex flex-col items-center gap-2 p-4 rounded-xl transition-all min-w-[100px]
+        flex flex-col items-center gap-2 p-4 rounded-xl transition-all w-[160px]
         ${
           canAfford
             ? "bg-zinc-700 hover:bg-zinc-600 cursor-pointer"
@@ -107,7 +107,7 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
       title={upgrade.description}
     >
       <Icon className="w-8 h-8" />
-      <span className="text-sm font-medium">{upgrade.name}</span>
+      <span className="text-sm font-medium text-center leading-tight">{upgrade.name}</span>
       <span className="text-xs text-gray-400">
         Lvl {level} → {level + 1}
       </span>

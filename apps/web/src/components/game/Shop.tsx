@@ -41,6 +41,10 @@ export const Shop: FC = () => {
     if (upgrade.id === "autoSpin") {
       return isStimulationPage && stimulationMaxed;
     }
+    // Theo mode shows alongside auto spin (after stimulation mode is maxed)
+    if (upgrade.id === "theoMode") {
+      return isStimulationPage && stimulationMaxed;
+    }
     // Continue on Desktop only shows on mobile after all upgrades are maxed
     if (upgrade.id === "continueOnDesktop") {
       return isMobile && allMaxed;

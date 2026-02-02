@@ -4,17 +4,20 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import {
   selectStimulationUnlocked,
   selectSpinCount,
+  selectTheoModeUnlocked,
   restoreState,
 } from "@/store/slices/gameSlice";
 import { decodeGameState } from "@/lib/stateCodec";
 import FidgetSpinner from "@/components/game/FidgetSpinner";
 import SlotMachine from "@/components/game/SlotMachine";
 import Shop from "@/components/game/Shop";
+import TheoVideo from "@/components/game/TheoVideo";
 
 const StimulationSpinner: FC = () => {
   const dispatch = useAppDispatch();
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);
+  const theoModeUnlocked = useAppSelector(selectTheoModeUnlocked);
   const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
 
   // Check for state param and restore before deciding to redirect
@@ -46,6 +49,7 @@ const StimulationSpinner: FC = () => {
     <div className="min-h-screen bg-black text-white lg:h-screen lg:overflow-hidden lg:relative">
       {/* Mobile: scrollable layout */}
       <div className="lg:hidden flex flex-col items-center py-8 gap-8">
+        {theoModeUnlocked && <TheoVideo />}
         <div className="text-4xl font-bold text-center">
           {spinCount.toLocaleString()} <span className="text-zinc-400 text-2xl">spins</span>
         </div>
@@ -61,6 +65,13 @@ const StimulationSpinner: FC = () => {
 
       {/* Desktop: absolute positioning */}
       <div className="hidden lg:block h-full">
+        {/* Theo video - top left */}
+        {theoModeUnlocked && (
+          <div className="absolute top-4 left-4 z-10">
+            <TheoVideo />
+          </div>
+        )}
+
         {/* Centered FidgetSpinner with counter above and shop below */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="text-6xl font-bold mb-4">

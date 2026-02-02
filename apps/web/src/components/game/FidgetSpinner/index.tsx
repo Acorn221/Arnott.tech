@@ -75,7 +75,9 @@ const FidgetSpinner: FC<FidgetSpinnerProps> = ({
   const spinCount = useAppSelector(selectSpinCount);
   const speedMultiplier = useAppSelector(selectUpgradeEffect("bearingUpgrade"));
   const rgbLevel = useAppSelector(selectUpgradeLevel("rgbMode"));
-  const spinMultiplier = useAppSelector(selectUpgradeEffect("rgbMode"));
+  const rgbMultiplier = useAppSelector(selectUpgradeEffect("rgbMode"));
+  const theoMultiplier = useAppSelector(selectUpgradeEffect("theoMode"));
+  const spinMultiplier = rgbMultiplier * theoMultiplier; // Stack multipliers
   const autoSpinUnlocked = useAppSelector(selectAutoSpinUnlocked);
   const autoSpinLevel = useAppSelector(selectAutoSpinLevel);
 

@@ -5,6 +5,7 @@ import {
   Sparkles,
   RotateCw,
   Share2,
+  Tv,
   type LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +58,14 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: RotateCw,
     costs: [50000, 100000, 200000, 400000, 750000, 1500000, 3000000, 5000000],
     effect: (level) => level, // 0 = off, 1-8 = speed levels
+  },
+  {
+    id: "theoMode",
+    name: "Theo complaining about nextjs",
+    description: "2x spins while Theo rants",
+    icon: Tv,
+    costs: [1000000],
+    effect: (level) => (level > 0 ? 2 : 1), // 2x multiplier when unlocked
   },
   {
     id: "continueOnDesktop",
