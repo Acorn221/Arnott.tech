@@ -12,6 +12,9 @@ import { EffectComposer, Vignette } from "@react-three/postprocessing";
 import InteractiveSlotMachine from "./interactive-slot-machine";
 import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
 import ShareDialog from "./ShareDialog";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { addSpins, spendSpins, selectSpinCount, selectGamblingUnlocked } from "@/store/slices/gameSlice";
+import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
 
 /** Main component with Canvas - Provider is INSIDE Canvas for R3F compatibility */
 const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
@@ -21,6 +24,21 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [dialogResult, setDialogResult] = useState<SpinResult | null>(null);
+
+  const dispatch = useAppDispatch();
+  const spinCount = useAppSelector(selectSpinCount);
+  const gamblingUnlocked = useAppSelector(selectGamblingUnlocked);
+
+  const handleAttemptSpin = useCallback(() => {
+    if (spinCount < SPIN_COST) return false;
+    dispatch(spendSpins(SPIN_COST));
+    return true;
+  }, [spinCount, dispatch]);
+
+  const handleSpinComplete = useCallback((score: number) => {
+    const winnings = calculateSpinsWon(score);
+    if (winnings > 0) dispatch(addSpins(winnings));
+  }, [dispatch]);
 
   const captureScreenshot = useCallback(() => {
     if (!canvasRef.current) return null;
@@ -95,7 +113,13 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   }, []);
 
   return (
-    <div {...props}>
+    <div {...props} className={`relative ${props.className ?? ""}`}>
+      {/* Spin balance display - only show when gambling is unlocked */}
+      {gamblingUnlocked && (
+        <div className="absolute top-2 left-2 z-10 bg-black/70 px-3 py-1 rounded text-sm text-white">
+          {spinCount} spins (Cost: {SPIN_COST})
+        </div>
+      )}
       <Canvas
         ref={canvasRef}
         camera={{
@@ -112,6 +136,8 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
         <SlotMachineProvider
           onShareDialog={openShareDialog}
           captureScreenshot={captureScreenshot}
+          onAttemptSpin={gamblingUnlocked ? handleAttemptSpin : undefined}
+          onSpinComplete={gamblingUnlocked ? handleSpinComplete : undefined}
         >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 

@@ -1,4 +1,4 @@
-import { Cog, Rainbow, type LucideIcon } from "lucide-react";
+import { Cog, Rainbow, Dices, type LucideIcon } from "lucide-react";
 
 export interface UpgradeDefinition {
   id: string;
@@ -25,6 +25,14 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: Rainbow,
     costs: [50, 150, 300],
     effect: (level) => (level === 0 ? 1 : 1 + level), // 1x, 2x, 3x, 4x multiplier
+  },
+  {
+    id: "gamblingMode",
+    name: "Gambling Mode",
+    description: "Bet spins on the slot machine",
+    icon: Dices,
+    costs: [500],
+    effect: (level) => (level > 0 ? 1 : 0), // 0 = locked, 1 = unlocked
   },
 ];
 

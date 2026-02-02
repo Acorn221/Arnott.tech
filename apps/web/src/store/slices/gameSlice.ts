@@ -71,5 +71,7 @@ export const selectIsUpgradeMaxed = (id: string) => (state: RootState) => {
 };
 export const selectAllUpgradesMaxed = (state: RootState) =>
   UPGRADES.every((u) => (state.game.upgrades[u.id] ?? 0) >= getMaxLevel(u));
+export const selectGamblingUnlocked = (state: RootState) =>
+  (state.game.upgrades["gamblingMode"] ?? 0) > 0;
 
 export default gameSlice.reducer;

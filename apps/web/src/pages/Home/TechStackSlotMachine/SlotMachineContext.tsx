@@ -145,12 +145,16 @@ interface SlotMachineProviderProps {
   children: ReactNode;
   onShareDialog?: (result: SpinResult) => void;
   captureScreenshot?: () => string | null;
+  onAttemptSpin?: () => boolean;
+  onSpinComplete?: (score: number) => void;
 }
 
 export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   children,
   onShareDialog,
   captureScreenshot,
+  onAttemptSpin,
+  onSpinComplete,
 }) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -311,6 +315,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
     setLastResult(result);
 
+    // Award winnings
+    onSpinComplete?.(score.score);
+
     // Play win/lose sound based on score
     if (score.score >= 50) {
       soundManager.playWin();
@@ -325,7 +332,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       score.color,
       score.emoji,
     );
-  }, []);
+  }, [onSpinComplete]);
 
   // Share the result
   const shareResult = useCallback(async () => {
@@ -397,6 +404,11 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     );
     if (anyReelActive || !reelManagersRef.current) return;
 
+    // Check if spin is allowed (has enough spins)
+    if (onAttemptSpin && !onAttemptSpin()) {
+      return; // Not enough spins
+    }
+
     // Clear existing timers and result
     stopTimers.current.forEach(clearTimeout);
     stopTimers.current = [];
@@ -430,7 +442,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       const timer = window.setTimeout(() => stopReel(reelIndex), delay);
       stopTimers.current.push(timer);
     });
-  }, [stopReel]);
+  }, [stopReel, onAttemptSpin]);
 
   // Initialize on mount
   useEffect(() => {
