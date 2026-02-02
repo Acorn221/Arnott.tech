@@ -21,6 +21,7 @@ import {
   createReelTextureManager,
   detectFrontFaceByPosition,
   shuffleReel,
+  initializeTexturePool,
 } from "./config/reel-textures";
 import { type Technology } from "./config/technologies";
 import {
@@ -196,6 +197,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   // Initialize reel texture managers
   const initializeReels = useCallback(async () => {
     if (reelManagersRef.current) return;
+
+    // Initialize texture pool first (pre-generates all textures)
+    await initializeTexturePool();
 
     const [backend, frontend, database] = await Promise.all([
       createReelTextureManager("backend"),
