@@ -5,7 +5,7 @@ import {
   getUpgradeCost as getUpgradeCostFromDef,
   getMaxLevel,
   getUpgradeById,
-} from '@/pages/Home/Fidget-Spinner/upgrades';
+} from '@/components/game/upgrades';
 
 const SHOP_UNLOCK_THRESHOLD = 10;
 

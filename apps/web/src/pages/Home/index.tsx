@@ -13,9 +13,9 @@ import OtherPrograms from "./Carousel/Slides/OtherPrograms";
 import Projects from "./Projects";
 import { getEmail } from "./util/misc";
 import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
-import FidgetSpinner from "./Fidget-Spinner";
-import Shop from "./Fidget-Spinner/Shop";
-import StickySpinBalance from "./Fidget-Spinner/StickySpinBalance";
+import FidgetSpinner from "@/components/game/FidgetSpinner";
+import Shop from "@/components/game/Shop";
+import StickySpinBalance from "@/components/game/StickySpinBalance";
 
 const txt = Text.home;
 

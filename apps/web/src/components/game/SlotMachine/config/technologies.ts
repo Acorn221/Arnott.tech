@@ -58,7 +58,7 @@ import FirebaseIcon from "devicon/icons/firebase/firebase-original.svg";
 import SupabaseIcon from "devicon/icons/supabase/supabase-original.svg";
 
 // Custom icons
-import DynamoDbIcon from "../../Carousel/Slides/util/Icons/assets/dynamoDB.svg";
+import DynamoDbIcon from "@/pages/Home/Carousel/Slides/util/Icons/assets/dynamoDB.svg";
 
 // ============================================================================
 // Types
