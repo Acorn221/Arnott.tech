@@ -1,4 +1,5 @@
 import { type FC, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   purchaseUpgrade,
@@ -15,6 +16,7 @@ interface UpgradeButtonProps {
 
 export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const spinCount = useAppSelector(selectSpinCount);
   const level = useAppSelector(selectUpgradeLevel(upgradeId));
   const cost = useAppSelector(selectUpgradeCost(upgradeId));
@@ -32,7 +34,14 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
         slotMachine?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
     }
-  }, [dispatch, upgradeId]);
+
+    // Navigate to stimulation spinner page after purchasing
+    if (upgradeId === "stimulationMode") {
+      setTimeout(() => {
+        navigate("/stimulation-spinner");
+      }, 100);
+    }
+  }, [dispatch, upgradeId, navigate]);
 
   if (!upgrade) return null;
 

@@ -77,5 +77,11 @@ export const selectGamblingMultiplier = (state: RootState) => {
   const level = state.game.upgrades["gamblingMode"] ?? 0;
   return level > 0 ? Math.pow(10, level - 1) : 0; // 1x at level 1 (200 cost), 10x at level 2 (2000 cost)
 };
+export const selectStimulationUnlocked = (state: RootState) =>
+  (state.game.upgrades["stimulationMode"] ?? 0) > 0;
+export const selectAutoSpinUnlocked = (state: RootState) =>
+  (state.game.upgrades["autoSpin"] ?? 0) > 0;
+export const selectAutoSpinLevel = (state: RootState) =>
+  state.game.upgrades["autoSpin"] ?? 0;
 
 export default gameSlice.reducer;

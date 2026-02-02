@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useLocation } from "react-router-dom";
 import { useAppSelector } from "@/store/hooks";
 import {
   selectShopUnlocked,
@@ -9,17 +10,31 @@ import { UPGRADES } from "./upgrades";
 import UpgradeButton from "./UpgradeButton";
 
 export const Shop: FC = () => {
+  const location = useLocation();
+  const isStimulationPage = location.pathname === "/stimulation-spinner";
+
   const shopUnlocked = useAppSelector(selectShopUnlocked);
   const allMaxed = useAppSelector(selectAllUpgradesMaxed);
   const bearingMaxed = useAppSelector(selectIsUpgradeMaxed("bearingUpgrade"));
+  const gamblingMaxed = useAppSelector(selectIsUpgradeMaxed("gamblingMode"));
+  const stimulationMaxed = useAppSelector(selectIsUpgradeMaxed("stimulationMode"));
 
-  if (!shopUnlocked || allMaxed) return null;
+  if (!shopUnlocked) return null;
 
-  // Filter upgrades: hide maxed ones, show gambling only after bearings maxed
+  // Filter upgrades: show gambling only after bearings maxed,
+  // show stimulation mode only after gambling is maxed, show auto spin only on stimulation page
   const visibleUpgrades = UPGRADES.filter((upgrade) => {
     // Gambling mode only shows after bearings are maxed
     if (upgrade.id === "gamblingMode") {
       return bearingMaxed;
+    }
+    // Stimulation mode only shows after gambling is maxed
+    if (upgrade.id === "stimulationMode") {
+      return gamblingMaxed;
+    }
+    // Auto spin only shows on stimulation page after stimulation mode is maxed
+    if (upgrade.id === "autoSpin") {
+      return isStimulationPage && stimulationMaxed;
     }
     return true;
   });

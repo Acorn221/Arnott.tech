@@ -106,10 +106,7 @@ const Home = () => {
               <div className="w-full flex lg:hidden">
                 <Shop />
               </div>
-              <XyzTransition
-                appear
-                xyz={`${fadeAnimation} down-2 short-100%`}
-              >
+              <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
                 <div className="flex-1 px-5">
                   <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
                     {txt.intro.title}

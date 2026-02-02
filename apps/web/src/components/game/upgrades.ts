@@ -1,4 +1,4 @@
-import { Cog, Rainbow, Dices, type LucideIcon } from "lucide-react";
+import { Cog, Rainbow, Dices, Sparkles, RotateCw, type LucideIcon } from "lucide-react";
 
 export interface UpgradeDefinition {
   id: string;
@@ -33,6 +33,22 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: Dices,
     costs: [500, 5000],
     effect: (level) => (level > 0 ? Math.pow(10, level - 1) : 0), // 0 = locked, 1 = 1x (200), 2 = 10x (2000)
+  },
+  {
+    id: "stimulationMode",
+    name: "Stimulation Mode",
+    description: "Unlock the /stimulation-spinner page",
+    icon: Sparkles,
+    costs: [10000],
+    effect: (level) => (level > 0 ? 1 : 0),
+  },
+  {
+    id: "autoSpin",
+    name: "Auto Spin",
+    description: "Automatically spins the fidget spinner",
+    icon: RotateCw,
+    costs: [50000, 100000, 200000, 400000, 750000, 1500000, 3000000, 5000000],
+    effect: (level) => level, // 0 = off, 1-8 = speed levels
   },
 ];
 
