@@ -8,6 +8,12 @@ const MAX_HANDLE_ROTATION = Math.PI * 0.4; // ~72 degrees max pull
 const SPRING_BACK_DURATION = 0.6;
 const TRIGGER_THRESHOLD = 0.8; // 80% of max rotation triggers
 
+// Sensitivity settings - touch needs higher values due to lag causing fewer events
+const MOUSE_SENSITIVITY = 0.008;
+const TOUCH_SENSITIVITY = 0.015; // ~2x higher for touch
+const VELOCITY_BOOST_THRESHOLD = 50; // pixels/sec to start boosting
+const MAX_VELOCITY_BOOST = 2.5; // max multiplier when moving fast
+
 // Overshoot easing - goes past target then bounces back
 const easeOutBack = (t: number): number => {
   const c1 = 1.70158;
@@ -60,21 +66,44 @@ export const useSlotMachineHandle = ({
   // Global pointer events
   useEffect(() => {
     let lastY = 0;
+    let lastTime = 0;
     let hasFirstMove = false;
 
     const onPointerMove = (event: PointerEvent) => {
       if (!isDragging.current) return;
 
+      const now = performance.now();
+
       if (!hasFirstMove) {
         lastY = event.clientY;
+        lastTime = now;
         hasFirstMove = true;
         return;
       }
 
       const deltaY = event.clientY - lastY;
+      const deltaTime = Math.max(1, now - lastTime); // ms, avoid divide by zero
       lastY = event.clientY;
+      lastTime = now;
 
-      const newRotation = handleRotation.current + deltaY * 0.008;
+      // Use higher sensitivity for touch
+      const isTouch = event.pointerType === "touch";
+      const baseSensitivity = isTouch ? TOUCH_SENSITIVITY : MOUSE_SENSITIVITY;
+
+      // Calculate velocity and apply boost for fast movements
+      // This compensates for lag by amplifying fast swipes
+      const velocity = Math.abs(deltaY) / deltaTime * 1000; // pixels/sec
+      let velocityBoost = 1;
+      if (velocity > VELOCITY_BOOST_THRESHOLD) {
+        const boostFactor = Math.min(
+          (velocity - VELOCITY_BOOST_THRESHOLD) / 500,
+          MAX_VELOCITY_BOOST - 1,
+        );
+        velocityBoost = 1 + boostFactor;
+      }
+
+      const newRotation =
+        handleRotation.current + deltaY * baseSensitivity * velocityBoost;
       handleRotation.current = Math.max(
         0,
         Math.min(MAX_HANDLE_ROTATION, newRotation),
@@ -86,6 +115,7 @@ export const useSlotMachineHandle = ({
 
       isDragging.current = false;
       hasFirstMove = false;
+      lastTime = 0;
       gl.domElement.style.cursor = "auto";
 
       // Check trigger
