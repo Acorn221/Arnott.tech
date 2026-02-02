@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 
 interface SpinnerModelProps {
   isXray: boolean;
+  rgbLevel?: number;
 }
 
 /** Maximum wobble offset in radians (about 0.5 degrees) */
@@ -76,10 +77,11 @@ const createMaterials = (): SpinnerMaterialMap => ({
     }),
 });
 
-const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
+const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props }) => {
   const materials = useRef(createMaterials());
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/fidget-spinner.gltf");
+  const mainBodyMaterial = materials.current["1.000000_0.000000_0.000000_0.000000_0.000000"];
 
   // Initialize materials
   useEffect(() => {
@@ -133,6 +135,18 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, ...props }) => {
 
       groupRef.current.rotation.z = offsetY;
       groupRef.current.rotation.x = offsetX;
+    }
+
+    // RGB mode animation
+    if (mainBodyMaterial && !isXray) {
+      if (rgbLevel > 0) {
+        const speed = rgbLevel * 0.5; // Speed increases with level
+        const hue = (Date.now() / 1000 * speed) % 1;
+        mainBodyMaterial.color.setHSL(hue, 1, 0.5);
+      } else {
+        // Reset to original red when RGB is off
+        mainBodyMaterial.color.setHex(0xff0000);
+      }
     }
   });
 

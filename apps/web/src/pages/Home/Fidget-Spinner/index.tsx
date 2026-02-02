@@ -43,9 +43,11 @@ const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
-  const { state, addSpins, getUpgradeEffect } = useSpinulation();
+  const { state, addSpins, getUpgradeEffect, getUpgradeLevel } = useSpinulation();
   const spinCount = state.spinCount;
   const speedMultiplier = getUpgradeEffect("bearingUpgrade");
+  const rgbLevel = getUpgradeLevel("rgbMode");
+  const spinMultiplier = getUpgradeEffect("rgbMode");
 
   // Wrapper for InteractiveSpinner compatibility
   const setSpinCount = useCallback(
@@ -54,10 +56,10 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
         // Extract the delta from the functional update
         const next = updater(spinCount);
         const delta = next - spinCount;
-        if (delta > 0) addSpins(delta);
+        if (delta > 0) addSpins(Math.floor(delta * spinMultiplier));
       }
     },
-    [spinCount, addSpins],
+    [spinCount, addSpins, spinMultiplier],
   );
 
   // Current CRDT event (source of truth for spinner state)
@@ -288,6 +290,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
             onRelease={release}
             isSynced={isSynced}
             speedMultiplier={speedMultiplier}
+            rgbLevel={rgbLevel}
           />
         </Suspense>
       </Canvas>

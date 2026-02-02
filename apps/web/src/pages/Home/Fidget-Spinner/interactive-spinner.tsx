@@ -56,6 +56,8 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
   isSynced?: boolean;
   /** Multiplier for spin velocity from upgrades */
   speedMultiplier?: number;
+  /** RGB mode level (0 = off, 1+ = on with increasing speed) */
+  rgbLevel?: number;
 };
 
 const InteractiveSpinner = ({
@@ -66,6 +68,7 @@ const InteractiveSpinner = ({
   onRelease,
   isSynced = false,
   speedMultiplier = 1,
+  rgbLevel = 0,
   ...props
 }: InteractiveSpinnerProps) => {
   const groupRef = useRef<THREE.Group>(null);
@@ -268,7 +271,7 @@ const InteractiveSpinner = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      <SpinnerModel isXray={isXray} />
+      <SpinnerModel isXray={isXray} rgbLevel={rgbLevel} />
     </group>
   );
 };
