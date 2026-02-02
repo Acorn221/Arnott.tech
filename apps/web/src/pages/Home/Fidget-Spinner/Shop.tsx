@@ -1,16 +1,20 @@
 import type { FC } from "react";
 import { useSpinulation } from "./SpinulationContext";
-
-const UNLOCK_THRESHOLD = 10;
+import { UPGRADES } from "./upgrades";
+import UpgradeButton from "./UpgradeButton";
 
 export const Shop: FC = () => {
-  const { spinCount } = useSpinulation();
+  const { state } = useSpinulation();
 
-  if (spinCount < UNLOCK_THRESHOLD) return null;
+  if (!state.shopUnlocked) return null;
 
   return (
-    <div className="flex flex-col items-center gap-2 p-4  w-full">
-      <span className="">Upgrades coming soon...</span>
+    <div className="flex flex-col items-center gap-4 p-4 w-full">
+      <div className="flex flex-wrap justify-center gap-4">
+        {UPGRADES.map((upgrade) => (
+          <UpgradeButton key={upgrade.id} upgradeId={upgrade.id} />
+        ))}
+      </div>
     </div>
   );
 };

@@ -3,7 +3,6 @@ import {
   type FC,
   type InputHTMLAttributes,
   Suspense,
-  useState,
   useCallback,
   useRef,
   useEffect,
@@ -44,7 +43,22 @@ const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
-  const { spinCount, setSpinCount } = useSpinulation();
+  const { state, addSpins, getUpgradeEffect } = useSpinulation();
+  const spinCount = state.spinCount;
+  const speedMultiplier = getUpgradeEffect("bearingUpgrade");
+
+  // Wrapper for InteractiveSpinner compatibility
+  const setSpinCount = useCallback(
+    (updater: React.SetStateAction<number>) => {
+      if (typeof updater === "function") {
+        // Extract the delta from the functional update
+        const next = updater(spinCount);
+        const delta = next - spinCount;
+        if (delta > 0) addSpins(delta);
+      }
+    },
+    [spinCount, addSpins],
+  );
 
   // Current CRDT event (source of truth for spinner state)
   const currentEventRef = useRef<SpinnerEvent | null>(null);
@@ -83,7 +97,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   const handlePeerJoin = useCallback((_peerId: string, _isLocal: boolean) => {
     // Debounce to prevent spam when many peers join at once
     const joinTime = Date.now();
-    if (joinTime - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
+    if (joinTime - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS)
+      return;
     lastWelcomeSpinRef.current = joinTime;
 
     // Small delay to ensure connection is stable before sending
@@ -92,7 +107,10 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       let eventToSend: SpinnerEvent;
 
       if (currentEventRef.current) {
-        const state = spinnerStateComputer.compute(currentEventRef.current, Date.now());
+        const state = spinnerStateComputer.compute(
+          currentEventRef.current,
+          Date.now(),
+        );
         // Only use existing event if spinner is still moving meaningfully
         if (Math.abs(state.velocity) > WELCOME_SPIN_VELOCITY_THRESHOLD) {
           eventToSend = currentEventRef.current;
@@ -127,12 +145,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }, WELCOME_SPIN_DELAY_MS);
   }, []);
 
-  const {
-    broadcast,
-    isConnected,
-    connectionState,
-    peerInfo,
-  } = useSyncRoom({
+  const { broadcast, isConnected, connectionState, peerInfo } = useSyncRoom({
     autoConnect: true,
     onMessage: handleMessage,
     onPeerJoin: handlePeerJoin,
@@ -233,9 +246,13 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
                 <>
                   {" - "}
                   {peerInfo.total} other{peerInfo.total !== 1 ? "s" : ""}
-                  {peerInfo.remoteTransport === "mixed" && <> - WebRTC + WebSocket</>}
+                  {peerInfo.remoteTransport === "mixed" && (
+                    <> - WebRTC + WebSocket</>
+                  )}
                   {peerInfo.remoteTransport === "webrtc" && <> - WebRTC</>}
-                  {peerInfo.remoteTransport === "websocket" && <> - WebSocket</>}
+                  {peerInfo.remoteTransport === "websocket" && (
+                    <> - WebSocket</>
+                  )}
                 </>
               )}
             </span>
@@ -270,6 +287,7 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
             onDrag={drag}
             onRelease={release}
             isSynced={isSynced}
+            speedMultiplier={speedMultiplier}
           />
         </Suspense>
       </Canvas>

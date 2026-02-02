@@ -54,6 +54,8 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
   onRelease?: (rotation: number, velocity: number) => void;
   /** Whether we're synced with remote peers */
   isSynced?: boolean;
+  /** Multiplier for spin velocity from upgrades */
+  speedMultiplier?: number;
 };
 
 const InteractiveSpinner = ({
@@ -63,6 +65,7 @@ const InteractiveSpinner = ({
   onDrag,
   onRelease,
   isSynced = false,
+  speedMultiplier = 1,
   ...props
 }: InteractiveSpinnerProps) => {
   const groupRef = useRef<THREE.Group>(null);
@@ -139,10 +142,11 @@ const InteractiveSpinner = ({
       const boostedVelocity =
         speedFactor > 0 ? baseVelocity * (1 + boost) : baseVelocity;
 
+      const maxVelocity = MAX_ANGULAR_VELOCITY * speedMultiplier;
       angularVelocity.current = THREE.MathUtils.clamp(
-        boostedVelocity,
-        -MAX_ANGULAR_VELOCITY,
-        MAX_ANGULAR_VELOCITY
+        boostedVelocity * speedMultiplier,
+        -maxVelocity,
+        maxVelocity
       );
     }
 
