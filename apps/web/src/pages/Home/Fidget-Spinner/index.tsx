@@ -19,6 +19,7 @@ import {
   type SpinnerEvent,
   type SpinnerState,
 } from "./spinner-codec";
+import { useSpinulation } from "./SpinulationContext";
 
 // Test instrumentation
 declare global {
@@ -43,7 +44,7 @@ const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
-  const [spinCount, setSpinCount] = useState(0);
+  const { spinCount, setSpinCount } = useSpinulation();
 
   // Current CRDT event (source of truth for spinner state)
   const currentEventRef = useRef<SpinnerEvent | null>(null);
