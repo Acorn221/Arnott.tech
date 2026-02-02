@@ -63,6 +63,7 @@ const StimulationSpinner: FC = () => {
           disableSync
           hideStatusBar
           enableAutoSpin
+          enableHighSpeedRenderer
           className="w-full max-w-[500px] h-[300px]"
         />
         <Shop />
@@ -93,6 +94,7 @@ const StimulationSpinner: FC = () => {
             disableSync
             hideStatusBar
             enableAutoSpin
+            enableHighSpeedRenderer
             className="w-[700px] h-[400px]"
           />
           <Shop />

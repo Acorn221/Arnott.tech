@@ -64,6 +64,8 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
   isDraggingRef?: MutableRefObject<boolean>;
   /** Visual pulse when auto-spin triggers */
   autoSpinPulse?: boolean;
+  /** Callback to report current velocity (for high-speed renderer) */
+  onVelocityChange?: (velocity: number) => void;
 };
 
 const InteractiveSpinner = ({
@@ -77,6 +79,7 @@ const InteractiveSpinner = ({
   rgbLevel = 0,
   isDraggingRef,
   autoSpinPulse = false,
+  onVelocityChange,
   ...props
 }: InteractiveSpinnerProps) => {
   const groupRef = useRef<THREE.Group>(null);
@@ -292,6 +295,8 @@ const InteractiveSpinner = ({
       }
     }
 
+    // Report velocity to parent for high-speed renderer
+    onVelocityChange?.(angularVelocity.current);
   });
 
   return (
