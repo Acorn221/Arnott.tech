@@ -15,7 +15,6 @@ import { getEmail } from "./util/misc";
 import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
 import FidgetSpinner from "./Fidget-Spinner";
 import Shop from "./Fidget-Spinner/Shop";
-import { SpinulationProvider } from "./Fidget-Spinner/SpinulationContext";
 
 const txt = Text.home;
 
@@ -99,33 +98,31 @@ const Home = () => {
         {/* <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}> */}
         <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 max-w-[1280px]">
           <div className="flex-col flex gap-4 text-center">
-            <SpinulationProvider>
-              <div className="flex flex-col lg:flex-row gap-4">
-                <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
+            <div className="flex flex-col lg:flex-row gap-4">
+              <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
 
-                <div className="w-full flex lg:hidden">
-                  <Shop />
-                </div>
-                <XyzTransition
-                  appear
-                  xyz={`${fadeAnimation} down-2 short-100%`}
-                >
-                  <div className="flex-1 px-5">
-                    <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
-                      {txt.intro.title}
-                      <div className="bg-white p-[2px] rounded-full mt-1" />
-                    </div>
-                    <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
-                      {txt.intro.text}
-                    </div>
-                  </div>
-                </XyzTransition>
-              </div>
-
-              <div className="w-full lg:grid hidden justify-center grid-cols-2">
+              <div className="w-full flex lg:hidden">
                 <Shop />
               </div>
-            </SpinulationProvider>
+              <XyzTransition
+                appear
+                xyz={`${fadeAnimation} down-2 short-100%`}
+              >
+                <div className="flex-1 px-5">
+                  <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
+                    {txt.intro.title}
+                    <div className="bg-white p-[2px] rounded-full mt-1" />
+                  </div>
+                  <div className="md:text-2xl text-xl p-5 bg-zinc-800/75 rounded-xl">
+                    {txt.intro.text}
+                  </div>
+                </div>
+              </XyzTransition>
+            </div>
+
+            <div className="w-full lg:grid hidden justify-center grid-cols-2">
+              <Shop />
+            </div>
 
             <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
               {txt.projects.title}

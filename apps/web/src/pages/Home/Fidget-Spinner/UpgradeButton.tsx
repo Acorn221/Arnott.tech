@@ -1,5 +1,12 @@
 import type { FC } from "react";
-import { useSpinulation } from "./SpinulationContext";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  purchaseUpgrade,
+  selectSpinCount,
+  selectUpgradeLevel,
+  selectUpgradeCost,
+  selectIsUpgradeMaxed,
+} from "@/store/slices/gameSlice";
 import { getUpgradeById } from "./upgrades";
 
 interface UpgradeButtonProps {
@@ -7,26 +14,21 @@ interface UpgradeButtonProps {
 }
 
 export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
-  const {
-    state,
-    purchaseUpgrade,
-    getUpgradeCost,
-    getUpgradeLevel,
-    isUpgradeMaxed,
-  } = useSpinulation();
+  const dispatch = useAppDispatch();
+  const spinCount = useAppSelector(selectSpinCount);
+  const level = useAppSelector(selectUpgradeLevel(upgradeId));
+  const cost = useAppSelector(selectUpgradeCost(upgradeId));
+  const isMaxed = useAppSelector(selectIsUpgradeMaxed(upgradeId));
 
   const upgrade = getUpgradeById(upgradeId);
   if (!upgrade) return null;
 
-  const level = getUpgradeLevel(upgradeId);
-  const cost = getUpgradeCost(upgradeId);
-  const isMaxed = isUpgradeMaxed(upgradeId);
-  const canAfford = state.spinCount >= cost;
+  const canAfford = spinCount >= cost;
   const Icon = upgrade.icon;
 
   return (
     <button
-      onClick={() => purchaseUpgrade(upgradeId)}
+      onClick={() => dispatch(purchaseUpgrade(upgradeId))}
       disabled={!canAfford || isMaxed}
       className={`
         flex flex-col items-center gap-2 p-4 rounded-xl transition-all min-w-[100px]

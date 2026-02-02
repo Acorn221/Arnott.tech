@@ -18,7 +18,13 @@ import {
   type SpinnerEvent,
   type SpinnerState,
 } from "./spinner-codec";
-import { useSpinulation } from "./SpinulationContext";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  addSpins,
+  selectSpinCount,
+  selectUpgradeEffect,
+  selectUpgradeLevel,
+} from "@/store/slices/gameSlice";
 
 // Test instrumentation
 declare global {
@@ -43,11 +49,11 @@ const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
-  const { state, addSpins, getUpgradeEffect, getUpgradeLevel } = useSpinulation();
-  const spinCount = state.spinCount;
-  const speedMultiplier = getUpgradeEffect("bearingUpgrade");
-  const rgbLevel = getUpgradeLevel("rgbMode");
-  const spinMultiplier = getUpgradeEffect("rgbMode");
+  const dispatch = useAppDispatch();
+  const spinCount = useAppSelector(selectSpinCount);
+  const speedMultiplier = useAppSelector(selectUpgradeEffect("bearingUpgrade"));
+  const rgbLevel = useAppSelector(selectUpgradeLevel("rgbMode"));
+  const spinMultiplier = useAppSelector(selectUpgradeEffect("rgbMode"));
 
   // Wrapper for InteractiveSpinner compatibility
   const setSpinCount = useCallback(
@@ -56,10 +62,10 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
         // Extract the delta from the functional update
         const next = updater(spinCount);
         const delta = next - spinCount;
-        if (delta > 0) addSpins(Math.floor(delta * spinMultiplier));
+        if (delta > 0) dispatch(addSpins(Math.floor(delta * spinMultiplier)));
       }
     },
-    [spinCount, addSpins, spinMultiplier],
+    [spinCount, dispatch, spinMultiplier],
   );
 
   // Current CRDT event (source of truth for spinner state)

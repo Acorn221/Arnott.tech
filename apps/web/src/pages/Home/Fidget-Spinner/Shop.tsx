@@ -1,14 +1,17 @@
 import type { FC } from "react";
-import { useSpinulation } from "./SpinulationContext";
+import { useAppSelector } from "@/store/hooks";
+import {
+  selectShopUnlocked,
+  selectAllUpgradesMaxed,
+} from "@/store/slices/gameSlice";
 import { UPGRADES } from "./upgrades";
 import UpgradeButton from "./UpgradeButton";
 
 export const Shop: FC = () => {
-  const { state, isUpgradeMaxed } = useSpinulation();
+  const shopUnlocked = useAppSelector(selectShopUnlocked);
+  const allMaxed = useAppSelector(selectAllUpgradesMaxed);
 
-  const allMaxed = UPGRADES.every((u) => isUpgradeMaxed(u.id));
-
-  if (!state.shopUnlocked || allMaxed) return null;
+  if (!shopUnlocked || allMaxed) return null;
 
   return (
     <div className="flex flex-col items-center gap-4 p-4 w-full">
