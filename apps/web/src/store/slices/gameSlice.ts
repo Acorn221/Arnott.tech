@@ -44,10 +44,19 @@ const gameSlice = createSlice({
       state.spinCount -= cost;
       state.upgrades[action.payload] = level + 1;
     },
+    restoreState: (
+      state,
+      action: PayloadAction<{ spinCount: number; upgrades: Record<string, number> }>,
+    ) => {
+      state.spinCount = action.payload.spinCount;
+      state.upgrades = action.payload.upgrades;
+      state.shopUnlocked = true; // They had upgrades, shop was unlocked
+    },
   },
 });
 
-export const { addSpins, spendSpins, purchaseUpgrade } = gameSlice.actions;
+export const { addSpins, spendSpins, purchaseUpgrade, restoreState } =
+  gameSlice.actions;
 
 // Selectors
 export const selectSpinCount = (state: RootState) => state.game.spinCount;
@@ -83,5 +92,6 @@ export const selectAutoSpinUnlocked = (state: RootState) =>
   (state.game.upgrades["autoSpin"] ?? 0) > 0;
 export const selectAutoSpinLevel = (state: RootState) =>
   state.game.upgrades["autoSpin"] ?? 0;
+export const selectUpgrades = (state: RootState) => state.game.upgrades;
 
 export default gameSlice.reducer;

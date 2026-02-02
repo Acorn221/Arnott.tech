@@ -1,4 +1,12 @@
-import { Cog, Rainbow, Dices, Sparkles, RotateCw, type LucideIcon } from "lucide-react";
+import {
+  Cog,
+  Rainbow,
+  Dices,
+  Sparkles,
+  RotateCw,
+  Share2,
+  type LucideIcon,
+} from "lucide-react";
 
 export interface UpgradeDefinition {
   id: string;
@@ -49,6 +57,14 @@ export const UPGRADES: UpgradeDefinition[] = [
     icon: RotateCw,
     costs: [50000, 100000, 200000, 400000, 750000, 1500000, 3000000, 5000000],
     effect: (level) => level, // 0 = off, 1-8 = speed levels
+  },
+  {
+    id: "continueOnDesktop",
+    name: "Continue on Desktop",
+    description: "Share a link to continue your progress",
+    icon: Share2,
+    costs: [], // No cost - triggers share action
+    effect: () => 0, // No effect
   },
 ];
 

@@ -1,14 +1,41 @@
-import { type FC } from "react";
+import { type FC, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAppSelector } from "@/store/hooks";
-import { selectStimulationUnlocked, selectSpinCount } from "@/store/slices/gameSlice";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  selectStimulationUnlocked,
+  selectSpinCount,
+  restoreState,
+} from "@/store/slices/gameSlice";
+import { decodeGameState } from "@/lib/stateCodec";
 import FidgetSpinner from "@/components/game/FidgetSpinner";
 import SlotMachine from "@/components/game/SlotMachine";
 import Shop from "@/components/game/Shop";
 
 const StimulationSpinner: FC = () => {
+  const dispatch = useAppDispatch();
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);
+  const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
+
+  // Check for state param and restore before deciding to redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stateParam = params.get("state");
+    if (stateParam) {
+      const decoded = decodeGameState(stateParam);
+      if (decoded) {
+        dispatch(restoreState(decoded));
+        // Clean URL without triggering navigation
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+    setHasCheckedUrl(true);
+  }, [dispatch]);
+
+  // Wait for URL check before deciding to redirect
+  if (!hasCheckedUrl) {
+    return null; // Or a loading spinner
+  }
 
   // Redirect to home if not unlocked
   if (!isUnlocked) {

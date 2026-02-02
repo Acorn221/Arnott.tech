@@ -7,8 +7,10 @@ import {
   selectUpgradeLevel,
   selectUpgradeCost,
   selectIsUpgradeMaxed,
+  selectUpgrades,
 } from "@/store/slices/gameSlice";
 import { getUpgradeById } from "./upgrades";
+import { generateContinueUrl } from "@/lib/stateCodec";
 
 interface UpgradeButtonProps {
   upgradeId: string;
@@ -21,10 +23,33 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
   const level = useAppSelector(selectUpgradeLevel(upgradeId));
   const cost = useAppSelector(selectUpgradeCost(upgradeId));
   const isMaxed = useAppSelector(selectIsUpgradeMaxed(upgradeId));
+  const upgrades = useAppSelector(selectUpgrades);
 
   const upgrade = getUpgradeById(upgradeId);
 
   const handlePurchase = useCallback(() => {
+    // Special handling for "Continue on Desktop" - use Web Share API
+    if (upgradeId === "continueOnDesktop") {
+      const url = generateContinueUrl(spinCount, upgrades);
+
+      if (navigator.share) {
+        navigator
+          .share({
+            title: "Continue Fidget Spinner",
+            text: "Continue my fidget spinner progress on desktop",
+            url,
+          })
+          .catch(() => {
+            // User cancelled or share failed - fallback to clipboard
+            navigator.clipboard.writeText(url);
+          });
+      } else {
+        // Fallback for browsers without Share API
+        navigator.clipboard.writeText(url);
+      }
+      return;
+    }
+
     dispatch(purchaseUpgrade(upgradeId));
 
     // Scroll to slot machine after purchasing gambling mode
@@ -41,15 +66,31 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
         navigate("/stimulation-spinner");
       }, 100);
     }
-  }, [dispatch, upgradeId, navigate]);
+  }, [dispatch, upgradeId, navigate, spinCount, upgrades]);
 
   if (!upgrade) return null;
 
-  // Hide maxed upgrades
-  if (isMaxed) return null;
+  // Hide maxed upgrades (except continueOnDesktop which has no levels)
+  if (isMaxed && upgradeId !== "continueOnDesktop") return null;
 
-  const canAfford = spinCount >= cost;
+  const isContinueOnDesktop = upgradeId === "continueOnDesktop";
+  const canAfford = isContinueOnDesktop || spinCount >= cost;
   const Icon = upgrade.icon;
+
+  // Special UI for "Continue on Desktop"
+  if (isContinueOnDesktop) {
+    return (
+      <button
+        onClick={handlePurchase}
+        className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all min-w-[100px] bg-blue-700 hover:bg-blue-600 cursor-pointer"
+        title={upgrade.description}
+      >
+        <Icon className="w-8 h-8" />
+        <span className="text-sm font-medium">{upgrade.name}</span>
+        <span className="text-xs text-gray-300">{upgrade.description}</span>
+      </button>
+    );
+  }
 
   return (
     <button

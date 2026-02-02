@@ -21,6 +21,11 @@ export const Shop: FC = () => {
 
   if (!shopUnlocked) return null;
 
+  // Mobile detection for "Continue on Desktop" feature
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   // Filter upgrades: show gambling only after bearings maxed,
   // show stimulation mode only after gambling is maxed, show auto spin only on stimulation page
   const visibleUpgrades = UPGRADES.filter((upgrade) => {
@@ -35,6 +40,10 @@ export const Shop: FC = () => {
     // Auto spin only shows on stimulation page after stimulation mode is maxed
     if (upgrade.id === "autoSpin") {
       return isStimulationPage && stimulationMaxed;
+    }
+    // Continue on Desktop only shows on mobile after all upgrades are maxed
+    if (upgrade.id === "continueOnDesktop") {
+      return isMobile && allMaxed;
     }
     return true;
   });
