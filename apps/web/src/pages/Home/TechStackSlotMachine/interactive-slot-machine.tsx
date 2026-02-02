@@ -96,9 +96,13 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   }, [position]);
 
   const handleTrigger = useCallback(() => {
-    soundManager.playHandlePull();
-    triggerRumble();
-    startGame();
+    console.log("[slot-machine] handleTrigger called");
+    const started = startGame();
+    console.log("[slot-machine] startGame returned:", started);
+    if (started) {
+      soundManager.playHandlePull();
+      triggerRumble();
+    }
   }, [triggerRumble, startGame]);
 
   const { handlePointerDown, handlePointerOver, handlePointerOut } =

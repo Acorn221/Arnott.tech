@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import { type FC, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   purchaseUpgrade,
@@ -21,39 +21,51 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
   const isMaxed = useAppSelector(selectIsUpgradeMaxed(upgradeId));
 
   const upgrade = getUpgradeById(upgradeId);
+
+  const handlePurchase = useCallback(() => {
+    dispatch(purchaseUpgrade(upgradeId));
+
+    // Scroll to slot machine after purchasing gambling mode
+    if (upgradeId === "gamblingMode") {
+      setTimeout(() => {
+        const slotMachine = document.querySelector("[data-slot-machine]");
+        slotMachine?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [dispatch, upgradeId]);
+
   if (!upgrade) return null;
+
+  // Hide maxed upgrades
+  if (isMaxed) return null;
 
   const canAfford = spinCount >= cost;
   const Icon = upgrade.icon;
 
   return (
     <button
-      onClick={() => dispatch(purchaseUpgrade(upgradeId))}
-      disabled={!canAfford || isMaxed}
+      onClick={handlePurchase}
+      disabled={!canAfford}
       className={`
         flex flex-col items-center gap-2 p-4 rounded-xl transition-all min-w-[100px]
         ${
-          isMaxed
-            ? "bg-yellow-500/20 border-2 border-yellow-500/50"
-            : canAfford
-              ? "bg-zinc-700 hover:bg-zinc-600 cursor-pointer"
-              : "bg-zinc-800 opacity-50 cursor-not-allowed"
+          canAfford
+            ? "bg-zinc-700 hover:bg-zinc-600 cursor-pointer"
+            : "bg-zinc-800 opacity-50 cursor-not-allowed"
         }
       `}
       title={upgrade.description}
     >
-      <Icon className={`w-8 h-8 ${isMaxed ? "text-yellow-400" : ""}`} />
+      <Icon className="w-8 h-8" />
       <span className="text-sm font-medium">{upgrade.name}</span>
       <span className="text-xs text-gray-400">
-        {isMaxed ? "MAX" : `Lvl ${level} → ${level + 1}`}
+        Lvl {level} → {level + 1}
       </span>
-      {!isMaxed && (
-        <span
-          className={`text-xs ${canAfford ? "text-green-400" : "text-red-400"}`}
-        >
-          Cost: {cost}
-        </span>
-      )}
+      <span
+        className={`text-xs ${canAfford ? "text-green-400" : "text-red-400"}`}
+      >
+        Cost: {cost}
+      </span>
     </button>
   );
 };

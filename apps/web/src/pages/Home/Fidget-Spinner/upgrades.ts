@@ -31,8 +31,8 @@ export const UPGRADES: UpgradeDefinition[] = [
     name: "Gambling Mode",
     description: "Bet spins on the slot machine",
     icon: Dices,
-    costs: [500],
-    effect: (level) => (level > 0 ? 1 : 0), // 0 = locked, 1 = unlocked
+    costs: [500, 5000],
+    effect: (level) => (level > 0 ? Math.pow(10, level - 1) : 0), // 0 = locked, 1 = 1x (200), 2 = 10x (2000)
   },
 ];
 

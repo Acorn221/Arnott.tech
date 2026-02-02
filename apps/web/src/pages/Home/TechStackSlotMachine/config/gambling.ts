@@ -1,4 +1,4 @@
-export const SPIN_COST = 10;
+export const SPIN_COST = 200; // Base cost at level 1
 
 export const calculateSpinsWon = (score: number): number => {
   if (score < 25) return 0;

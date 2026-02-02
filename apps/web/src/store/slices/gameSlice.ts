@@ -73,5 +73,9 @@ export const selectAllUpgradesMaxed = (state: RootState) =>
   UPGRADES.every((u) => (state.game.upgrades[u.id] ?? 0) >= getMaxLevel(u));
 export const selectGamblingUnlocked = (state: RootState) =>
   (state.game.upgrades["gamblingMode"] ?? 0) > 0;
+export const selectGamblingMultiplier = (state: RootState) => {
+  const level = state.game.upgrades["gamblingMode"] ?? 0;
+  return level > 0 ? Math.pow(10, level - 1) : 0; // 1x at level 1 (200 cost), 10x at level 2 (2000 cost)
+};
 
 export default gameSlice.reducer;

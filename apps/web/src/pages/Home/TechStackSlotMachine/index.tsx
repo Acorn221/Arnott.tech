@@ -13,7 +13,7 @@ import InteractiveSlotMachine from "./interactive-slot-machine";
 import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
 import ShareDialog from "./ShareDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addSpins, spendSpins, selectSpinCount, selectGamblingUnlocked } from "@/store/slices/gameSlice";
+import { addSpins, spendSpins, selectSpinCount, selectGamblingUnlocked, selectGamblingMultiplier } from "@/store/slices/gameSlice";
 import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
 
 /** Main component with Canvas - Provider is INSIDE Canvas for R3F compatibility */
@@ -28,17 +28,20 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   const dispatch = useAppDispatch();
   const spinCount = useAppSelector(selectSpinCount);
   const gamblingUnlocked = useAppSelector(selectGamblingUnlocked);
+  const gamblingMultiplier = useAppSelector(selectGamblingMultiplier);
+
+  const actualSpinCost = SPIN_COST * gamblingMultiplier;
 
   const handleAttemptSpin = useCallback(() => {
-    if (spinCount < SPIN_COST) return false;
-    dispatch(spendSpins(SPIN_COST));
+    if (spinCount < actualSpinCost) return false;
+    dispatch(spendSpins(actualSpinCost));
     return true;
-  }, [spinCount, dispatch]);
+  }, [spinCount, dispatch, actualSpinCost]);
 
   const handleSpinComplete = useCallback((score: number) => {
-    const winnings = calculateSpinsWon(score);
+    const winnings = calculateSpinsWon(score) * gamblingMultiplier;
     if (winnings > 0) dispatch(addSpins(winnings));
-  }, [dispatch]);
+  }, [dispatch, gamblingMultiplier]);
 
   const captureScreenshot = useCallback(() => {
     if (!canvasRef.current) return null;
@@ -113,7 +116,7 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   }, []);
 
   return (
-    <div {...props}>
+    <div {...props} data-slot-machine>
       <Canvas
         ref={canvasRef}
         camera={{
@@ -133,6 +136,7 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
           onAttemptSpin={gamblingUnlocked ? handleAttemptSpin : undefined}
           onSpinComplete={gamblingUnlocked ? handleSpinComplete : undefined}
           gamblingEnabled={gamblingUnlocked}
+          gamblingMultiplier={gamblingMultiplier}
         >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 

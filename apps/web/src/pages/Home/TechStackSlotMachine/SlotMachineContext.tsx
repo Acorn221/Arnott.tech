@@ -88,7 +88,7 @@ export interface SlotMachineContextValue {
   lastResult: SpinResult | null;
 
   // Actions
-  startGame: () => void;
+  startGame: () => boolean;
   setHandlePivot: (pivot: THREE.Object3D | null) => void;
   setSpinners: (spinners: Record<string, THREE.Object3D>) => void;
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
@@ -149,6 +149,7 @@ interface SlotMachineProviderProps {
   onAttemptSpin?: () => boolean;
   onSpinComplete?: (score: number) => void;
   gamblingEnabled?: boolean;
+  gamblingMultiplier?: number;
 }
 
 export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
@@ -158,6 +159,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   onAttemptSpin,
   onSpinComplete,
   gamblingEnabled,
+  gamblingMultiplier = 1,
 }) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -329,7 +331,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     }
 
     // Update display plate with score (and spins won if gambling)
-    const spinsWon = gamblingEnabled ? calculateSpinsWon(score.score) : undefined;
+    const spinsWon = gamblingEnabled ? calculateSpinsWon(score.score) * gamblingMultiplier : undefined;
     displayPlateRef.current?.showScore(
       score.score,
       score.label,
@@ -337,7 +339,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       score.emoji,
       spinsWon,
     );
-  }, [onSpinComplete, gamblingEnabled]);
+  }, [onSpinComplete, gamblingEnabled, gamblingMultiplier]);
 
   // Share the result
   const shareResult = useCallback(async () => {
@@ -402,16 +404,16 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     }
   }, [lastResult, onShareDialog, captureScreenshot]);
 
-  // Start the game
-  const startGame = useCallback(() => {
+  // Start the game - returns true if spin started, false otherwise
+  const startGame = useCallback((): boolean => {
     const anyReelActive = reelStatesRef.current.some(
       (state) => state.phase !== "stopped",
     );
-    if (anyReelActive || !reelManagersRef.current) return;
+    if (anyReelActive || !reelManagersRef.current) return false;
 
     // Check if spin is allowed (has enough spins)
     if (onAttemptSpin && !onAttemptSpin()) {
-      return; // Not enough spins
+      return false; // Not enough spins
     }
 
     // Clear existing timers and result
@@ -447,6 +449,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       const timer = window.setTimeout(() => stopReel(reelIndex), delay);
       stopTimers.current.push(timer);
     });
+
+    log.debug("startGame: spin started successfully");
+    return true;
   }, [stopReel, onAttemptSpin]);
 
   // Initialize on mount
@@ -457,9 +462,10 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   // Update display plate when gambling mode changes
   useEffect(() => {
     if (displayPlateRef.current && !isSpinningRef.current && !lastResult) {
-      displayPlateRef.current.reset(gamblingEnabled, SPIN_COST);
+      const actualCost = SPIN_COST * gamblingMultiplier;
+      displayPlateRef.current.reset(gamblingEnabled, actualCost);
     }
-  }, [gamblingEnabled, lastResult]);
+  }, [gamblingEnabled, gamblingMultiplier, lastResult]);
 
   const value = useMemo<SlotMachineContextValue>(
     () => ({
