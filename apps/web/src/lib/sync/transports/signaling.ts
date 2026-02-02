@@ -11,7 +11,11 @@
 
 import { createLogger } from "@arnott/logger";
 import type { ITransport } from "../interfaces/transport";
-import { SYNC_ROOM_ID, type TransportState, type TransportConfig } from "../interfaces/types";
+import {
+  SYNC_ROOM_ID,
+  type TransportState,
+  type TransportConfig,
+} from "../interfaces/types";
 import {
   RECONNECT_INITIAL_DELAY_MS,
   RECONNECT_MAX_DELAY_MS,
@@ -177,7 +181,9 @@ export class SignalingTransport implements ITransport {
     const wsBase = getWsUrl(this.signalingUrl ?? undefined);
 
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`${wsBase}/api/signal/ws?roomId=${encodeURIComponent(SYNC_ROOM_ID)}`);
+      const ws = new WebSocket(
+        `${wsBase}/api/signal/ws?roomId=${encodeURIComponent(SYNC_ROOM_ID)}`,
+      );
       ws.binaryType = "arraybuffer";
       this.ws = ws;
 
@@ -216,13 +222,15 @@ export class SignalingTransport implements ITransport {
 
   private async handleWebSocketMessage(
     event: MessageEvent,
-    resolveConnect?: () => void
+    resolveConnect?: () => void,
   ): Promise<void> {
     // Binary data = relayed from another peer via WebSocket
     // Server wraps with 8-byte sender ID header
     if (event.data instanceof ArrayBuffer && event.data.byteLength > 8) {
       const view = new Uint8Array(event.data);
-      const senderId = new TextDecoder().decode(view.slice(0, 8)).replace(/\0/g, "");
+      const senderId = new TextDecoder()
+        .decode(view.slice(0, 8))
+        .replace(/\0/g, "");
       const payload = event.data.slice(8);
 
       this.onReceive?.(senderId, payload);
@@ -260,10 +268,16 @@ export class SignalingTransport implements ITransport {
       if (this.options.enableWebRTC && this.myPeerId) {
         for (const remotePeerId of peers) {
           if (this.myPeerId < remotePeerId) {
-            log.debug("Initiating WebRTC (we have lower ID)", { myId: this.myPeerId, remotePeerId });
+            log.debug("Initiating WebRTC (we have lower ID)", {
+              myId: this.myPeerId,
+              remotePeerId,
+            });
             await this.initiateWebRTC(remotePeerId);
           } else {
-            log.debug("Waiting for WebRTC initiation (they have lower ID)", { myId: this.myPeerId, remotePeerId });
+            log.debug("Waiting for WebRTC initiation (they have lower ID)", {
+              myId: this.myPeerId,
+              remotePeerId,
+            });
           }
         }
       }
@@ -278,14 +292,25 @@ export class SignalingTransport implements ITransport {
       // Also initiate WebRTC to the new peer
       // Use peer ID comparison as tie-breaker to avoid both sides sending offers
       // Lower peer ID initiates the connection
-      if (this.options.enableWebRTC && this.myPeerId && this.myPeerId < peerId) {
-        log.debug("Initiating WebRTC to new peer (we have lower ID)", { myId: this.myPeerId, peerId });
+      if (
+        this.options.enableWebRTC &&
+        this.myPeerId &&
+        this.myPeerId < peerId
+      ) {
+        log.debug("Initiating WebRTC to new peer (we have lower ID)", {
+          myId: this.myPeerId,
+          peerId,
+        });
         void this.initiateWebRTC(peerId);
       }
     } else if (msg.type === "peer-left") {
       const { peerId } = msg;
       this.removePeer(peerId);
-    } else if (msg.type === "offer" || msg.type === "answer" || msg.type === "ice") {
+    } else if (
+      msg.type === "offer" ||
+      msg.type === "answer" ||
+      msg.type === "ice"
+    ) {
       await this.handleSignal(msg);
     }
   }
@@ -324,7 +349,9 @@ export class SignalingTransport implements ITransport {
     // Set timeout to clean up stalled WebRTC connections
     peer.rtcTimeout = window.setTimeout(() => {
       if (!peer.rtcConnected) {
-        rtcLog.debug("WebRTC timeout, using WS relay", { peerId: remotePeerId });
+        rtcLog.debug("WebRTC timeout, using WS relay", {
+          peerId: remotePeerId,
+        });
         peer.rtcConnection?.close();
         peer.rtcConnection = null;
         peer.dataChannel = null;
@@ -336,11 +363,17 @@ export class SignalingTransport implements ITransport {
       await rtcConnection.setLocalDescription(offer);
       this.sendSignal("offer", remotePeerId, { sdp: offer.sdp });
     } catch (err) {
-      rtcLog.debug("WebRTC offer failed, using WS relay", { peerId: remotePeerId, error: err });
+      rtcLog.debug("WebRTC offer failed, using WS relay", {
+        peerId: remotePeerId,
+        error: err,
+      });
     }
   }
 
-  private setupRTCConnection(peer: PeerConnection, isInitiator: boolean): RTCPeerConnection {
+  private setupRTCConnection(
+    peer: PeerConnection,
+    isInitiator: boolean,
+  ): RTCPeerConnection {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     peer.rtcConnection = pc;
 
@@ -364,7 +397,10 @@ export class SignalingTransport implements ITransport {
       if (state === "connected" || state === "completed") {
         rtcLog.debug("ICE connected successfully!", { peerId: peer.id, state });
       } else if (state === "failed") {
-        rtcLog.debug("ICE connection FAILED - falling back to WebSocket", { peerId: peer.id, state });
+        rtcLog.debug("ICE connection FAILED - falling back to WebSocket", {
+          peerId: peer.id,
+          state,
+        });
         peer.rtcConnected = false;
       } else if (state === "disconnected") {
         rtcLog.debug("ICE disconnected", { peerId: peer.id, state });
@@ -397,7 +433,10 @@ export class SignalingTransport implements ITransport {
           clearTimeout(peer.rtcTimeout);
           peer.rtcTimeout = null;
         }
-        rtcLog.debug("Data channel OPEN - WebRTC P2P active!", { peerId: peer.id, label: channel.label });
+        rtcLog.debug("Data channel OPEN - WebRTC P2P active!", {
+          peerId: peer.id,
+          label: channel.label,
+        });
         // Notify that WebRTC status changed
         this.onWebRTCChange?.();
       };
@@ -451,7 +490,8 @@ export class SignalingTransport implements ITransport {
     }
 
     if (type === "offer") {
-      const rtcConnection = peer.rtcConnection ?? this.setupRTCConnection(peer, false);
+      const rtcConnection =
+        peer.rtcConnection ?? this.setupRTCConnection(peer, false);
 
       try {
         await rtcConnection.setRemoteDescription({ type: "offer", sdp });
@@ -467,7 +507,10 @@ export class SignalingTransport implements ITransport {
     } else if (type === "answer") {
       if (peer.rtcConnection) {
         try {
-          await peer.rtcConnection.setRemoteDescription({ type: "answer", sdp });
+          await peer.rtcConnection.setRemoteDescription({
+            type: "answer",
+            sdp,
+          });
           peer.remoteDescriptionSet = true;
           await this.processPendingCandidates(peer);
         } catch (err) {
@@ -479,7 +522,10 @@ export class SignalingTransport implements ITransport {
         try {
           await peer.rtcConnection.addIceCandidate(candidate);
         } catch (err) {
-          rtcLog.debug("Failed to add ICE candidate", { peerId: from, error: err });
+          rtcLog.debug("Failed to add ICE candidate", {
+            peerId: from,
+            error: err,
+          });
         }
       } else {
         peer.pendingCandidates.push(candidate);
@@ -493,14 +539,21 @@ export class SignalingTransport implements ITransport {
         try {
           await peer.rtcConnection.addIceCandidate(candidate);
         } catch (err) {
-          rtcLog.debug("Failed to add pending ICE candidate", { peerId: peer.id, error: err });
+          rtcLog.debug("Failed to add pending ICE candidate", {
+            peerId: peer.id,
+            error: err,
+          });
         }
       }
       peer.pendingCandidates = [];
     }
   }
 
-  private sendSignal(type: string, to: string, payload: Record<string, unknown>): void {
+  private sendSignal(
+    type: string,
+    to: string,
+    payload: Record<string, unknown>,
+  ): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, to, ...payload }));
     }
@@ -519,10 +572,16 @@ export class SignalingTransport implements ITransport {
     // Map internal reconnecting to "connecting" for ITransport
     this.setState("connecting");
     const { initial, max, multiplier } = this.options.reconnectBackoff;
-    const delay = Math.min(initial * Math.pow(multiplier, this.reconnectAttempt), max);
+    const delay = Math.min(
+      initial * Math.pow(multiplier, this.reconnectAttempt),
+      max,
+    );
     this.reconnectAttempt++;
 
-    log.debug("Attempting reconnect", { attempt: this.reconnectAttempt, delay });
+    log.debug("Attempting reconnect", {
+      attempt: this.reconnectAttempt,
+      delay,
+    });
 
     this.reconnectTimeout = window.setTimeout(() => {
       void this.connect({ signalingUrl: this.signalingUrl ?? undefined });
