@@ -41,8 +41,8 @@ export const UPGRADES: UpgradeDefinition[] = [
     name: "Gambling Mode",
     description: "Bet spins on the slot machine",
     icon: Dices,
-    costs: [500, 5000],
-    effect: (level) => (level > 0 ? Math.pow(10, level - 1) : 0), // 0 = locked, 1 = 1x (200), 2 = 10x (2000)
+    costs: [500, 5000, 50000, 500000],
+    effect: (level) => [0, 1, 10, 50, 100][level] ?? 0, // 0 = locked, then 1x, 10x, 50x, 100x
   },
   {
     id: "stimulationMode",
@@ -71,7 +71,7 @@ export const UPGRADES: UpgradeDefinition[] = [
   {
     id: "ftxMode",
     name: "Invest in FTX",
-    description: "Invest 2M spins, sell before the crash!",
+    description: "Sell before the crash!",
     icon: TrendingUp,
     costs: [3000000],
     effect: (level) => (level > 0 ? 1 : 0),

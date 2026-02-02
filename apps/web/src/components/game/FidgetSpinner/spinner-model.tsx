@@ -81,7 +81,6 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props })
   const materials = useRef(createMaterials());
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/fidget-spinner.gltf");
-  const mainBodyMaterial = materials.current["1.000000_0.000000_0.000000_0.000000_0.000000"];
 
   // Initialize materials
   useEffect(() => {
@@ -138,6 +137,7 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props })
     }
 
     // RGB mode animation
+    const mainBodyMaterial = materials.current["1.000000_0.000000_0.000000_0.000000_0.000000"];
     if (mainBodyMaterial && !isXray) {
       if (rgbLevel > 0) {
         const speed = rgbLevel * 0.5; // Speed increases with level

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -8,9 +8,11 @@ import StandardLayout from "@/layout/StandardLayout";
 import RickRoll from "@/misc/RickRoll";
 import { LighterfuelUninstall } from "./pages/Projects/LighterFuel/uninstall";
 import Dev from "@/pages/Dev";
-import StimulationSpinner from "@/pages/StimulationSpinner";
 import { useAppDispatch } from "@/store/hooks";
 import { addSpins } from "@/store/slices/gameSlice";
+
+// Lazy load heavy pages
+const StimulationSpinner = lazy(() => import("@/pages/StimulationSpinner"));
 
 const DevKeyboardShortcuts = () => {
   const dispatch = useAppDispatch();
@@ -41,7 +43,14 @@ const App = () => (
         element={<LighterfuelUninstall />}
       />
       <Route path="/dev" element={<Dev />} />
-      <Route path="/stimulation-spinner" element={<StimulationSpinner />} />
+      <Route
+        path="/stimulation-spinner"
+        element={
+          <Suspense fallback={<div className="min-h-screen bg-black" />}>
+            <StimulationSpinner />
+          </Suspense>
+        }
+      />
       <Route element={<StandardLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="J4a-website/" element={<Home />} />

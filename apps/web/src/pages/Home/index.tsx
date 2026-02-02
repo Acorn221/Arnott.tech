@@ -2,7 +2,7 @@ import { XyzTransition } from "@animxyz/react";
 import { AiFillLinkedin } from "react-icons/ai";
 import { MdEmail } from "react-icons/md";
 import { SiGmail } from "react-icons/si";
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactGA from "react-ga4";
 import Text from "@/misc/Text";
 import Carousel from "./Carousel";
@@ -13,9 +13,11 @@ import OtherPrograms from "./Carousel/Slides/OtherPrograms";
 import Projects from "./Projects";
 import { getEmail } from "./util/misc";
 import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
-import FidgetSpinner from "@/components/game/FidgetSpinner";
-import Shop from "@/components/game/Shop";
-import StickySpinBalance from "@/components/game/StickySpinBalance";
+
+// Lazy load game components (Three.js is heavy)
+const FidgetSpinner = lazy(() => import("@/components/game/FidgetSpinner"));
+const Shop = lazy(() => import("@/components/game/Shop"));
+const StickySpinBalance = lazy(() => import("@/components/game/StickySpinBalance"));
 
 const txt = Text.home;
 
@@ -80,7 +82,9 @@ const Home = () => {
 
   return (
     <div className="h-full text-white">
-      <StickySpinBalance />
+      <Suspense fallback={null}>
+        <StickySpinBalance />
+      </Suspense>
       <XyzTransition appear xyz={`${fadeAnimation} down-2`}>
         <div className="text-5xl text-center py-5 h-[10vh] min-h-[2em] min-w-fit">
           {txt.title}
@@ -101,11 +105,15 @@ const Home = () => {
         <div className="min-h-[5em] flex flex-col align-middle justify-center gap-4 max-w-[1280px]">
           <div className="flex-col flex gap-4 text-center">
             <div className="flex flex-col lg:flex-row gap-4">
-              <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
+              <Suspense fallback={<div className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] bg-zinc-800/50 rounded-xl animate-pulse" />}>
+                <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
+              </Suspense>
 
-              <div className="w-full flex lg:hidden">
-                <Shop />
-              </div>
+              <Suspense fallback={null}>
+                <div className="w-full flex lg:hidden">
+                  <Shop />
+                </div>
+              </Suspense>
               <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
                 <div className="flex-1 px-5">
                   <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
@@ -119,9 +127,11 @@ const Home = () => {
               </XyzTransition>
             </div>
 
-            <div className="w-full lg:grid hidden justify-center grid-cols-2">
-              <Shop />
-            </div>
+            <Suspense fallback={null}>
+              <div className="w-full lg:grid hidden justify-center grid-cols-2">
+                <Shop />
+              </div>
+            </Suspense>
 
             <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl">
               {txt.projects.title}

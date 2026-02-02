@@ -1,8 +1,8 @@
 import { type FC, useState, useEffect, useRef, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addSpins, spendSpins, selectSpinCount } from "@/store/slices/gameSlice";
+import { useAppDispatch } from "@/store/hooks";
+import { addSpins } from "@/store/slices/gameSlice";
 
-const INVESTMENT_COST = 2_000_000;
+const INVESTMENT_COST = 3_000_000; // Same as unlock cost - buying IS the investment
 const DAYS_PER_SECOND = 18; // ~1050 days over 60 seconds = 1 min total
 
 // Simplified FTT price history (date, price in USD)
@@ -79,9 +79,8 @@ interface FTXInvestmentProps {
 
 const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
   const dispatch = useAppDispatch();
-  const spinCount = useAppSelector(selectSpinCount);
 
-  const [isInvested, setIsInvested] = useState(false);
+  // Game starts immediately - the purchase WAS the investment
   const [currentDate, setCurrentDate] = useState(START_DATE);
   const [currentPrice, setCurrentPrice] = useState(INITIAL_PRICE);
   const [gameOver, setGameOver] = useState(false);
@@ -91,8 +90,7 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
-
-  const canAfford = spinCount >= INVESTMENT_COST;
+  const gameStarted = useRef(false);
 
   // Calculate current value based on price multiplier
   const multiplier = currentPrice / INITIAL_PRICE;
@@ -184,9 +182,10 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
     ctx.fillText(`$${currentPrice.toFixed(2)}`, currentX + 10, currentY + 4);
   }, [currentDate, currentPrice]);
 
-  // Animation loop
+  // Animation loop - starts immediately since purchase IS the investment
   useEffect(() => {
-    if (!isInvested || gameOver) return;
+    if (gameOver || gameStarted.current) return;
+    gameStarted.current = true;
 
     const animate = (time: number) => {
       if (lastTimeRef.current === 0) {
@@ -225,7 +224,7 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isInvested, gameOver]);
+  }, [gameOver]);
 
   // Update price when date changes
   useEffect(() => {
@@ -237,18 +236,8 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
     drawChart();
   }, [drawChart]);
 
-  const handleInvest = () => {
-    if (!canAfford) return;
-    dispatch(spendSpins(INVESTMENT_COST));
-    setIsInvested(true);
-    setGameOver(false);
-    setResult(null);
-    setCurrentDate(START_DATE);
-    setCurrentPrice(INITIAL_PRICE);
-  };
-
   const handleSell = () => {
-    if (!isInvested || gameOver) return;
+    if (gameOver) return;
 
     // Stop animation
     if (animationRef.current) {
@@ -259,7 +248,6 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
     setResult("win");
     setFinalValue(currentValue);
     dispatch(addSpins(currentValue));
-    setIsInvested(false);
   };
 
   return (
@@ -269,7 +257,7 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
       <div className="px-3 py-2 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between">
         <span className="text-sm font-medium">FTX Investment Simulator</span>
         <div className="flex items-center gap-2">
-          {isInvested && !gameOver && (
+          {!gameOver && (
             <span className="text-xs text-zinc-400">{formatDate(currentDate)}</span>
           )}
           {onClose && (
@@ -294,19 +282,17 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
         {/* Status display */}
         <div className="mt-3 flex justify-between items-center text-sm">
           <div>
-            <span className="text-zinc-400">Investment: </span>
+            <span className="text-zinc-400">Invested: </span>
             <span className="font-medium">{formatNumber(INVESTMENT_COST)}</span>
           </div>
-          {isInvested && (
-            <div>
-              <span className="text-zinc-400">Value: </span>
-              <span
-                className={`font-medium ${currentValue >= INVESTMENT_COST ? "text-green-400" : "text-red-400"}`}
-              >
-                {formatNumber(currentValue)} ({multiplier.toFixed(2)}x)
-              </span>
-            </div>
-          )}
+          <div>
+            <span className="text-zinc-400">Value: </span>
+            <span
+              className={`font-medium ${currentValue >= INVESTMENT_COST ? "text-green-400" : "text-red-400"}`}
+            >
+              {formatNumber(currentValue)} ({multiplier.toFixed(2)}x)
+            </span>
+          </div>
         </div>
 
         {/* Result message */}
@@ -329,31 +315,15 @@ const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
           </div>
         )}
 
-        {/* Action buttons - only show if game not completed */}
+        {/* Sell button - game starts automatically */}
         {!gameOver && (
-          <div className="mt-3 flex gap-2">
-            {!isInvested && (
-              <button
-                onClick={handleInvest}
-                disabled={!canAfford}
-                className={`flex-1 py-2 px-4 rounded font-medium transition-colors ${
-                  canAfford
-                    ? "bg-blue-600 hover:bg-blue-500 cursor-pointer"
-                    : "bg-zinc-700 opacity-50 cursor-not-allowed"
-                }`}
-              >
-                Invest {formatNumber(INVESTMENT_COST)}
-              </button>
-            )}
-
-            {isInvested && (
-              <button
-                onClick={handleSell}
-                className="flex-1 py-2 px-4 rounded font-medium bg-green-600 hover:bg-green-500 cursor-pointer"
-              >
-                SELL NOW ({formatNumber(currentValue)})
-              </button>
-            )}
+          <div className="mt-3">
+            <button
+              onClick={handleSell}
+              className="w-full py-2 px-4 rounded font-medium bg-green-600 hover:bg-green-500 cursor-pointer"
+            >
+              SELL NOW ({formatNumber(currentValue)})
+            </button>
           </div>
         )}
       </div>

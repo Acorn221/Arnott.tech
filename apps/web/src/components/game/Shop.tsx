@@ -5,6 +5,7 @@ import {
   selectShopUnlocked,
   selectAllUpgradesMaxed,
   selectIsUpgradeMaxed,
+  selectUpgradeLevel,
 } from "@/store/slices/gameSlice";
 import { UPGRADES } from "./upgrades";
 import UpgradeButton from "./UpgradeButton";
@@ -16,6 +17,7 @@ export const Shop: FC = () => {
   const shopUnlocked = useAppSelector(selectShopUnlocked);
   const allMaxed = useAppSelector(selectAllUpgradesMaxed);
   const bearingMaxed = useAppSelector(selectIsUpgradeMaxed("bearingUpgrade"));
+  const gamblingLevel = useAppSelector(selectUpgradeLevel("gamblingMode"));
   const gamblingMaxed = useAppSelector(selectIsUpgradeMaxed("gamblingMode"));
   const stimulationMaxed = useAppSelector(selectIsUpgradeMaxed("stimulationMode"));
 
@@ -27,15 +29,18 @@ export const Shop: FC = () => {
     /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   // Filter upgrades: show gambling only after bearings maxed,
-  // show stimulation mode only after gambling is maxed, show auto spin only on stimulation page
+  // show stimulation mode only after gambling level 2, show auto spin only on stimulation page
   const visibleUpgrades = UPGRADES.filter((upgrade) => {
-    // Gambling mode only shows after bearings are maxed
+    // Gambling mode: levels 1-2 on home page, levels 3-4 only on stimulation page
     if (upgrade.id === "gamblingMode") {
-      return bearingMaxed;
+      if (!bearingMaxed) return false;
+      // On home page, hide once level 2 is reached (levels 3-4 are stimulation page only)
+      if (!isStimulationPage && gamblingLevel >= 2) return false;
+      return true;
     }
-    // Stimulation mode only shows after gambling is maxed
+    // Stimulation mode unlocks after gambling level 2 (not max level)
     if (upgrade.id === "stimulationMode") {
-      return gamblingMaxed;
+      return gamblingLevel >= 2;
     }
     // Auto spin only shows on stimulation page after stimulation mode is maxed
     if (upgrade.id === "autoSpin") {

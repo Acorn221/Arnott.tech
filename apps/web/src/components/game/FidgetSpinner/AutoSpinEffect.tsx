@@ -66,16 +66,26 @@ const AutoSpinEffect = ({ active, parentRef }: AutoSpinEffectProps) => {
     }
     wasActive.current = active;
 
-    if (!active && startTimeRef.current > PARTICLE_LIFETIME) return;
-
-    startTimeRef.current += delta;
-    const t = startTimeRef.current / PARTICLE_LIFETIME;
-
     // Update each particle instance
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
     const quaternion = new THREE.Quaternion();
     const scale = new THREE.Vector3();
+
+    // If not animating, hide all particles by scaling to 0
+    if (!active && startTimeRef.current > PARTICLE_LIFETIME) {
+      scale.set(0, 0, 0);
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        matrix.compose(position, quaternion, scale);
+        particlesRef.current.setMatrixAt(i, matrix);
+      }
+      particlesRef.current.instanceMatrix.needsUpdate = true;
+      (particlesRef.current.material as THREE.MeshBasicMaterial).opacity = 0;
+      return;
+    }
+
+    startTimeRef.current += delta;
+    const t = startTimeRef.current / PARTICLE_LIFETIME;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const { angle, startRadius, rotationSpeed } = initialData[i];

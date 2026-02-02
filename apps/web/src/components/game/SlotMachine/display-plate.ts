@@ -1,5 +1,12 @@
 import * as THREE from "three";
 
+/** Format number with k/M suffix */
+const formatNumber = (n: number): string => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}k`;
+  return n.toString();
+};
+
 export interface DisplayPlateConfig {
   text: string;
   subText?: string;
@@ -105,7 +112,7 @@ export class DynamicDisplayPlate {
   reset(gamblingEnabled = false, spinCost = 10): void {
     this.isScoreMode = false;
     this.spinsWon = null;
-    this.config.text = gamblingEnabled ? `COST: ${spinCost} SPINS` : "SPIN TO WIN!";
+    this.config.text = gamblingEnabled ? `COST: ${formatNumber(spinCost)} SPINS` : "SPIN TO WIN!";
     this.config.subText = "";
     this.config.textColor = gamblingEnabled ? "#FFD700" : "#FFFFFF";
     this.config.subTextColor = "#888888";
@@ -149,7 +156,7 @@ export class DynamicDisplayPlate {
         ctx.shadowBlur = 6;
         ctx.shadowOffsetY = 3;
         ctx.fillStyle = this.spinsWon > 0 ? "#00FF88" : "#FF4444";
-        const text = this.spinsWon > 0 ? `+${this.spinsWon.toLocaleString()}` : "0 SPINS";
+        const text = this.spinsWon > 0 ? `+${formatNumber(this.spinsWon)}` : "0 SPINS";
         ctx.fillText(text, width / 2, height / 2);
         ctx.restore();
       } else {
