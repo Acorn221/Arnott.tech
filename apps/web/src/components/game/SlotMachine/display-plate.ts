@@ -134,6 +134,18 @@ export class DynamicDisplayPlate {
     this.render();
   }
 
+  /** Show insufficient funds warning */
+  showInsufficientFunds(): void {
+    this.isScoreMode = false;
+    this.config.text = "NOT ENOUGH SPINS!";
+    this.config.subText = "";
+    this.config.textColor = "#FF4444";
+    this.config.fontSize = 44;
+    this.material.emissive = new THREE.Color("#FF4444");
+    this.material.emissiveIntensity = 0.2;
+    this.render();
+  }
+
   private render(): void {
     if (!this.context) return;
 

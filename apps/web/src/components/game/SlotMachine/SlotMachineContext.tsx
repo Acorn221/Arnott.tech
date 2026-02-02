@@ -413,6 +413,14 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
     // Check if spin is allowed (has enough spins)
     if (onAttemptSpin && !onAttemptSpin()) {
+      // Show insufficient funds feedback
+      displayPlateRef.current?.showInsufficientFunds();
+      soundManager.playLose();
+      // Reset back to normal after 1.5 seconds
+      setTimeout(() => {
+        const actualCost = SPIN_COST * gamblingMultiplier;
+        displayPlateRef.current?.reset(true, actualCost);
+      }, 1500);
       return false; // Not enough spins
     }
 
@@ -451,7 +459,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     });
 
     return true;
-  }, [stopReel, onAttemptSpin]);
+  }, [stopReel, onAttemptSpin, gamblingMultiplier]);
 
   // Initialize on mount
   useEffect(() => {
