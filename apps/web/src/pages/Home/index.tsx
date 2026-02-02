@@ -103,10 +103,13 @@ const Home = () => {
               <div className="flex flex-col lg:flex-row gap-4">
                 <FidgetSpinner className="flex-1 lg:h-96 lg:min-h-full w-full min-h-[40vh] select-none" />
 
-                <div className="w-full flex md:hidden">
+                <div className="w-full flex lg:hidden">
                   <Shop />
                 </div>
-                <XyzTransition appear xyz={`${fadeAnimation} down-2 short-100%`}>
+                <XyzTransition
+                  appear
+                  xyz={`${fadeAnimation} down-2 short-100%`}
+                >
                   <div className="flex-1 px-5">
                     <div className="text-3xl p-2 bg-zinc-800/75 rounded-xl ">
                       {txt.intro.title}
@@ -119,7 +122,7 @@ const Home = () => {
                 </XyzTransition>
               </div>
 
-              <div className="w-full md:grid hidden justify-center grid-cols-2">
+              <div className="w-full lg:grid hidden justify-center grid-cols-2">
                 <Shop />
               </div>
             </SpinulationProvider>
