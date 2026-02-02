@@ -8,7 +8,7 @@ import { createLogger } from "@arnott/logger";
 import Text from "@/misc/Text";
 
 const log = createLogger("ui:projects");
-import TechStackSlotMachine from "../TechStackSlotMachine";
+import TechStackSlotMachine from "@/components/game/SlotMachine";
 import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
 import { GiArchiveResearch } from "react-icons/gi";
 

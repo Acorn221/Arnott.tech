@@ -235,10 +235,11 @@ export class SyncCoordinator {
     this.leader?.stop();
     this.leader = null;
 
-    for (const transport of this.transports.values()) {
-      await transport.disconnect();
-    }
+    const transports = [...this.transports.values()];
     this.transports.clear();
+    for (const transport of transports) {
+      await transport?.disconnect();
+    }
     this.broadcastTransport = null;
     this.signalingTransport = null;
 
@@ -301,9 +302,12 @@ export class SyncCoordinator {
     const msgId = this.getMessageId(data);
     this.addSeenMessage(msgId);
 
+    // Snapshot transports to avoid issues if map is modified during iteration
+    const transports = [...this.transports.values()];
+
     // Send via all connected transports
-    for (const transport of this.transports.values()) {
-      if (transport.state === "connected") {
+    for (const transport of transports) {
+      if (transport?.state === "connected") {
         transport.broadcast(data);
       }
     }

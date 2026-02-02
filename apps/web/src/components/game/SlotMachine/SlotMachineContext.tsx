@@ -29,6 +29,7 @@ import {
   getScoreMessage,
 } from "./config/scoring";
 import { soundManager } from "./sounds";
+import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
 
 // Share button material type
 export interface ShareButtonMaterial {
@@ -87,7 +88,7 @@ export interface SlotMachineContextValue {
   lastResult: SpinResult | null;
 
   // Actions
-  startGame: () => void;
+  startGame: () => boolean;
   setHandlePivot: (pivot: THREE.Object3D | null) => void;
   setSpinners: (spinners: Record<string, THREE.Object3D>) => void;
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
@@ -145,12 +146,20 @@ interface SlotMachineProviderProps {
   children: ReactNode;
   onShareDialog?: (result: SpinResult) => void;
   captureScreenshot?: () => string | null;
+  onAttemptSpin?: () => boolean;
+  onSpinComplete?: (score: number) => void;
+  gamblingEnabled?: boolean;
+  gamblingMultiplier?: number;
 }
 
 export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   children,
   onShareDialog,
   captureScreenshot,
+  onAttemptSpin,
+  onSpinComplete,
+  gamblingEnabled,
+  gamblingMultiplier = 1,
 }) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -311,6 +320,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
 
     setLastResult(result);
 
+    // Award winnings
+    onSpinComplete?.(score.score);
+
     // Play win/lose sound based on score
     if (score.score >= 50) {
       soundManager.playWin();
@@ -318,14 +330,16 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       soundManager.playLose();
     }
 
-    // Update display plate with score
+    // Update display plate with score (and spins won if gambling)
+    const spinsWon = gamblingEnabled ? calculateSpinsWon(score.score) * gamblingMultiplier : undefined;
     displayPlateRef.current?.showScore(
       score.score,
       score.label,
       score.color,
       score.emoji,
+      spinsWon,
     );
-  }, []);
+  }, [onSpinComplete, gamblingEnabled, gamblingMultiplier]);
 
   // Share the result
   const shareResult = useCallback(async () => {
@@ -390,12 +404,25 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
     }
   }, [lastResult, onShareDialog, captureScreenshot]);
 
-  // Start the game
-  const startGame = useCallback(() => {
+  // Start the game - returns true if spin started, false otherwise
+  const startGame = useCallback((): boolean => {
     const anyReelActive = reelStatesRef.current.some(
       (state) => state.phase !== "stopped",
     );
-    if (anyReelActive || !reelManagersRef.current) return;
+    if (anyReelActive || !reelManagersRef.current) return false;
+
+    // Check if spin is allowed (has enough spins)
+    if (onAttemptSpin && !onAttemptSpin()) {
+      // Show insufficient funds feedback
+      displayPlateRef.current?.showInsufficientFunds();
+      soundManager.playLose();
+      // Reset back to normal after 1.5 seconds
+      setTimeout(() => {
+        const actualCost = SPIN_COST * gamblingMultiplier;
+        displayPlateRef.current?.reset(true, actualCost);
+      }, 1500);
+      return false; // Not enough spins
+    }
 
     // Clear existing timers and result
     stopTimers.current.forEach(clearTimeout);
@@ -430,12 +457,22 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       const timer = window.setTimeout(() => stopReel(reelIndex), delay);
       stopTimers.current.push(timer);
     });
-  }, [stopReel]);
+
+    return true;
+  }, [stopReel, onAttemptSpin, gamblingMultiplier]);
 
   // Initialize on mount
   useEffect(() => {
     void initializeReels();
   }, [initializeReels]);
+
+  // Update display plate when gambling mode changes
+  useEffect(() => {
+    if (displayPlateRef.current && !isSpinningRef.current && !lastResult) {
+      const actualCost = SPIN_COST * gamblingMultiplier;
+      displayPlateRef.current.reset(gamblingEnabled, actualCost);
+    }
+  }, [gamblingEnabled, gamblingMultiplier, lastResult]);
 
   const value = useMemo<SlotMachineContextValue>(
     () => ({

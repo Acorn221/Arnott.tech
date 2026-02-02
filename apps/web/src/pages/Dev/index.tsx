@@ -1,5 +1,5 @@
 import { type FC } from "react";
-import TechStackSlotMachine from "../Home/TechStackSlotMachine";
+import TechStackSlotMachine from "@/components/game/SlotMachine";
 
 const Dev: FC = () => (
   <div

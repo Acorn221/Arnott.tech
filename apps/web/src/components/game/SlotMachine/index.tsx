@@ -12,6 +12,9 @@ import { EffectComposer, Vignette } from "@react-three/postprocessing";
 import InteractiveSlotMachine from "./interactive-slot-machine";
 import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
 import ShareDialog from "./ShareDialog";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { addSpins, spendSpins, selectSpinCount, selectGamblingUnlocked, selectGamblingMultiplier } from "@/store/slices/gameSlice";
+import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
 
 /** Main component with Canvas - Provider is INSIDE Canvas for R3F compatibility */
 const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
@@ -21,6 +24,24 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [dialogResult, setDialogResult] = useState<SpinResult | null>(null);
+
+  const dispatch = useAppDispatch();
+  const spinCount = useAppSelector(selectSpinCount);
+  const gamblingUnlocked = useAppSelector(selectGamblingUnlocked);
+  const gamblingMultiplier = useAppSelector(selectGamblingMultiplier);
+
+  const actualSpinCost = SPIN_COST * gamblingMultiplier;
+
+  const handleAttemptSpin = useCallback(() => {
+    if (spinCount < actualSpinCost) return false;
+    dispatch(spendSpins(actualSpinCost));
+    return true;
+  }, [spinCount, dispatch, actualSpinCost]);
+
+  const handleSpinComplete = useCallback((score: number) => {
+    const winnings = calculateSpinsWon(score) * gamblingMultiplier;
+    if (winnings > 0) dispatch(addSpins(winnings));
+  }, [dispatch, gamblingMultiplier]);
 
   const captureScreenshot = useCallback(() => {
     if (!canvasRef.current) return null;
@@ -95,7 +116,7 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
   }, []);
 
   return (
-    <div {...props}>
+    <div {...props} data-slot-machine>
       <Canvas
         ref={canvasRef}
         camera={{
@@ -112,6 +133,10 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
         <SlotMachineProvider
           onShareDialog={openShareDialog}
           captureScreenshot={captureScreenshot}
+          onAttemptSpin={gamblingUnlocked ? handleAttemptSpin : undefined}
+          onSpinComplete={gamblingUnlocked ? handleSpinComplete : undefined}
+          gamblingEnabled={gamblingUnlocked}
+          gamblingMultiplier={gamblingMultiplier}
         >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 

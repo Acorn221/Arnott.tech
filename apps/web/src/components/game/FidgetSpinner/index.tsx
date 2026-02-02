@@ -3,10 +3,10 @@ import {
   type FC,
   type InputHTMLAttributes,
   Suspense,
-  useState,
   useCallback,
   useRef,
   useEffect,
+  useState,
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
 import InteractiveSpinner from "./interactive-spinner";
@@ -19,6 +19,15 @@ import {
   type SpinnerEvent,
   type SpinnerState,
 } from "./spinner-codec";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  addSpins,
+  selectSpinCount,
+  selectUpgradeEffect,
+  selectUpgradeLevel,
+  selectAutoSpinUnlocked,
+  selectAutoSpinLevel,
+} from "@/store/slices/gameSlice";
 
 // Test instrumentation
 declare global {
@@ -40,10 +49,68 @@ const WELCOME_SPIN_DELAY_MS = 100;
 /** Retry delay for welcome spin broadcast (ms) */
 const WELCOME_SPIN_RETRY_DELAY_MS = 200;
 
-const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
+/** Cooldown after user spin before auto-spin kicks in (ms) */
+const AUTO_SPIN_COOLDOWN = 5000;
+/** Auto spin intervals by level (ms) - faster at higher levels */
+const AUTO_SPIN_INTERVALS = [1000, 800, 650, 500, 400, 300, 200, 150];
+/** Auto spin velocity boosts by level (radians/second) - top 3 levels exceed manual spinning */
+const AUTO_SPIN_BOOSTS = [4, 5, 6, 8, 10, 25, 35, 50];
+
+interface FidgetSpinnerProps extends InputHTMLAttributes<HTMLDivElement> {
+  /** Disable WebRTC sync (for standalone/stimulation mode) */
+  disableSync?: boolean;
+  /** Hide the status bar with spin count and sync info */
+  hideStatusBar?: boolean;
+  /** Enable auto-spin feature (requires upgrade) */
+  enableAutoSpin?: boolean;
+}
+
+const FidgetSpinner: FC<FidgetSpinnerProps> = ({
+  disableSync = false,
+  hideStatusBar = false,
+  enableAutoSpin = false,
   ...props
 }) => {
-  const [spinCount, setSpinCount] = useState(0);
+  const dispatch = useAppDispatch();
+  const spinCount = useAppSelector(selectSpinCount);
+  const speedMultiplier = useAppSelector(selectUpgradeEffect("bearingUpgrade"));
+  const rgbLevel = useAppSelector(selectUpgradeLevel("rgbMode"));
+  const rgbMultiplier = useAppSelector(selectUpgradeEffect("rgbMode"));
+  const theoMultiplier = useAppSelector(selectUpgradeEffect("theoMode"));
+  const spinMultiplier = rgbMultiplier * theoMultiplier; // Stack multipliers
+  const autoSpinUnlocked = useAppSelector(selectAutoSpinUnlocked);
+  const autoSpinLevel = useAppSelector(selectAutoSpinLevel);
+
+  // Track if user is currently dragging (to avoid interfering with auto-spin)
+  const isDraggingRef = useRef(false);
+  // Track last user spin time (to cooldown auto-spin after user interaction)
+  const lastUserSpinRef = useRef(0);
+  // Visual pulse when auto-spin triggers
+  const [autoSpinPulse, setAutoSpinPulse] = useState(false);
+  // Track previous auto-spin level to detect upgrades
+  const prevAutoSpinLevelRef = useRef(autoSpinLevel);
+
+  // Reset cooldown and trigger immediate spin when auto-spin is upgraded
+  useEffect(() => {
+    if (autoSpinLevel > prevAutoSpinLevelRef.current && enableAutoSpin) {
+      // Reset cooldown so auto-spin starts immediately
+      lastUserSpinRef.current = 0;
+    }
+    prevAutoSpinLevelRef.current = autoSpinLevel;
+  }, [autoSpinLevel, enableAutoSpin]);
+
+  // Wrapper for InteractiveSpinner compatibility
+  const setSpinCount = useCallback(
+    (updater: React.SetStateAction<number>) => {
+      if (typeof updater === "function") {
+        // Extract the delta from the functional update
+        const next = updater(spinCount);
+        const delta = next - spinCount;
+        if (delta > 0) dispatch(addSpins(Math.floor(delta * spinMultiplier)));
+      }
+    },
+    [spinCount, dispatch, spinMultiplier],
+  );
 
   // Current CRDT event (source of truth for spinner state)
   const currentEventRef = useRef<SpinnerEvent | null>(null);
@@ -82,7 +149,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   const handlePeerJoin = useCallback((_peerId: string, _isLocal: boolean) => {
     // Debounce to prevent spam when many peers join at once
     const joinTime = Date.now();
-    if (joinTime - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS) return;
+    if (joinTime - lastWelcomeSpinRef.current < WELCOME_SPIN_DEBOUNCE_MS)
+      return;
     lastWelcomeSpinRef.current = joinTime;
 
     // Small delay to ensure connection is stable before sending
@@ -91,7 +159,10 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
       let eventToSend: SpinnerEvent;
 
       if (currentEventRef.current) {
-        const state = spinnerStateComputer.compute(currentEventRef.current, Date.now());
+        const state = spinnerStateComputer.compute(
+          currentEventRef.current,
+          Date.now(),
+        );
         // Only use existing event if spinner is still moving meaningfully
         if (Math.abs(state.velocity) > WELCOME_SPIN_VELOCITY_THRESHOLD) {
           eventToSend = currentEventRef.current;
@@ -126,13 +197,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
     }, WELCOME_SPIN_DELAY_MS);
   }, []);
 
-  const {
-    broadcast,
-    isConnected,
-    connectionState,
-    peerInfo,
-  } = useSyncRoom({
-    autoConnect: true,
+  const { broadcast, isConnected, connectionState, peerInfo } = useSyncRoom({
+    autoConnect: !disableSync,
     onMessage: handleMessage,
     onPeerJoin: handlePeerJoin,
   });
@@ -188,6 +254,21 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
 
   const release = useCallback(
     (rotation: number, velocity: number) => {
+      // Track user spin time for auto-spin cooldown
+      lastUserSpinRef.current = Date.now();
+      handleEventEmit({
+        type: "release",
+        timestamp: Date.now(),
+        rotation,
+        velocity,
+      });
+    },
+    [handleEventEmit],
+  );
+
+  // Internal boost for auto-spin (doesn't trigger cooldown)
+  const autoSpinBoost = useCallback(
+    (rotation: number, velocity: number) => {
       handleEventEmit({
         type: "release",
         timestamp: Date.now(),
@@ -199,6 +280,38 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
   );
 
   const isSynced = connectionState === "connected";
+
+  // Auto-spin effect - boosts velocity periodically without interfering with user
+  useEffect(() => {
+    if (!enableAutoSpin || !autoSpinUnlocked || autoSpinLevel === 0) return;
+
+    const levelIndex = Math.min(autoSpinLevel - 1, AUTO_SPIN_INTERVALS.length - 1);
+    const spinInterval = AUTO_SPIN_INTERVALS[levelIndex];
+    const velocityBoost = AUTO_SPIN_BOOSTS[levelIndex];
+
+    const interval = setInterval(() => {
+      // Don't interfere if user is dragging
+      if (isDraggingRef.current) return;
+
+      // Don't boost if user recently spun (10s cooldown)
+      if (Date.now() - lastUserSpinRef.current < AUTO_SPIN_COOLDOWN) return;
+
+      const state = computeState(Date.now());
+      // Boost velocity in the current direction, or start spinning if stopped
+      const currentVelocity = state.velocity || 0;
+      const wasStatic = Math.abs(currentVelocity) < 1;
+      const newVelocity = currentVelocity + velocityBoost * (currentVelocity >= 0 ? 1 : -1);
+      autoSpinBoost(state.rotation, newVelocity);
+
+      // Only show wind animation when going from static to spinning
+      if (wasStatic) {
+        setAutoSpinPulse(true);
+        setTimeout(() => setAutoSpinPulse(false), 500);
+      }
+    }, spinInterval);
+
+    return () => clearInterval(interval);
+  }, [enableAutoSpin, autoSpinUnlocked, autoSpinLevel, computeState, autoSpinBoost]);
 
   // Test instrumentation - expose spinner state for E2E tests
   useEffect(() => {
@@ -221,26 +334,32 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
 
   return (
     <div {...props}>
-      <div className="flex w-full justify-center align-middle gap-4 items-center">
-        <div className="m-auto flex items-center gap-4">
-          <span>Spins: {spinCount}</span>
-          {isConnected && (
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              Synced
-              {peerInfo.total > 0 && (
-                <>
-                  {" - "}
-                  {peerInfo.total} other{peerInfo.total !== 1 ? "s" : ""}
-                  {peerInfo.remoteTransport === "mixed" && <> - WebRTC + WebSocket</>}
-                  {peerInfo.remoteTransport === "webrtc" && <> - WebRTC</>}
-                  {peerInfo.remoteTransport === "websocket" && <> - WebSocket</>}
-                </>
-              )}
-            </span>
-          )}
+      {!hideStatusBar && (
+        <div className="flex w-full justify-center align-middle gap-4 items-center">
+          <div className="m-auto flex items-center gap-4">
+            <span>Spins: {spinCount}</span>
+            {isConnected && (
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                Synced
+                {peerInfo.total > 0 && (
+                  <>
+                    {" - "}
+                    {peerInfo.total} other{peerInfo.total !== 1 ? "s" : ""}
+                    {peerInfo.remoteTransport === "mixed" && (
+                      <> - WebRTC + WebSocket</>
+                    )}
+                    {peerInfo.remoteTransport === "webrtc" && <> - WebRTC</>}
+                    {peerInfo.remoteTransport === "websocket" && (
+                      <> - WebSocket</>
+                    )}
+                  </>
+                )}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <Canvas
         camera={{
           position: [0, 4, 0],
@@ -248,7 +367,8 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
           rotation: [-Math.PI / 2, 0, 0],
         }}
         shadows
-        gl={{ antialias: true }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: true, powerPreference: "high-performance" }}
       >
         <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
         <ambientLight intensity={0.2} />
@@ -269,6 +389,10 @@ const FidgetSpinner: FC<InputHTMLAttributes<HTMLDivElement>> = ({
             onDrag={drag}
             onRelease={release}
             isSynced={isSynced}
+            speedMultiplier={speedMultiplier}
+            rgbLevel={rgbLevel}
+            isDraggingRef={isDraggingRef}
+            autoSpinPulse={autoSpinPulse}
           />
         </Suspense>
       </Canvas>
