@@ -96,9 +96,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   }, [position]);
 
   const handleTrigger = useCallback(() => {
-    console.log("[slot-machine] handleTrigger called");
     const started = startGame();
-    console.log("[slot-machine] startGame returned:", started);
     if (started) {
       soundManager.playHandlePull();
       triggerRumble();

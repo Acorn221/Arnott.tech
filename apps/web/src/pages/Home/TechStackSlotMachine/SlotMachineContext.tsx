@@ -450,7 +450,6 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
       stopTimers.current.push(timer);
     });
 
-    log.debug("startGame: spin started successfully");
     return true;
   }, [stopReel, onAttemptSpin]);
 
