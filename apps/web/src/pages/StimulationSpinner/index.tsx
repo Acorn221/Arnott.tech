@@ -70,6 +70,9 @@ const StimulationSpinner: FC = () => {
           <FTXInvestment className="w-full max-w-[400px]" onClose={() => setFtxClosed(true)} />
         )}
         <SlotMachine className="w-full max-w-[500px] h-[350px]" />
+        <div className="text-zinc-500 text-sm text-center pb-4">
+          Made in London - Inspired by Neal.fun ❤️
+        </div>
       </div>
 
       {/* Desktop: absolute positioning */}
@@ -105,6 +108,11 @@ const StimulationSpinner: FC = () => {
         {/* SlotMachine - bottom right */}
         <div className="absolute bottom-4 right-4 w-[500px] h-[450px]">
           <SlotMachine className="w-full h-full" />
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-zinc-500 text-sm">
+          Made in London - Inspired by Neal.fun ❤️
         </div>
       </div>
     </div>
