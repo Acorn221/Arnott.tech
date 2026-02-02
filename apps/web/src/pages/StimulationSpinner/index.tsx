@@ -6,6 +6,7 @@ import {
   selectSpinCount,
   selectTheoModeUnlocked,
   selectFtxModeUnlocked,
+  selectUpgradeLevel,
   restoreState,
 } from "@/store/slices/gameSlice";
 import { decodeGameState } from "@/lib/stateCodec";
@@ -20,6 +21,7 @@ const StimulationSpinner: FC = () => {
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);
   const theoModeUnlocked = useAppSelector(selectTheoModeUnlocked);
+  const theoLevel = useAppSelector(selectUpgradeLevel("theoMode"));
   const ftxModeUnlocked = useAppSelector(selectFtxModeUnlocked);
   const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
   const [ftxClosed, setFtxClosed] = useState(false);
@@ -53,7 +55,7 @@ const StimulationSpinner: FC = () => {
     <div className="min-h-screen bg-black text-white lg:h-screen lg:overflow-hidden lg:relative">
       {/* Mobile: scrollable layout */}
       <div className="lg:hidden flex flex-col items-center py-8 gap-8 px-4">
-        {theoModeUnlocked && <TheoVideo />}
+        {theoModeUnlocked && <TheoVideo level={theoLevel} />}
         <div className="text-4xl font-bold text-center">
           {spinCount.toLocaleString()} <span className="text-zinc-400 text-2xl">spins</span>
         </div>
@@ -75,7 +77,7 @@ const StimulationSpinner: FC = () => {
         {/* Theo video - top left */}
         {theoModeUnlocked && (
           <div className="absolute top-4 left-4 z-10">
-            <TheoVideo />
+            <TheoVideo level={theoLevel} />
           </div>
         )}
 

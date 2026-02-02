@@ -63,10 +63,10 @@ export const UPGRADES: UpgradeDefinition[] = [
   {
     id: "theoMode",
     name: "Theo complaining about nextjs",
-    description: "2x spins while Theo rants",
+    description: "Multiplier while Theo rants",
     icon: Tv,
-    costs: [1000000],
-    effect: (level) => (level > 0 ? 2 : 1), // 2x multiplier when unlocked
+    costs: [1000000, 5000000, 25000000],
+    effect: (level) => [1, 2, 3, 4][level] ?? 1, // 1x, 2x, 3x, 4x multiplier
   },
   {
     id: "ftxMode",
