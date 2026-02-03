@@ -107,8 +107,8 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
     }
   }, [state.gameOver, handleExit]);
 
-  const doInvest = (startupId: string) => {
-    invest(startupId, investAmount);
+  const doInvest = (startupId: string, amount: number) => {
+    invest(startupId, amount);
     // Flash animation
     setFlashingStartup(startupId);
     setTimeout(() => setFlashingStartup(null), 300);
@@ -198,7 +198,7 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
                     {!isExpired && (
                       <>
                         <button
-                          onClick={() => doInvest(pr.startupId)}
+                          onClick={() => doInvest(pr.startupId, maxInvestable)}
                           disabled={!canInvest}
                           className={`px-3 py-1 text-xs rounded font-medium ${
                             canInvest
