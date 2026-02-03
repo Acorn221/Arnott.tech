@@ -14,7 +14,7 @@ interface TheoVideoProps {
  * Shows all unlocked videos tiled horizontally
  * Autoplays muted
  */
-const TheoVideo = ({ level = 1 }: TheoVideoProps) => {
+export const TheoVideo = ({ level = 1 }: TheoVideoProps) => {
   // Get videos to show (all up to current level)
   const videosToShow = THEO_VIDEOS.slice(
     0,
@@ -53,5 +53,3 @@ const TheoVideo = ({ level = 1 }: TheoVideoProps) => {
     </div>
   );
 };
-
-export default TheoVideo;

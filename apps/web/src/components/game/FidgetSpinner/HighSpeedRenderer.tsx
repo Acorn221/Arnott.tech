@@ -34,5 +34,3 @@ export const HighSpeedRenderer = ({
 
   return <>{children}</>;
 };
-
-export default HighSpeedRenderer;

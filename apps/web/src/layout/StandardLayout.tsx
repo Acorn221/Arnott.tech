@@ -1,11 +1,11 @@
 import { Outlet } from "react-router";
 import { AiFillHeart } from "react-icons/ai";
 import CookieConsent from "react-cookie-consent";
-import Text from "@/misc/Text";
+import { Text } from "@/misc/Text";
 
 const txt = Text.layout.footer;
 
-const StandardLayout = () => (
+export const StandardLayout = () => (
   <div className="flex flex-col min-h-screen justify-between">
     <main>
       <CookieConsent>This website uses cookies for analytics.</CookieConsent>
@@ -19,5 +19,3 @@ const StandardLayout = () => (
     </footer>
   </div>
 );
-
-export default StandardLayout;

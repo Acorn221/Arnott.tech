@@ -4,9 +4,9 @@ import { type Group } from "three";
 import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
 import { useSlotMachine } from "./SlotMachineContext";
-import SlotMachineModel from "./SlotMachineModel";
+import { SlotMachineModel } from "./SlotMachineModel";
 import { useSlotMachineHandle } from "./useSlotMachineHandle";
-import TechLabels from "./TechLabels";
+import { TechLabels } from "./TechLabels";
 import {
   getHiddenFaces,
   getRandomUnusedTech,
@@ -26,7 +26,7 @@ type InteractiveSlotMachineProps = ThreeElements["group"] & {
   position: [number, number, number];
 };
 
-const InteractiveSlotMachine = ({
+export const InteractiveSlotMachine = ({
   scale,
   position,
   ...props
@@ -457,5 +457,3 @@ const InteractiveSlotMachine = ({
     </group>
   );
 };
-
-export default InteractiveSlotMachine;

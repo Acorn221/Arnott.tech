@@ -4,20 +4,28 @@ import { MdEmail } from "react-icons/md";
 import { SiGmail } from "react-icons/si";
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import ReactGA from "react-ga4";
-import Text from "@/misc/Text";
-import Carousel from "./Carousel";
-import Frontend from "./Carousel/Slides/Frontend";
-import DevTools from "./Carousel/Slides/DevTools";
-import Backend from "./Carousel/Slides/Backend";
-import OtherPrograms from "./Carousel/Slides/OtherPrograms";
-import Projects from "./Projects";
+import { Text } from "@/misc/Text";
+import { Carousel } from "./Carousel";
+import { Frontend } from "./Carousel/Slides/Frontend";
+import { DevTools } from "./Carousel/Slides/DevTools";
+import { Backend } from "./Carousel/Slides/Backend";
+import { OtherPrograms } from "./Carousel/Slides/OtherPrograms";
+import { Projects } from "./Projects";
 import { getEmail } from "./util/misc";
-import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
+import { StyledToolTip } from "@/misc/StyledComponents/StyledToolTip";
 
 // Lazy load game components (Three.js is heavy)
-const FidgetSpinner = lazy(() => import("@/components/game/FidgetSpinner"));
-const Shop = lazy(() => import("@/components/game/Shop"));
-const StickySpinBalance = lazy(() => import("@/components/game/StickySpinBalance"));
+const FidgetSpinner = lazy(() =>
+  import("@/components/game/FidgetSpinner").then((m) => ({ default: m.FidgetSpinner })),
+);
+const Shop = lazy(() =>
+  import("@/components/game/Shop").then((m) => ({ default: m.Shop })),
+);
+const StickySpinBalance = lazy(() =>
+  import("@/components/game/StickySpinBalance").then((m) => ({
+    default: m.StickySpinBalance,
+  })),
+);
 
 const txt = Text.home;
 
@@ -25,7 +33,7 @@ const fadeAnimation = "fade in-out delay-4 duration-24";
 
 const slides = [Frontend, Backend, DevTools, OtherPrograms];
 
-const Home = () => {
+export const Home = () => {
   const [email, setEmail] = useState("/");
 
   const requestEmail = useCallback(() => {
@@ -201,5 +209,3 @@ const Home = () => {
     </div>
   );
 };
-
-export default Home;

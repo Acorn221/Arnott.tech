@@ -26,5 +26,3 @@ export const StickySpinBalance = () => {
     </div>
   );
 };
-
-export default StickySpinBalance;

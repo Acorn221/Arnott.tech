@@ -56,7 +56,7 @@ const SPINNER_PART_NAMES = [
 /** Regex to match individual face groups: reel-[1-3]-face-[1-8] (exact match, no occurrence_ prefix) */
 const REEL_FACE_REGEX = /^reel-(\d+)-face-(\d+)$/;
 
-const SlotMachineModel = () => {
+export const SlotMachineModel = () => {
   const {
     setHandlePivot,
     setSpinners,
@@ -309,7 +309,5 @@ const SlotMachineModel = () => {
     </group>
   );
 };
-
-export default SlotMachineModel;
 
 useGLTF.preload("/tech-stack-slot-machine.gltf");

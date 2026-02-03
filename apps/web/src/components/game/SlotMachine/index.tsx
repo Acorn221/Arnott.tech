@@ -8,15 +8,17 @@ import {
 } from "react";
 import { OrbitControls, Environment, BakeShadows } from "@react-three/drei";
 import { EffectComposer, Vignette } from "@react-three/postprocessing";
-import InteractiveSlotMachine from "./InteractiveSlotMachine";
+import { InteractiveSlotMachine } from "./InteractiveSlotMachine";
 import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
-import ShareDialog from "./ShareDialog";
+import { ShareDialog } from "./ShareDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addSpins, spendSpins, selectSpinCount, selectGamblingUnlocked, selectGamblingMultiplier } from "@/store/slices/gameSlice";
 import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
 
 /** Main component with Canvas - Provider is INSIDE Canvas for R3F compatibility */
-const TechStackSlotMachine = ({ ...props }: HTMLAttributes<HTMLDivElement>) => {
+export const TechStackSlotMachine = ({
+  ...props
+}: HTMLAttributes<HTMLDivElement>) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
@@ -210,5 +212,3 @@ const TechStackSlotMachine = ({ ...props }: HTMLAttributes<HTMLDivElement>) => {
     </div>
   );
 };
-
-export default TechStackSlotMachine;

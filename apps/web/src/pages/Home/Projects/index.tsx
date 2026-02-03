@@ -11,9 +11,9 @@ import { ImFirefox } from "react-icons/im";
 
 // Internal modules
 import { createLogger } from "@arnott/logger";
-import TechStackSlotMachine from "@/components/game/SlotMachine";
-import Text from "@/misc/Text";
-import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
+import { TechStackSlotMachine } from "@/components/game/SlotMachine";
+import { Text } from "@/misc/Text";
+import { CrashProjectCard } from "../CrashMyPc/ProjectCard";
 
 const log = createLogger("ui:projects");
 
@@ -28,7 +28,7 @@ const openLink = (link: string) => {
   window.open(link, "_blank");
 };
 
-const Projects = () => {
+export const Projects = () => {
   const [referrerSource, setReferrerSource] = useState<string | null>(null);
 
   useEffect(() => {
@@ -147,5 +147,3 @@ const Projects = () => {
     </div>
   );
 };
-
-export default Projects;

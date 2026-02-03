@@ -13,8 +13,8 @@ import {
   type ThreeEvent,
   useFrame,
 } from "@react-three/fiber";
-import SpinnerModel from "./SpinnerModel";
-import AutoSpinEffect from "./AutoSpinEffect";
+import { SpinnerModel } from "./SpinnerModel";
+import { AutoSpinEffect } from "./AutoSpinEffect";
 import type { SpinnerState } from "./spinner-codec";
 import {
   FRICTION_BASE,
@@ -68,7 +68,7 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
   onVelocityChange?: (velocity: number) => void;
 };
 
-const InteractiveSpinner = ({
+export const InteractiveSpinner = ({
   setSpinCount,
   computeState,
   onGrab,
@@ -315,5 +315,3 @@ const InteractiveSpinner = ({
 };
 
 InteractiveSpinner.displayName = "InteractiveSpinner";
-
-export default InteractiveSpinner;

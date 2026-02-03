@@ -77,7 +77,11 @@ const createMaterials = (): SpinnerMaterialMap => ({
     }),
 });
 
-const SpinnerModel = ({ isXray, rgbLevel = 0, ...props }: SpinnerModelProps) => {
+export const SpinnerModel = ({
+  isXray,
+  rgbLevel = 0,
+  ...props
+}: SpinnerModelProps) => {
   const materials = useRef(createMaterials());
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/fidget-spinner.gltf");
@@ -156,7 +160,5 @@ const SpinnerModel = ({ isXray, rgbLevel = 0, ...props }: SpinnerModelProps) => 
     </group>
   );
 };
-
-export default SpinnerModel;
 
 useGLTF.preload("/fidget-spinner.gltf");

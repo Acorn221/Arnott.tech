@@ -119,5 +119,3 @@ export const UpgradeButton = ({ upgradeId }: UpgradeButtonProps) => {
     </button>
   );
 };
-
-export default UpgradeButton;

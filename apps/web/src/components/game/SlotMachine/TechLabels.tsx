@@ -148,7 +148,7 @@ const ButtonLabel = ({
   );
 };
 
-const TechLabels = () => {
+export const TechLabels = () => {
   const { lastResult, isSpinningRef } = useSlotMachine();
 
   // Don't render if no result or still spinning
@@ -224,5 +224,3 @@ const getColorForScore = (techScore: number) => {
   if (techScore >= 40) return "#F97316"; // Orange
   return "#EF4444"; // Red
 };
-
-export default TechLabels;

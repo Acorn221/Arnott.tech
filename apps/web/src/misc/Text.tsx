@@ -67,7 +67,7 @@ export type TextType = {
     };
   };
 };
-const Text: TextType = {
+export const Text: TextType = {
   home: {
     title: "James Arnott",
     intro: {
@@ -280,5 +280,3 @@ const Text: TextType = {
     },
   },
 };
-
-export default Text;

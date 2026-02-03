@@ -1,16 +1,16 @@
 import { XyzTransitionGroup } from "@animxyz/react";
 import { useContext, useEffect, useState } from "react";
 import { CarouselContext } from "@/pages/Home/Carousel/";
-import Text from "@/misc/Text";
-import Slide from "../Slide";
-import IconContainer from "../util/IconContainer";
+import { Text } from "@/misc/Text";
+import { Slide } from "../Slide";
+import { IconContainer } from "../util/IconContainer";
 import { BackendIcons } from "../util/Icons";
 
 const txt = Text.home.slides.backend;
 
 const iconStyles = "h-[9vmin] max-h-[8vmin] min-h-[6vmin] max-w-[8vmin]";
 
-const Backend = ({ index }: { index: number }) => {
+export const Backend = ({ index }: { index: number }) => {
   const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -49,5 +49,3 @@ const Backend = ({ index }: { index: number }) => {
     </Slide>
   );
 };
-
-export default Backend;

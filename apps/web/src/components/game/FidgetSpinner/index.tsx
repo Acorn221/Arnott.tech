@@ -8,8 +8,8 @@ import {
   useState,
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
-import InteractiveSpinner from "./InteractiveSpinner";
-import HighSpeedRenderer from "./HighSpeedRenderer";
+import { InteractiveSpinner } from "./InteractiveSpinner";
+import { HighSpeedRenderer } from "./HighSpeedRenderer";
 import { useSyncRoom } from "@/lib/sync";
 import {
   encodeSpinnerEvent,
@@ -141,7 +141,7 @@ interface FidgetSpinnerProps extends InputHTMLAttributes<HTMLDivElement> {
   enableHighSpeedRenderer?: boolean;
 }
 
-const FidgetSpinner = ({
+export const FidgetSpinner = ({
   disableSync = false,
   hideStatusBar = false,
   enableAutoSpin = false,
@@ -473,5 +473,3 @@ const FidgetSpinner = ({
     </div>
   );
 };
-
-export default FidgetSpinner;

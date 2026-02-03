@@ -7,7 +7,7 @@ import {
   selectUpgradeLevel,
 } from "@/store/slices/gameSlice";
 import { UPGRADES } from "./upgrades";
-import UpgradeButton from "./UpgradeButton";
+import { UpgradeButton } from "./UpgradeButton";
 
 export const Shop = () => {
   const location = useLocation();
@@ -70,5 +70,3 @@ export const Shop = () => {
     </div>
   );
 };
-
-export default Shop;

@@ -5,7 +5,7 @@ import Tooltip, {
   type TooltipProps,
 } from "@mui/material/Tooltip";
 
-const StyledToolTip: ComponentType<TooltipProps> = styled(
+export const StyledToolTip: ComponentType<TooltipProps> = styled(
   ({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
   ),
@@ -14,5 +14,3 @@ const StyledToolTip: ComponentType<TooltipProps> = styled(
     fontSize: "1.2rem",
   },
 }));
-
-export default StyledToolTip;

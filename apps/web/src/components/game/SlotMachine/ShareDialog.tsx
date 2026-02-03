@@ -8,7 +8,7 @@ interface ShareDialogProps {
   screenshot: string | null;
 }
 
-const ShareDialog = ({
+export const ShareDialog = ({
   isOpen,
   onClose,
   result,
@@ -215,5 +215,3 @@ const ShareDialog = ({
     </div>
   );
 };
-
-export default ShareDialog;

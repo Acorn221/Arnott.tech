@@ -77,7 +77,7 @@ interface FTXInvestmentProps {
   onClose?: () => void;
 }
 
-const FTXInvestment = ({ className, onClose }: FTXInvestmentProps) => {
+export const FTXInvestment = ({ className, onClose }: FTXInvestmentProps) => {
   const dispatch = useAppDispatch();
 
   // Game starts immediately - the purchase WAS the investment
@@ -330,5 +330,3 @@ const FTXInvestment = ({ className, onClose }: FTXInvestmentProps) => {
     </div>
   );
 };
-
-export default FTXInvestment;

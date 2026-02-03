@@ -10,13 +10,13 @@ import {
   restoreState,
 } from "@/store/slices/gameSlice";
 import { decodeGameState } from "@/lib/stateCodec";
-import FidgetSpinner from "@/components/game/FidgetSpinner";
-import SlotMachine from "@/components/game/SlotMachine";
-import Shop from "@/components/game/Shop";
-import TheoVideo from "@/components/game/TheoVideo";
-import FTXInvestment from "@/components/game/FTXInvestment";
+import { FidgetSpinner } from "@/components/game/FidgetSpinner";
+import { TechStackSlotMachine as SlotMachine } from "@/components/game/SlotMachine";
+import { Shop } from "@/components/game/Shop";
+import { TheoVideo } from "@/components/game/TheoVideo";
+import { FTXInvestment } from "@/components/game/FTXInvestment";
 
-const StimulationSpinner = () => {
+export const StimulationSpinner = () => {
   const dispatch = useAppDispatch();
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);
@@ -120,5 +120,3 @@ const StimulationSpinner = () => {
     </div>
   );
 };
-
-export default StimulationSpinner;
