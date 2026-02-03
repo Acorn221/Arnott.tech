@@ -417,6 +417,225 @@
         { "type": "funding", "date": "2017-06-01", "round": "Series H", "raised": 150000000, "valuation": 12300000000 },
         { "type": "exit", "date": "2019-04-18", "outcome": "ipo", "finalValuation": 12600000000 }
       ]
+    },
+    {
+      "id": "jawbone",
+      "name": "Jawbone",
+      "description": "Wearable fitness tracker and Bluetooth speaker company",
+      "foundedDate": "2003-01-01",
+      "sector": "Consumer Hardware",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2006-01-01", "round": "Series A", "raised": 8000000, "valuation": 30000000 },
+        { "type": "funding", "date": "2008-01-01", "round": "Series B", "raised": 30000000, "valuation": 100000000 },
+        { "type": "funding", "date": "2011-03-01", "round": "Series C", "raised": 40000000, "valuation": 500000000 },
+        { "type": "funding", "date": "2011-12-01", "round": "Series D", "raised": 70000000, "valuation": 1500000000 },
+        { "type": "funding", "date": "2014-01-01", "round": "Series E", "raised": 250000000, "valuation": 3000000000 },
+        { "type": "milestone", "date": "2015-01-01", "description": "Fitness tracker sales plummet as Apple Watch launches" },
+        { "type": "funding", "date": "2015-06-01", "round": "Series F", "raised": 165000000, "valuation": 2500000000 },
+        { "type": "milestone", "date": "2016-01-01", "description": "Lays off 15% of workforce" },
+        { "type": "funding", "date": "2016-06-01", "round": "Debt", "raised": 50000000, "valuation": 1500000000 },
+        { "type": "milestone", "date": "2017-01-01", "description": "Stops manufacturing fitness trackers" },
+        { "type": "exit", "date": "2017-07-06", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "vine",
+      "name": "Vine",
+      "description": "Short-form video platform with 6-second looping videos",
+      "foundedDate": "2012-06-01",
+      "sector": "Social Media",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2012-06-01", "round": "Seed", "raised": 1000000, "valuation": 5000000 },
+        { "type": "milestone", "date": "2012-10-09", "description": "Acquired by Twitter for $30M before launch" },
+        { "type": "milestone", "date": "2013-01-24", "description": "Launches on iOS, becomes #1 free app" },
+        { "type": "milestone", "date": "2015-01-01", "description": "Reaches 200M monthly active users" },
+        { "type": "milestone", "date": "2016-01-01", "description": "Top creators leave for YouTube and Instagram" },
+        { "type": "milestone", "date": "2016-10-27", "description": "Twitter announces Vine will be discontinued" },
+        { "type": "exit", "date": "2017-01-17", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "moviepass",
+      "name": "MoviePass",
+      "description": "Subscription service offering unlimited movie theater tickets",
+      "foundedDate": "2011-01-01",
+      "sector": "Entertainment",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2012-01-01", "round": "Seed", "raised": 1000000, "valuation": 5000000 },
+        { "type": "funding", "date": "2014-01-01", "round": "Series A", "raised": 7500000, "valuation": 25000000 },
+        { "type": "funding", "date": "2016-01-01", "round": "Series B", "raised": 12000000, "valuation": 50000000 },
+        { "type": "milestone", "date": "2017-08-15", "description": "Drops price to $9.95/month, acquires 150K subscribers in days" },
+        { "type": "milestone", "date": "2017-12-01", "description": "Reaches 1.5M subscribers" },
+        { "type": "milestone", "date": "2018-06-01", "description": "Reaches 3M subscribers, losing $20M per month" },
+        { "type": "milestone", "date": "2018-07-26", "description": "Service goes dark, runs out of cash" },
+        { "type": "milestone", "date": "2018-08-06", "description": "Limits users to 3 movies per month" },
+        { "type": "exit", "date": "2020-01-28", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "solyndra",
+      "name": "Solyndra",
+      "description": "Solar panel manufacturer with cylindrical solar cells",
+      "foundedDate": "2005-01-01",
+      "sector": "Energy",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2006-01-01", "round": "Series A", "raised": 10500000, "valuation": 30000000 },
+        { "type": "funding", "date": "2007-01-01", "round": "Series B", "raised": 78000000, "valuation": 150000000 },
+        { "type": "funding", "date": "2008-01-01", "round": "Series C", "raised": 144000000, "valuation": 400000000 },
+        { "type": "funding", "date": "2009-01-01", "round": "Series D", "raised": 219000000, "valuation": 800000000 },
+        { "type": "milestone", "date": "2009-09-04", "description": "Receives $535M government loan guarantee" },
+        { "type": "funding", "date": "2010-01-01", "round": "Series E", "raised": 175000000, "valuation": 1000000000 },
+        { "type": "milestone", "date": "2010-06-01", "description": "Cancels planned IPO" },
+        { "type": "milestone", "date": "2011-03-01", "description": "Chinese solar panels crash prices, Solyndra can't compete" },
+        { "type": "exit", "date": "2011-09-01", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "fab",
+      "name": "Fab.com",
+      "description": "Flash sale e-commerce site for designer goods",
+      "foundedDate": "2010-06-01",
+      "sector": "E-commerce",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2011-07-01", "round": "Series A", "raised": 8000000, "valuation": 30000000 },
+        { "type": "milestone", "date": "2011-08-01", "description": "Pivots from gay social network to flash sales" },
+        { "type": "funding", "date": "2012-02-01", "round": "Series B", "raised": 40000000, "valuation": 200000000 },
+        { "type": "funding", "date": "2012-07-01", "round": "Series C", "raised": 105000000, "valuation": 600000000 },
+        { "type": "milestone", "date": "2012-12-01", "description": "10M members, $115M in annual revenue" },
+        { "type": "funding", "date": "2013-06-01", "round": "Series D", "raised": 150000000, "valuation": 1000000000 },
+        { "type": "milestone", "date": "2013-09-01", "description": "Lays off 100+ employees in Europe" },
+        { "type": "milestone", "date": "2014-03-01", "description": "Lays off 50% of remaining staff" },
+        { "type": "exit", "date": "2015-03-01", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "homejoy",
+      "name": "Homejoy",
+      "description": "On-demand home cleaning service",
+      "foundedDate": "2012-07-01",
+      "sector": "Services",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2012-12-01", "round": "Y Combinator", "raised": 120000, "valuation": 1500000 },
+        { "type": "funding", "date": "2013-06-01", "round": "Seed", "raised": 1700000, "valuation": 8000000 },
+        { "type": "funding", "date": "2013-12-01", "round": "Series A", "raised": 24000000, "valuation": 80000000 },
+        { "type": "funding", "date": "2014-02-01", "round": "Series B", "raised": 38000000, "valuation": 150000000 },
+        { "type": "milestone", "date": "2014-06-01", "description": "Expands to 30+ cities" },
+        { "type": "milestone", "date": "2015-01-01", "description": "Cleaner lawsuits over contractor classification" },
+        { "type": "milestone", "date": "2015-06-01", "description": "Unable to raise Series C" },
+        { "type": "exit", "date": "2015-07-31", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "rdio",
+      "name": "Rdio",
+      "description": "Music streaming service co-founded by Skype founders",
+      "foundedDate": "2010-01-01",
+      "sector": "Entertainment",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2010-04-01", "round": "Seed", "raised": 2500000, "valuation": 15000000 },
+        { "type": "funding", "date": "2011-03-01", "round": "Series A", "raised": 17500000, "valuation": 75000000 },
+        { "type": "milestone", "date": "2011-08-01", "description": "Launches in US and 20+ countries" },
+        { "type": "funding", "date": "2012-09-01", "round": "Series B", "raised": 17500000, "valuation": 100000000 },
+        { "type": "milestone", "date": "2014-01-01", "description": "Struggling to compete with Spotify's growth" },
+        { "type": "funding", "date": "2014-07-01", "round": "Series C", "raised": 55000000, "valuation": 200000000 },
+        { "type": "milestone", "date": "2015-10-01", "description": "Lays off staff, scaling back operations" },
+        { "type": "exit", "date": "2015-11-17", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "fast",
+      "name": "Fast",
+      "description": "One-click checkout startup for e-commerce",
+      "foundedDate": "2019-03-01",
+      "sector": "Fintech",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2019-07-01", "round": "Seed", "raised": 2500000, "valuation": 15000000 },
+        { "type": "funding", "date": "2020-01-01", "round": "Series A", "raised": 20000000, "valuation": 80000000 },
+        { "type": "funding", "date": "2021-01-21", "round": "Series B", "raised": 102000000, "valuation": 580000000 },
+        { "type": "milestone", "date": "2021-06-01", "description": "Lavish spending on offices and perks" },
+        { "type": "milestone", "date": "2021-12-01", "description": "Only processing $300K-600K in GMV per year" },
+        { "type": "milestone", "date": "2022-03-01", "description": "Failed to raise Series C" },
+        { "type": "exit", "date": "2022-04-05", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "katerra",
+      "name": "Katerra",
+      "description": "Construction tech startup promising to revolutionize building",
+      "foundedDate": "2015-01-01",
+      "sector": "Construction",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2016-01-01", "round": "Series A", "raised": 12000000, "valuation": 50000000 },
+        { "type": "funding", "date": "2017-05-01", "round": "Series B", "raised": 75000000, "valuation": 300000000 },
+        { "type": "funding", "date": "2018-01-01", "round": "Series C", "raised": 865000000, "valuation": 3000000000 },
+        { "type": "milestone", "date": "2018-06-01", "description": "SoftBank leads massive funding round" },
+        { "type": "funding", "date": "2020-01-01", "round": "Series D", "raised": 200000000, "valuation": 4000000000 },
+        { "type": "milestone", "date": "2020-06-01", "description": "COVID-19 disrupts construction projects" },
+        { "type": "milestone", "date": "2021-01-01", "description": "Lays off 200 employees" },
+        { "type": "exit", "date": "2021-06-01", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "betterplace",
+      "name": "Better Place",
+      "description": "Electric vehicle battery swapping network",
+      "foundedDate": "2007-10-01",
+      "sector": "Energy",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2008-01-01", "round": "Series A", "raised": 200000000, "valuation": 600000000 },
+        { "type": "milestone", "date": "2009-01-01", "description": "Announces partnerships with Renault-Nissan" },
+        { "type": "funding", "date": "2010-01-01", "round": "Series B", "raised": 350000000, "valuation": 1250000000 },
+        { "type": "milestone", "date": "2011-01-01", "description": "Launches first battery swap station in Israel" },
+        { "type": "funding", "date": "2011-11-01", "round": "Series C", "raised": 200000000, "valuation": 2250000000 },
+        { "type": "milestone", "date": "2012-10-01", "description": "Only 750 cars sold in Israel, far below projections" },
+        { "type": "milestone", "date": "2013-01-01", "description": "CEO Shai Agassi steps down" },
+        { "type": "exit", "date": "2013-05-26", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "irl",
+      "name": "IRL",
+      "description": "Social calendar app for planning events with friends",
+      "foundedDate": "2017-01-01",
+      "sector": "Social Media",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2017-06-01", "round": "Seed", "raised": 3000000, "valuation": 12000000 },
+        { "type": "funding", "date": "2019-06-01", "round": "Series A", "raised": 8000000, "valuation": 40000000 },
+        { "type": "funding", "date": "2021-06-01", "round": "Series C", "raised": 170000000, "valuation": 1170000000 },
+        { "type": "milestone", "date": "2021-08-01", "description": "Claims 20M monthly active users" },
+        { "type": "milestone", "date": "2022-01-01", "description": "Acquires Gather, pivots to virtual events" },
+        { "type": "milestone", "date": "2023-06-23", "description": "SEC investigation reveals 95% of users were fake" },
+        { "type": "exit", "date": "2023-06-27", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "yikyak",
+      "name": "Yik Yak",
+      "description": "Anonymous local social network popular on college campuses",
+      "foundedDate": "2013-11-01",
+      "sector": "Social Media",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2014-03-01", "round": "Seed", "raised": 1500000, "valuation": 10000000 },
+        { "type": "funding", "date": "2014-06-01", "round": "Series A", "raised": 10000000, "valuation": 100000000 },
+        { "type": "milestone", "date": "2014-09-01", "description": "Top 10 most downloaded social app" },
+        { "type": "funding", "date": "2014-11-01", "round": "Series B", "raised": 62000000, "valuation": 400000000 },
+        { "type": "milestone", "date": "2015-09-01", "description": "1.8M daily active users at peak" },
+        { "type": "milestone", "date": "2016-01-01", "description": "Removes anonymity, users flee" },
+        { "type": "milestone", "date": "2016-12-01", "description": "Lays off 60% of staff" },
+        { "type": "exit", "date": "2017-04-28", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
     }
   ]
 }

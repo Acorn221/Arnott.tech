@@ -13,7 +13,11 @@ export type StartupSector =
   | 'Fintech'
   | 'Delivery'
   | 'Aerospace'
-  | 'Cloud Storage';
+  | 'Cloud Storage'
+  | 'Energy'
+  | 'E-commerce'
+  | 'Services'
+  | 'Construction';
 
 export interface FundingEvent {
   type: 'funding';
