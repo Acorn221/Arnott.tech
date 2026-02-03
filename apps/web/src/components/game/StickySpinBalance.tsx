@@ -1,5 +1,5 @@
 import { useAppSelector } from "@/store/hooks";
-import { selectSpinCount, selectShopUnlocked } from "@/store/slices/gameSlice";
+import { selectShopUnlocked,selectSpinCount } from "@/store/slices/gameSlice";
 
 export const StickySpinBalance = () => {
   const spinCount = useAppSelector(selectSpinCount);

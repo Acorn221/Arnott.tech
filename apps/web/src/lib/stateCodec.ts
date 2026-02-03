@@ -37,7 +37,7 @@ export const decodeGameState = (
   encoded: string,
 ): { spinCount: number; upgrades: Record<string, number> } | null => {
   try {
-    const payload: EncodedState = JSON.parse(atob(encoded));
+    const payload = JSON.parse(atob(encoded)) as EncodedState;
     const expectedHash = computeHash(payload.s, payload.u);
     if (payload.h !== expectedHash) return null;
 

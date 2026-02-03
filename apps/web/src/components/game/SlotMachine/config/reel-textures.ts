@@ -1,12 +1,13 @@
-import * as THREE from "three";
 import { createLogger } from "@arnott/logger";
+import * as THREE from "three";
+
 import {
-  type Technology,
-  BACKEND_TECHNOLOGIES,
-  FRONTEND_TECHNOLOGIES,
-  DATABASE_TECHNOLOGIES,
   ALL_TECHNOLOGIES,
+  BACKEND_TECHNOLOGIES,
+  DATABASE_TECHNOLOGIES,
+  FRONTEND_TECHNOLOGIES,
   type ReelCategory,
+  type Technology,
 } from "./technologies";
 
 const log = createLogger("ui:reel-textures");
@@ -55,8 +56,8 @@ interface PrerenderedTexture {
 }
 
 // Two pools: one for even backgrounds, one for odd backgrounds
-const texturePoolEven: Map<string, PrerenderedTexture> = new Map();
-const texturePoolOdd: Map<string, PrerenderedTexture> = new Map();
+const texturePoolEven = new Map<string, PrerenderedTexture>();
+const texturePoolOdd = new Map<string, PrerenderedTexture>();
 let texturePoolInitialized = false;
 let texturePoolInitializing = false;
 

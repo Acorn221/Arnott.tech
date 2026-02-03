@@ -1,12 +1,12 @@
-import type {
-  StateComputer,
-  ConflictResolver,
-} from "@/lib/sync";
 import {
-  FRICTION_BASE,
   FIXED_DT,
+  FRICTION_BASE,
   VELOCITY_THRESHOLD,
 } from "@/lib/physics";
+import type {
+  ConflictResolver,
+  StateComputer,
+} from "@/lib/sync";
 
 // Binary message types
 const MSG_GRAB = 0;

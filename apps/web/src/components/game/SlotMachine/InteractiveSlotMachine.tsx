@@ -1,25 +1,25 @@
-import { useRef, useCallback, Suspense, useEffect } from "react";
+import { type ThreeElements, useFrame, useThree } from "@react-three/fiber";
+import { Suspense, useCallback, useEffect,useRef } from "react";
 import type * as THREE from "three";
 import { type Group } from "three";
-import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
-import { useSlotMachine } from "./SlotMachineContext";
-import { SlotMachineModel } from "./SlotMachineModel";
-import { useSlotMachineHandle } from "./useSlotMachineHandle";
-import { TechLabels } from "./TechLabels";
+import {
+  BUTTON,
+  REEL,
+  RUMBLE,
+  SOUND,
+  SPINNER_NAMES,
+} from "./config/animation-constants";
 import {
   getHiddenFaces,
   getRandomUnusedTech,
   updateReelFace,
 } from "./config/reel-textures";
-import {
-  RUMBLE,
-  REEL,
-  BUTTON,
-  SOUND,
-  SPINNER_NAMES,
-} from "./config/animation-constants";
+import { useSlotMachine } from "./SlotMachineContext";
+import { SlotMachineModel } from "./SlotMachineModel";
 import { soundManager } from "./sounds";
+import { TechLabels } from "./TechLabels";
+import { useSlotMachineHandle } from "./useSlotMachineHandle";
 
 type InteractiveSlotMachineProps = ThreeElements["group"] & {
   scale: number;

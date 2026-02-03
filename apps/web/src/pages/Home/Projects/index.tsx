@@ -1,18 +1,15 @@
-// React
-import { useEffect, useState } from "react";
-
-// External libraries
 import { XyzTransition } from "@animxyz/react";
+import { createLogger } from "@arnott/logger";
+import { useEffect, useState } from "react";
 import ReactGA from "react-ga4";
-import { AiFillGithub, AiFillChrome } from "react-icons/ai";
+import { AiFillChrome,AiFillGithub } from "react-icons/ai";
 import { BiLinkExternal } from "react-icons/bi";
 import { GiArchiveResearch } from "react-icons/gi";
 import { ImFirefox } from "react-icons/im";
 
-// Internal modules
-import { createLogger } from "@arnott/logger";
 import { TechStackSlotMachine } from "@/components/game/SlotMachine";
 import { Text } from "@/misc/Text";
+
 import { CrashProjectCard } from "../CrashMyPc/ProjectCard";
 
 const log = createLogger("ui:projects");

@@ -1,9 +1,9 @@
-import LighterFuelLogo from "@/pages/Home/Projects/assets/LighterFuel512.png";
-import Snap2CalLogo from "@/pages/Home/Projects/assets/snap2cal.png";
-import JobStreamLogo from "@/pages/Home/Projects/assets/JobStreamLogo.svg";
-import LinkedOutLogo from "@/pages/Home/Projects/assets/LinkedOutLogo.png";
-import DeathMailLogo from "@/pages/Home/Projects/assets/DeathMail.svg";
 import CubeAuthn from "@/pages/Home/Projects/assets/CubeAuthn.png";
+import DeathMailLogo from "@/pages/Home/Projects/assets/DeathMail.svg";
+import JobStreamLogo from "@/pages/Home/Projects/assets/JobStreamLogo.svg";
+import LighterFuelLogo from "@/pages/Home/Projects/assets/LighterFuel512.png";
+import LinkedOutLogo from "@/pages/Home/Projects/assets/LinkedOutLogo.png";
+import Snap2CalLogo from "@/pages/Home/Projects/assets/snap2cal.png";
 
 export type TextType = {
   home: {

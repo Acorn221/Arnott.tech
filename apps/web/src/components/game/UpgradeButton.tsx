@@ -1,16 +1,18 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { generateContinueUrl } from "@/lib/stateCodec";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   purchaseUpgrade,
-  selectSpinCount,
-  selectUpgradeLevel,
-  selectUpgradeCost,
   selectIsUpgradeMaxed,
+  selectSpinCount,
+  selectUpgradeCost,
+  selectUpgradeLevel,
   selectUpgrades,
 } from "@/store/slices/gameSlice";
+
 import { getUpgradeById } from "./upgrades";
-import { generateContinueUrl } from "@/lib/stateCodec";
 
 interface UpgradeButtonProps {
   upgradeId: string;
@@ -41,11 +43,11 @@ export const UpgradeButton = ({ upgradeId }: UpgradeButtonProps) => {
           })
           .catch(() => {
             // User cancelled or share failed - fallback to clipboard
-            navigator.clipboard.writeText(url);
+            void navigator.clipboard.writeText(url);
           });
       } else {
         // Fallback for browsers without Share API
-        navigator.clipboard.writeText(url);
+        void navigator.clipboard.writeText(url);
       }
       return;
     }

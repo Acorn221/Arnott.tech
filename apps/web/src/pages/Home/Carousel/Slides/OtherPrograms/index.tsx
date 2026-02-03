@@ -1,11 +1,13 @@
-import { XyzTransitionGroup } from "@animxyz/react";
 
+import { XyzTransitionGroup } from "@animxyz/react";
 import React, { useContext, useEffect, useState } from "react";
-import { OtherProgramsIcons } from "../util/Icons";
-import { CarouselContext } from "@/pages/Home/Carousel/";
+
 import { Text } from "@/misc/Text";
+import { CarouselContext } from "@/pages/Home/Carousel/";
+
 import { Slide } from "../Slide";
 import { IconContainer } from "../util/IconContainer";
+import { OtherProgramsIcons } from "../util/Icons";
 
 const txt = Text.home.slides.otherPrograms;
 

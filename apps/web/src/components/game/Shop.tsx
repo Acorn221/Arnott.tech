@@ -1,13 +1,15 @@
 import { useLocation } from "react-router-dom";
+
 import { useAppSelector } from "@/store/hooks";
 import {
-  selectShopUnlocked,
   selectAllUpgradesMaxed,
   selectIsUpgradeMaxed,
+  selectShopUnlocked,
   selectUpgradeLevel,
 } from "@/store/slices/gameSlice";
-import { UPGRADES } from "./upgrades";
+
 import { UpgradeButton } from "./UpgradeButton";
+import { UPGRADES } from "./upgrades";
 
 export const Shop = () => {
   const location = useLocation();

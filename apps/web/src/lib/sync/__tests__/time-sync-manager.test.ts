@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { afterEach,beforeEach, describe, expect, it, vi } from "vitest";
+
 import { TimeSyncManager, type TimeSyncRequest, type TimeSyncResponse } from "../time-sync-manager";
 
 describe("TimeSyncManager", () => {
@@ -50,26 +51,26 @@ describe("TimeSyncManager", () => {
       const msg: TimeSyncRequest = { type: "time-sync-request", requestTime: 12345 };
       const data = new TextEncoder().encode(JSON.stringify(msg));
 
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(true);
+      expect(timeSync.isTimeSyncMessage(data.buffer)).toBe(true);
     });
 
     it("returns true for valid time-sync-response message", () => {
       const msg: TimeSyncResponse = { type: "time-sync-response", requestTime: 12345, responseTime: 12400 };
       const data = new TextEncoder().encode(JSON.stringify(msg));
 
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(true);
+      expect(timeSync.isTimeSyncMessage(data.buffer)).toBe(true);
     });
 
     it("returns false for message without type", () => {
       const data = new TextEncoder().encode(JSON.stringify({ requestTime: 12345 }));
 
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(false);
+      expect(timeSync.isTimeSyncMessage(data.buffer)).toBe(false);
     });
 
     it("returns false for message with wrong type", () => {
       const data = new TextEncoder().encode(JSON.stringify({ type: "other", requestTime: 12345 }));
 
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(false);
+      expect(timeSync.isTimeSyncMessage(data.buffer)).toBe(false);
     });
 
     it("returns false for very large messages", () => {
@@ -81,13 +82,13 @@ describe("TimeSyncManager", () => {
     it("returns false for invalid JSON", () => {
       const data = new TextEncoder().encode("not valid json");
 
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(false);
+      expect(timeSync.isTimeSyncMessage(data.buffer)).toBe(false);
     });
 
     it("returns false for binary data", () => {
       const data = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
 
-      expect(timeSync.isTimeSyncMessage(data.buffer as ArrayBuffer)).toBe(false);
+      expect(timeSync.isTimeSyncMessage(data.buffer)).toBe(false);
     });
   });
 
@@ -96,7 +97,7 @@ describe("TimeSyncManager", () => {
       const request: TimeSyncRequest = { type: "time-sync-request", requestTime: 1000 };
       const data = new TextEncoder().encode(JSON.stringify(request));
 
-      const result = timeSync.handleMessage("peer-1", data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage("peer-1", data.buffer);
 
       expect(result).not.toBeNull();
       expect(result!.responseMessage).not.toBeNull();
@@ -126,7 +127,7 @@ describe("TimeSyncManager", () => {
       };
       const data = new TextEncoder().encode(JSON.stringify(response));
 
-      const result = timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage(peerId, data.buffer);
 
       expect(result).not.toBeNull();
       expect(result!.isNewPeer).toBe(true);
@@ -145,7 +146,7 @@ describe("TimeSyncManager", () => {
       // Receive request
       const request: TimeSyncRequest = { type: "time-sync-request", requestTime: 1000 };
       const requestData = new TextEncoder().encode(JSON.stringify(request));
-      const requestResult = timeSync.handleMessage(peerId, requestData.buffer as ArrayBuffer);
+      const requestResult = timeSync.handleMessage(peerId, requestData.buffer);
 
       expect(requestResult!.isNewPeer).toBe(true);
     });
@@ -156,7 +157,7 @@ describe("TimeSyncManager", () => {
       // First request
       const request: TimeSyncRequest = { type: "time-sync-request", requestTime: 1000 };
       const data = new TextEncoder().encode(JSON.stringify(request));
-      timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      timeSync.handleMessage(peerId, data.buffer);
 
       // Complete RTT sync with a response
       const response: TimeSyncResponse = {
@@ -165,12 +166,12 @@ describe("TimeSyncManager", () => {
         responseTime: performance.now() + 5,
       };
       const responseData = new TextEncoder().encode(JSON.stringify(response));
-      timeSync.handleMessage(peerId, responseData.buffer as ArrayBuffer);
+      timeSync.handleMessage(peerId, responseData.buffer);
 
       // Second request from same peer
       const request2: TimeSyncRequest = { type: "time-sync-request", requestTime: 2000 };
       const data2 = new TextEncoder().encode(JSON.stringify(request2));
-      const result2 = timeSync.handleMessage(peerId, data2.buffer as ArrayBuffer);
+      const result2 = timeSync.handleMessage(peerId, data2.buffer);
 
       expect(result2!.isNewPeer).toBe(false);
     });
@@ -188,7 +189,7 @@ describe("TimeSyncManager", () => {
         responseTime: requestTime + 10,
       };
       const data = new TextEncoder().encode(JSON.stringify(response));
-      const result = timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage(peerId, data.buffer);
 
       expect(timeSync.getOffset(peerId)).toBe(result!.offset);
       expect(timeSync.isReady(peerId)).toBe(true);
@@ -199,7 +200,7 @@ describe("TimeSyncManager", () => {
     it("returns null for invalid message", () => {
       const data = new TextEncoder().encode("not json");
 
-      const result = timeSync.handleMessage("peer-1", data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage("peer-1", data.buffer);
 
       expect(result).toBeNull();
     });
@@ -207,7 +208,7 @@ describe("TimeSyncManager", () => {
     it("returns null for wrong message type", () => {
       const data = new TextEncoder().encode(JSON.stringify({ type: "other" }));
 
-      const result = timeSync.handleMessage("peer-1", data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage("peer-1", data.buffer);
 
       expect(result).toBeNull();
     });
@@ -224,7 +225,7 @@ describe("TimeSyncManager", () => {
         responseTime: performance.now() + 5,
       };
       const data = new TextEncoder().encode(JSON.stringify(response));
-      const result = timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage(peerId, data.buffer);
 
       expect(timeSync.getOffset(peerId)).toBe(result!.offset);
     });
@@ -249,7 +250,7 @@ describe("TimeSyncManager", () => {
         responseTime: performance.now() + 5,
       };
       const data = new TextEncoder().encode(JSON.stringify(response));
-      timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      timeSync.handleMessage(peerId, data.buffer);
 
       expect(timeSync.isReady(peerId)).toBe(true);
     });
@@ -266,7 +267,7 @@ describe("TimeSyncManager", () => {
         responseTime: performance.now() + 5,
       };
       const data = new TextEncoder().encode(JSON.stringify(response));
-      timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      timeSync.handleMessage(peerId, data.buffer);
 
       expect(timeSync.isReady(peerId)).toBe(true);
 
@@ -290,8 +291,8 @@ describe("TimeSyncManager", () => {
       const request: TimeSyncRequest = { type: "time-sync-request", requestTime: 1000 };
       const data = new TextEncoder().encode(JSON.stringify(request));
 
-      timeSync.handleMessage("peer-1", data.buffer as ArrayBuffer);
-      timeSync.handleMessage("peer-2", data.buffer as ArrayBuffer);
+      timeSync.handleMessage("peer-1", data.buffer);
+      timeSync.handleMessage("peer-2", data.buffer);
 
       timeSync.clear();
 
@@ -327,7 +328,7 @@ describe("TimeSyncManager", () => {
         responseTime: responseTime,
       };
       const data = new TextEncoder().encode(JSON.stringify(response));
-      const result = timeSync.handleMessage(peerId, data.buffer as ArrayBuffer);
+      const result = timeSync.handleMessage(peerId, data.buffer);
 
       const receiveTimeAfterResult = performance.now();
 

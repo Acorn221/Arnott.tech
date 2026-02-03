@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import {
-  selectStimulationUnlocked,
-  selectSpinCount,
-  selectTheoModeUnlocked,
-  selectFtxModeUnlocked,
-  selectUpgradeLevel,
-  restoreState,
-} from "@/store/slices/gameSlice";
-import { decodeGameState } from "@/lib/stateCodec";
+
 import { FidgetSpinner } from "@/components/game/FidgetSpinner";
-import { TechStackSlotMachine as SlotMachine } from "@/components/game/SlotMachine";
-import { Shop } from "@/components/game/Shop";
-import { TheoVideo } from "@/components/game/TheoVideo";
 import { FTXInvestment } from "@/components/game/FTXInvestment";
+import { Shop } from "@/components/game/Shop";
+import { TechStackSlotMachine as SlotMachine } from "@/components/game/SlotMachine";
+import { TheoVideo } from "@/components/game/TheoVideo";
+import { decodeGameState } from "@/lib/stateCodec";
+import { useAppDispatch,useAppSelector } from "@/store/hooks";
+import {
+  restoreState,
+  selectFtxModeUnlocked,
+  selectSpinCount,
+  selectStimulationUnlocked,
+  selectTheoModeUnlocked,
+  selectUpgradeLevel,
+} from "@/store/slices/gameSlice";
 
 export const StimulationSpinner = () => {
   const dispatch = useAppDispatch();

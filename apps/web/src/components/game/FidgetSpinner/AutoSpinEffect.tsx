@@ -1,5 +1,5 @@
-import { useRef, useMemo, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
+import { type MutableRefObject,useMemo, useRef } from "react";
 import * as THREE from "three";
 
 interface AutoSpinEffectProps {

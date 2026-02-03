@@ -1,7 +1,9 @@
 import { XyzTransitionGroup } from "@animxyz/react";
 import { useContext, useEffect, useState } from "react";
-import { CarouselContext } from "@/pages/Home/Carousel/";
+
 import { Text } from "@/misc/Text";
+import { CarouselContext } from "@/pages/Home/Carousel/";
+
 import { Slide } from "../Slide";
 import { IconContainer } from "../util/IconContainer";
 import { BackendIcons } from "../util/Icons";

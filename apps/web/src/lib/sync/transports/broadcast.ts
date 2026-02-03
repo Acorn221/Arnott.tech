@@ -11,9 +11,10 @@
  */
 
 import { createLogger } from "@arnott/logger";
-import type { ITransport } from "../interfaces/transport";
-import { SYNC_ROOM_ID, type TransportState, type TransportConfig } from "../interfaces/types";
+
 import { PRESENCE_INTERVAL_MS } from "../config";
+import type { ITransport } from "../interfaces/transport";
+import { SYNC_ROOM_ID, type TransportConfig,type TransportState } from "../interfaces/types";
 
 const log = createLogger("sync:broadcast");
 

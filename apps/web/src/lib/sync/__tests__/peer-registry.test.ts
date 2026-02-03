@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { PeerRegistry } from "../peer-registry";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { TransportType } from "../interfaces/types";
+import { PeerRegistry } from "../peer-registry";
 
 describe("PeerRegistry", () => {
   let registry: PeerRegistry;

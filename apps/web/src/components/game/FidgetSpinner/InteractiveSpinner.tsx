@@ -1,28 +1,30 @@
 import {
-  useRef,
-  useEffect,
-  useState,
-  type SetStateAction,
-  type Dispatch,
-  type MutableRefObject,
-  useCallback,
-} from "react";
-import * as THREE from "three";
-import {
   type ThreeElements,
   type ThreeEvent,
   useFrame,
 } from "@react-three/fiber";
-import { SpinnerModel } from "./SpinnerModel";
+import {
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import * as THREE from "three";
+
+import {
+  FIXED_DT,
+  FRICTION_BASE,
+  FULL_ROTATION,
+  MAX_ANGULAR_VELOCITY,
+  VELOCITY_THRESHOLD,
+} from "@/lib/physics";
+
 import { AutoSpinEffect } from "./AutoSpinEffect";
 import type { SpinnerState } from "./spinner-codec";
-import {
-  FRICTION_BASE,
-  FIXED_DT,
-  VELOCITY_THRESHOLD,
-  MAX_ANGULAR_VELOCITY,
-  FULL_ROTATION,
-} from "@/lib/physics";
+import { SpinnerModel } from "./SpinnerModel";
 
 /** Helper to track rotation and count complete spins */
 const trackRotationAndCountSpins = (

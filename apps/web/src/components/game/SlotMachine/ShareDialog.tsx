@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+
 import type { SpinResult } from "./SlotMachineContext";
 
 interface ShareDialogProps {

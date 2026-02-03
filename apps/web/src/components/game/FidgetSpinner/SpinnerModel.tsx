@@ -1,7 +1,7 @@
-import { useRef, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
-import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useEffect,useRef } from "react";
+import * as THREE from "three";
 
 interface SpinnerModelProps {
   isXray: boolean;

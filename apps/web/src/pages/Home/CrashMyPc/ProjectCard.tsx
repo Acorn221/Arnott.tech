@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
 import { XyzTransition } from "@animxyz/react";
-import { Skull } from "lucide-react";
 import { createLogger } from "@arnott/logger";
+import { Skull } from "lucide-react";
+import { useRef,useState } from "react";
 
 const log = createLogger("ui:crash-pc");
 

@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
-import { FaHome } from "react-icons/fa";
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
+import { FaHome } from "react-icons/fa";
+import { Link } from "react-router-dom";
 // The 404 not found page, with tailwind styling
 export const NotFound = () => {
   useEffect(() => {

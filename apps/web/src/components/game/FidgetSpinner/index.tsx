@@ -1,33 +1,35 @@
+import { Environment,OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import {
   type InputHTMLAttributes,
   Suspense,
   useCallback,
-  useRef,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import { OrbitControls, Environment } from "@react-three/drei";
-import { InteractiveSpinner } from "./InteractiveSpinner";
-import { HighSpeedRenderer } from "./HighSpeedRenderer";
+
 import { useSyncRoom } from "@/lib/sync";
-import {
-  encodeSpinnerEvent,
-  decodeSpinnerEvent,
-  spinnerStateComputer,
-  spinnerConflictResolver,
-  type SpinnerEvent,
-  type SpinnerState,
-} from "./spinner-codec";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addSpins,
+  selectAutoSpinLevel,
+  selectAutoSpinUnlocked,
   selectSpinCount,
   selectUpgradeEffect,
   selectUpgradeLevel,
-  selectAutoSpinUnlocked,
-  selectAutoSpinLevel,
 } from "@/store/slices/gameSlice";
+
+import { HighSpeedRenderer } from "./HighSpeedRenderer";
+import { InteractiveSpinner } from "./InteractiveSpinner";
+import {
+  decodeSpinnerEvent,
+  encodeSpinnerEvent,
+  spinnerConflictResolver,
+  type SpinnerEvent,
+  type SpinnerState,
+  spinnerStateComputer,
+} from "./spinner-codec";
 
 // Test instrumentation
 declare global {

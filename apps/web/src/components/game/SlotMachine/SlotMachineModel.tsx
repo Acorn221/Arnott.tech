@@ -1,19 +1,19 @@
-import { useRef, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useEffect,useRef } from "react";
 import * as THREE from "three";
 
-import { useSlotMachine } from "./SlotMachineContext";
 import {
   createMaterials,
-  type MaterialMap,
   type GltfMaterialKey,
+  type MaterialMap,
 } from "./materials";
 import {
   createStaticPartOverrides,
-  type StaticPartOverrideMap,
   type StaticPartName,
+  type StaticPartOverrideMap,
   type StaticPartOverridesResult,
 } from "./reel-config";
+import { useSlotMachine } from "./SlotMachineContext";
 import { createHandlePivot } from "./utils/create-handle-pivot";
 import { createSpinnerPivots } from "./utils/create-spinner-pivots";
 

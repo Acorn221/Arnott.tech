@@ -1,18 +1,20 @@
 import { XyzTransition } from "@animxyz/react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import ReactGA from "react-ga4";
 import { AiFillLinkedin } from "react-icons/ai";
 import { MdEmail } from "react-icons/md";
 import { SiGmail } from "react-icons/si";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import ReactGA from "react-ga4";
+
+import { StyledToolTip } from "@/misc/StyledComponents/StyledToolTip";
 import { Text } from "@/misc/Text";
+
 import { Carousel } from "./Carousel";
-import { Frontend } from "./Carousel/Slides/Frontend";
-import { DevTools } from "./Carousel/Slides/DevTools";
 import { Backend } from "./Carousel/Slides/Backend";
+import { DevTools } from "./Carousel/Slides/DevTools";
+import { Frontend } from "./Carousel/Slides/Frontend";
 import { OtherPrograms } from "./Carousel/Slides/OtherPrograms";
 import { Projects } from "./Projects";
 import { getEmail } from "./util/misc";
-import { StyledToolTip } from "@/misc/StyledComponents/StyledToolTip";
 
 // Lazy load game components (Three.js is heavy)
 const FidgetSpinner = lazy(() =>

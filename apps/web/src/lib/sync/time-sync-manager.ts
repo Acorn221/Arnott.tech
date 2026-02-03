@@ -19,9 +19,10 @@
  */
 
 import { createLogger } from "@arnott/logger";
+
 import {
-  TIME_SYNC_MAX_MESSAGE_SIZE,
   TIME_SYNC_LATENCY_BUFFER_MS,
+  TIME_SYNC_MAX_MESSAGE_SIZE,
 } from "./config";
 
 const log = createLogger("sync:timesync");

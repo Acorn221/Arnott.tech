@@ -1,64 +1,54 @@
-// Technology icons from devicon - using original/plain filled versions for visibility
-// Backend - Good languages
-import GoIcon from "devicon/icons/go/go-original.svg";
-import RustIcon from "devicon/icons/rust/rust-original.svg";
-import PythonIcon from "devicon/icons/python/python-original.svg";
-import CSharpIcon from "devicon/icons/csharp/csharp-original.svg";
-import KotlinIcon from "devicon/icons/kotlin/kotlin-original.svg";
-import ElixirIcon from "devicon/icons/elixir/elixir-original.svg";
-import CppIcon from "devicon/icons/cplusplus/cplusplus-original.svg";
-import CIcon from "devicon/icons/c/c-original.svg";
-import SwiftIcon from "devicon/icons/swift/swift-original.svg";
-
-// Backend - Runtimes
-import NodeJsIcon from "devicon/icons/nodejs/nodejs-original.svg";
+// Technology icons from devicon - sorted alphabetically by path
+import AngularIcon from "devicon/icons/angular/angular-original.svg";
 import BunIcon from "devicon/icons/bun/bun-original.svg";
+import CIcon from "devicon/icons/c/c-original.svg";
+import CassandraIcon from "devicon/icons/cassandra/cassandra-original.svg";
+import CppIcon from "devicon/icons/cplusplus/cplusplus-original.svg";
+import CSharpIcon from "devicon/icons/csharp/csharp-original.svg";
 import DenoIcon from "devicon/icons/denojs/denojs-original.svg";
-
-// Backend - Bad/Legacy languages
-import JavaIcon from "devicon/icons/java/java-original.svg";
-import PhpIcon from "devicon/icons/php/php-original.svg";
-import RubyIcon from "devicon/icons/ruby/ruby-original.svg";
-import ScalaIcon from "devicon/icons/scala/scala-original.svg";
-import HaskellIcon from "devicon/icons/haskell/haskell-original.svg";
+import ElixirIcon from "devicon/icons/elixir/elixir-original.svg";
 import ErlangIcon from "devicon/icons/erlang/erlang-original.svg";
+import FirebaseIcon from "devicon/icons/firebase/firebase-original.svg";
+import FortranIcon from "devicon/icons/fortran/fortran-original.svg";
 import FSharpIcon from "devicon/icons/fsharp/fsharp-original.svg";
+import GoIcon from "devicon/icons/go/go-original.svg";
+import GroovyIcon from "devicon/icons/groovy/groovy-original.svg";
+import HaskellIcon from "devicon/icons/haskell/haskell-original.svg";
+import JavaIcon from "devicon/icons/java/java-original.svg";
+import JavaScriptIcon from "devicon/icons/javascript/javascript-original.svg";
+import JQueryIcon from "devicon/icons/jquery/jquery-original.svg";
+import KotlinIcon from "devicon/icons/kotlin/kotlin-original.svg";
+import MariaDbIcon from "devicon/icons/mariadb/mariadb-original.svg";
+import MatlabIcon from "devicon/icons/matlab/matlab-original.svg";
+import MongoDbIcon from "devicon/icons/mongodb/mongodb-original.svg";
+import MySqlIcon from "devicon/icons/mysql/mysql-original.svg";
+import Neo4jIcon from "devicon/icons/neo4j/neo4j-original.svg";
+import NextJsIcon from "devicon/icons/nextjs/nextjs-original.svg";
+import NodeJsIcon from "devicon/icons/nodejs/nodejs-original.svg";
+import NuxtIcon from "devicon/icons/nuxtjs/nuxtjs-original.svg";
 import OCamlIcon from "devicon/icons/ocaml/ocaml-original.svg";
 import PerlIcon from "devicon/icons/perl/perl-original.svg";
-import MatlabIcon from "devicon/icons/matlab/matlab-original.svg";
-import GroovyIcon from "devicon/icons/groovy/groovy-original.svg";
-import FortranIcon from "devicon/icons/fortran/fortran-original.svg";
+import PhpIcon from "devicon/icons/php/php-original.svg";
+import PostgresIcon from "devicon/icons/postgresql/postgresql-original.svg";
+import PythonIcon from "devicon/icons/python/python-original.svg";
+import ReactIcon from "devicon/icons/react/react-original.svg";
+import RedisIcon from "devicon/icons/redis/redis-original.svg";
+import RubyIcon from "devicon/icons/ruby/ruby-original.svg";
+import RustIcon from "devicon/icons/rust/rust-original.svg";
+import ScalaIcon from "devicon/icons/scala/scala-original.svg";
+import SolidJsIcon from "devicon/icons/solidjs/solidjs-original.svg";
+import SqliteIcon from "devicon/icons/sqlite/sqlite-original.svg";
+import SupabaseIcon from "devicon/icons/supabase/supabase-original.svg";
+import SvelteIcon from "devicon/icons/svelte/svelte-original.svg";
+import SwiftIcon from "devicon/icons/swift/swift-original.svg";
+import VueIcon from "devicon/icons/vuejs/vuejs-original.svg";
+
+import DynamoDbIcon from "@/pages/Home/Carousel/Slides/util/Icons/assets/dynamoDB.svg";
 
 // Custom icons from public folder
 const BrainfuckIcon = "/brainfuck-icon.svg";
 const NeonIcon = "/neon-icon.svg";
 const htmxIcon = "/htmx-icon.svg";
-
-// Frontend
-import ReactIcon from "devicon/icons/react/react-original.svg";
-import VueIcon from "devicon/icons/vuejs/vuejs-original.svg";
-import SvelteIcon from "devicon/icons/svelte/svelte-original.svg";
-import NextJsIcon from "devicon/icons/nextjs/nextjs-original.svg";
-import NuxtIcon from "devicon/icons/nuxtjs/nuxtjs-original.svg";
-import AngularIcon from "devicon/icons/angular/angular-original.svg";
-import SolidJsIcon from "devicon/icons/solidjs/solidjs-original.svg";
-import JQueryIcon from "devicon/icons/jquery/jquery-original.svg";
-import JavaScriptIcon from "devicon/icons/javascript/javascript-original.svg";
-
-// Databases
-import PostgresIcon from "devicon/icons/postgresql/postgresql-original.svg";
-import MySqlIcon from "devicon/icons/mysql/mysql-original.svg";
-import MariaDbIcon from "devicon/icons/mariadb/mariadb-original.svg";
-import SqliteIcon from "devicon/icons/sqlite/sqlite-original.svg";
-import MongoDbIcon from "devicon/icons/mongodb/mongodb-original.svg";
-import RedisIcon from "devicon/icons/redis/redis-original.svg";
-import CassandraIcon from "devicon/icons/cassandra/cassandra-original.svg";
-import Neo4jIcon from "devicon/icons/neo4j/neo4j-original.svg";
-import FirebaseIcon from "devicon/icons/firebase/firebase-original.svg";
-import SupabaseIcon from "devicon/icons/supabase/supabase-original.svg";
-
-// Custom icons
-import DynamoDbIcon from "@/pages/Home/Carousel/Slides/util/Icons/assets/dynamoDB.svg";
 
 // ============================================================================
 // Types

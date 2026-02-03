@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, type ReactNode, type MutableRefObject } from "react";
+import { type MutableRefObject,type ReactNode, useRef } from "react";
 
 interface HighSpeedRendererProps {
   children: ReactNode;

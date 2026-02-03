@@ -15,7 +15,8 @@
  */
 
 import { createLogger } from "@arnott/logger";
-import { type TransportType, type Peer, getBestTransport } from "./interfaces/types";
+
+import { getBestTransport,type Peer, type TransportType } from "./interfaces/types";
 
 const log = createLogger("sync:peers");
 

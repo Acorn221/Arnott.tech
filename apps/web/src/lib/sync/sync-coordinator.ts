@@ -16,14 +16,15 @@
  */
 
 import { createLogger } from "@arnott/logger";
-import { PeerRegistry, type Peer } from "./peer-registry";
-import { TimeSyncManager } from "./time-sync-manager";
+
+import { CLOCK_SYNC_INTERVAL_MS,MAX_SEEN_MESSAGES } from "./config";
+import type { ITransport } from "./interfaces/transport";
+import { SYNC_ROOM_ID, type TransportState,type TransportType } from "./interfaces/types";
 import { LeaderElection } from "./leader-election";
+import { type Peer,PeerRegistry } from "./peer-registry";
+import { TimeSyncManager } from "./time-sync-manager";
 import { BroadcastTransport } from "./transports/broadcast";
 import { SignalingTransport } from "./transports/signaling";
-import type { ITransport } from "./interfaces/transport";
-import { SYNC_ROOM_ID, type TransportType, type TransportState } from "./interfaces/types";
-import { MAX_SEEN_MESSAGES, CLOCK_SYNC_INTERVAL_MS } from "./config";
 
 const log = createLogger("sync:coordinator");
 

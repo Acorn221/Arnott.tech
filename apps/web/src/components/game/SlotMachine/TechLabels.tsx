@@ -1,7 +1,8 @@
-import { useRef, useEffect, useMemo } from "react";
 import { Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo,useRef } from "react";
 import type * as THREE from "three";
+
 import { useSlotMachine } from "./SlotMachineContext";
 
 interface FloatingLabelProps {
