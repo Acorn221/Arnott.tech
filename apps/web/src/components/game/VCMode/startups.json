@@ -1,0 +1,422 @@
+{
+  "startups": [
+    {
+      "id": "theranos",
+      "name": "Theranos",
+      "description": "Blood testing startup that claimed to run hundreds of tests from a single drop of blood",
+      "foundedDate": "2003-01-01",
+      "sector": "Healthcare",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2004-06-01", "round": "Seed", "raised": 500000, "valuation": 5000000 },
+        { "type": "funding", "date": "2004-12-01", "round": "Seed 2", "raised": 5500000, "valuation": 30000000 },
+        { "type": "funding", "date": "2005-02-01", "round": "Series A", "raised": 5800000, "valuation": 40000000 },
+        { "type": "funding", "date": "2006-03-01", "round": "Series B", "raised": 9100000, "valuation": 60000000 },
+        { "type": "funding", "date": "2006-09-01", "round": "Series C", "raised": 28500000, "valuation": 100000000 },
+        { "type": "funding", "date": "2007-03-01", "round": "Series D", "raised": 43200000, "valuation": 197000000 },
+        { "type": "funding", "date": "2010-06-01", "round": "Series E", "raised": 45000000, "valuation": 1000000000 },
+        { "type": "milestone", "date": "2013-09-01", "description": "Partnership with Walgreens announced" },
+        { "type": "funding", "date": "2013-12-01", "round": "Series F", "raised": 50000000, "valuation": 1500000000 },
+        { "type": "funding", "date": "2014-06-01", "round": "Series G", "raised": 633000000, "valuation": 9000000000 },
+        { "type": "milestone", "date": "2015-10-15", "description": "WSJ publishes damning expose questioning blood test accuracy" },
+        { "type": "milestone", "date": "2016-01-01", "description": "CMS finds serious deficiencies in lab operations" },
+        { "type": "milestone", "date": "2016-07-01", "description": "Banned from operating blood labs for 2 years" },
+        { "type": "milestone", "date": "2018-03-14", "description": "SEC charges Holmes with fraud" },
+        { "type": "exit", "date": "2018-09-04", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "wework",
+      "name": "WeWork",
+      "description": "Co-working space startup that promised to revolutionize how people work",
+      "foundedDate": "2010-01-01",
+      "sector": "Real Estate",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2011-10-01", "round": "Seed", "raised": 1000000, "valuation": 10000000 },
+        { "type": "funding", "date": "2012-07-01", "round": "Series A", "raised": 17000000, "valuation": 97000000 },
+        { "type": "funding", "date": "2013-02-01", "round": "Series B", "raised": 40000000, "valuation": 440000000 },
+        { "type": "funding", "date": "2013-11-01", "round": "Series C", "raised": 150000000, "valuation": 1600000000 },
+        { "type": "funding", "date": "2014-10-01", "round": "Series D", "raised": 355000000, "valuation": 4960000000 },
+        { "type": "funding", "date": "2015-05-01", "round": "Series E", "raised": 433900000, "valuation": 10000000000 },
+        { "type": "funding", "date": "2016-10-01", "round": "Series F", "raised": 690000000, "valuation": 16900000000 },
+        { "type": "funding", "date": "2017-07-01", "round": "Series G", "raised": 760000000, "valuation": 20000000000 },
+        { "type": "funding", "date": "2017-08-01", "round": "Series H", "raised": 4400000000, "valuation": 20000000000 },
+        { "type": "milestone", "date": "2018-01-01", "description": "Rebrands parent company to 'The We Company'" },
+        { "type": "funding", "date": "2019-01-01", "round": "Series H-2", "raised": 2000000000, "valuation": 47000000000 },
+        { "type": "milestone", "date": "2019-08-14", "description": "IPO S-1 filing reveals $1.9B loss in 2018" },
+        { "type": "milestone", "date": "2019-09-17", "description": "IPO withdrawn amid investor concerns" },
+        { "type": "milestone", "date": "2019-09-24", "description": "Adam Neumann steps down as CEO" },
+        { "type": "milestone", "date": "2019-10-22", "description": "SoftBank bailout at ~$8B valuation" },
+        { "type": "milestone", "date": "2021-10-21", "description": "Goes public via SPAC at $9B valuation" },
+        { "type": "exit", "date": "2023-11-06", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "uber",
+      "name": "Uber",
+      "description": "Ride-hailing app that disrupted the taxi industry worldwide",
+      "foundedDate": "2009-03-01",
+      "sector": "Transportation",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2010-08-01", "round": "Seed", "raised": 1250000, "valuation": 5000000 },
+        { "type": "funding", "date": "2011-02-01", "round": "Series A", "raised": 11000000, "valuation": 60000000 },
+        { "type": "funding", "date": "2011-12-01", "round": "Series B", "raised": 37000000, "valuation": 330000000 },
+        { "type": "funding", "date": "2013-08-01", "round": "Series C", "raised": 258000000, "valuation": 3700000000 },
+        { "type": "funding", "date": "2014-06-01", "round": "Series D", "raised": 1200000000, "valuation": 17000000000 },
+        { "type": "milestone", "date": "2014-08-01", "description": "Launches UberPOOL carpooling service" },
+        { "type": "funding", "date": "2015-07-01", "round": "Series E", "raised": 1000000000, "valuation": 51000000000 },
+        { "type": "funding", "date": "2016-06-01", "round": "Series G", "raised": 3500000000, "valuation": 68000000000 },
+        { "type": "milestone", "date": "2017-02-01", "description": "Viral blog post exposes toxic workplace culture" },
+        { "type": "milestone", "date": "2017-06-21", "description": "Travis Kalanick resigns as CEO" },
+        { "type": "funding", "date": "2018-01-01", "round": "Series G-2", "raised": 1250000000, "valuation": 76000000000 },
+        { "type": "exit", "date": "2019-05-10", "outcome": "ipo", "finalValuation": 82200000000 },
+        { "type": "milestone", "date": "2023-02-01", "description": "Reports first annual profit of $1.1B" }
+      ]
+    },
+    {
+      "id": "airbnb",
+      "name": "Airbnb",
+      "description": "Home-sharing platform that lets anyone rent out their space",
+      "foundedDate": "2008-08-01",
+      "sector": "Travel",
+      "outcome": "ipo",
+      "events": [
+        { "type": "milestone", "date": "2008-08-01", "description": "Founders sell Obama O's cereal to fund the company" },
+        { "type": "funding", "date": "2009-01-01", "round": "Y Combinator", "raised": 20000, "valuation": 300000 },
+        { "type": "funding", "date": "2009-04-01", "round": "Seed", "raised": 600000, "valuation": 2000000 },
+        { "type": "funding", "date": "2010-11-01", "round": "Series A", "raised": 7200000, "valuation": 70000000 },
+        { "type": "funding", "date": "2011-07-01", "round": "Series B", "raised": 114900000, "valuation": 1300000000 },
+        { "type": "funding", "date": "2013-10-01", "round": "Series C", "raised": 200000000, "valuation": 2900000000 },
+        { "type": "funding", "date": "2014-04-01", "round": "Series D", "raised": 519700000, "valuation": 10500000000 },
+        { "type": "funding", "date": "2015-06-01", "round": "Series E", "raised": 1700000000, "valuation": 25500000000 },
+        { "type": "funding", "date": "2016-09-01", "round": "Series F", "raised": 555500000, "valuation": 31000000000 },
+        { "type": "milestone", "date": "2020-03-01", "description": "COVID-19 decimates bookings, valuation drops to $18B" },
+        { "type": "funding", "date": "2020-04-01", "round": "Emergency Round", "raised": 2000000000, "valuation": 18000000000 },
+        { "type": "exit", "date": "2020-12-10", "outcome": "ipo", "finalValuation": 100000000000 }
+      ]
+    },
+    {
+      "id": "ftx",
+      "name": "FTX",
+      "description": "Cryptocurrency exchange founded by Sam Bankman-Fried",
+      "foundedDate": "2019-05-01",
+      "sector": "Crypto",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2019-08-01", "round": "Seed", "raised": 8000000, "valuation": 50000000 },
+        { "type": "funding", "date": "2021-07-01", "round": "Series B", "raised": 900000000, "valuation": 18000000000 },
+        { "type": "milestone", "date": "2021-09-01", "description": "Signs sponsorship deal with Mercedes F1 team" },
+        { "type": "funding", "date": "2021-10-01", "round": "Series B-1", "raised": 420000000, "valuation": 25000000000 },
+        { "type": "funding", "date": "2022-01-31", "round": "Series C", "raised": 400000000, "valuation": 32000000000 },
+        { "type": "milestone", "date": "2022-02-01", "description": "Super Bowl ad featuring Larry David airs" },
+        { "type": "milestone", "date": "2022-11-02", "description": "CoinDesk reveals Alameda holds massive FTT position" },
+        { "type": "milestone", "date": "2022-11-06", "description": "Binance announces it will sell all FTT tokens" },
+        { "type": "milestone", "date": "2022-11-08", "description": "FTX halts customer withdrawals" },
+        { "type": "exit", "date": "2022-11-11", "outcome": "bankrupt", "finalValuation": 0 },
+        { "type": "milestone", "date": "2023-11-02", "description": "SBF found guilty of fraud" },
+        { "type": "milestone", "date": "2024-03-28", "description": "SBF sentenced to 25 years in prison" }
+      ]
+    },
+    {
+      "id": "juicero",
+      "name": "Juicero",
+      "description": "High-tech juicer startup that sold $400 machines to squeeze proprietary juice packs",
+      "foundedDate": "2013-01-01",
+      "sector": "Consumer Hardware",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2014-03-01", "round": "Seed", "raised": 4000000, "valuation": 15000000 },
+        { "type": "funding", "date": "2015-03-01", "round": "Series A", "raised": 16500000, "valuation": 70000000 },
+        { "type": "funding", "date": "2016-03-01", "round": "Series B", "raised": 70000000, "valuation": 270000000 },
+        { "type": "milestone", "date": "2016-03-31", "description": "Launches $699 Juicero Press" },
+        { "type": "funding", "date": "2016-08-01", "round": "Series C", "raised": 28000000, "valuation": 500000000 },
+        { "type": "milestone", "date": "2017-01-01", "description": "Price cut to $399 due to slow sales" },
+        { "type": "milestone", "date": "2017-04-19", "description": "Bloomberg reveals packs can be squeezed by hand" },
+        { "type": "exit", "date": "2017-09-01", "outcome": "bankrupt", "finalValuation": 0 }
+      ]
+    },
+    {
+      "id": "quibi",
+      "name": "Quibi",
+      "description": "Short-form mobile streaming service with 10-minute episodes",
+      "foundedDate": "2018-08-01",
+      "sector": "Entertainment",
+      "outcome": "bankrupt",
+      "events": [
+        { "type": "funding", "date": "2018-08-01", "round": "Series A", "raised": 1000000000, "valuation": 1000000000 },
+        { "type": "milestone", "date": "2019-01-01", "description": "Jeffrey Katzenberg recruits Meg Whitman as CEO" },
+        { "type": "funding", "date": "2020-03-01", "round": "Series B", "raised": 750000000, "valuation": 1750000000 },
+        { "type": "milestone", "date": "2020-04-06", "description": "Launches amid COVID-19 lockdowns" },
+        { "type": "milestone", "date": "2020-06-01", "description": "On track for only 2M subscribers vs 7.4M projected" },
+        { "type": "milestone", "date": "2020-10-21", "description": "Announces shutdown with only 500K subscribers" },
+        { "type": "exit", "date": "2020-12-01", "outcome": "bankrupt", "finalValuation": 0 },
+        { "type": "milestone", "date": "2021-01-08", "description": "Content sold to Roku for <$100M" }
+      ]
+    },
+    {
+      "id": "reddit",
+      "name": "Reddit",
+      "description": "Social news aggregation and discussion platform",
+      "foundedDate": "2005-06-23",
+      "sector": "Social Media",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2005-06-01", "round": "Y Combinator", "raised": 100000, "valuation": 500000 },
+        { "type": "milestone", "date": "2006-10-31", "description": "Acquired by Conde Nast for ~$10M" },
+        { "type": "milestone", "date": "2011-09-01", "description": "Spun off as independent company again" },
+        { "type": "funding", "date": "2014-09-01", "round": "Series A", "raised": 50000000, "valuation": 500000000 },
+        { "type": "funding", "date": "2017-07-01", "round": "Series C", "raised": 200000000, "valuation": 1800000000 },
+        { "type": "funding", "date": "2019-02-01", "round": "Series D", "raised": 300000000, "valuation": 3000000000 },
+        { "type": "funding", "date": "2021-02-01", "round": "Series E", "raised": 250000000, "valuation": 6000000000 },
+        { "type": "funding", "date": "2021-08-01", "round": "Series F", "raised": 410000000, "valuation": 10000000000 },
+        { "type": "milestone", "date": "2023-06-01", "description": "API pricing changes spark massive user protests" },
+        { "type": "exit", "date": "2024-03-21", "outcome": "ipo", "finalValuation": 6400000000 }
+      ]
+    },
+    {
+      "id": "databricks",
+      "name": "Databricks",
+      "description": "Data and AI platform built on Apache Spark",
+      "foundedDate": "2013-01-01",
+      "sector": "Enterprise Software",
+      "outcome": "private",
+      "events": [
+        { "type": "funding", "date": "2013-09-01", "round": "Series A", "raised": 14000000, "valuation": 50000000 },
+        { "type": "funding", "date": "2014-12-01", "round": "Series B", "raised": 33000000, "valuation": 200000000 },
+        { "type": "funding", "date": "2016-12-01", "round": "Series C", "raised": 60000000, "valuation": 600000000 },
+        { "type": "funding", "date": "2017-08-01", "round": "Series D", "raised": 140000000, "valuation": 1400000000 },
+        { "type": "funding", "date": "2019-02-01", "round": "Series E", "raised": 250000000, "valuation": 2750000000 },
+        { "type": "funding", "date": "2019-10-01", "round": "Series F", "raised": 400000000, "valuation": 6200000000 },
+        { "type": "funding", "date": "2021-02-01", "round": "Series G", "raised": 1000000000, "valuation": 28000000000 },
+        { "type": "funding", "date": "2021-08-01", "round": "Series H", "raised": 1600000000, "valuation": 38000000000 },
+        { "type": "funding", "date": "2024-12-01", "round": "Series J", "raised": 10000000000, "valuation": 62000000000 },
+        { "type": "funding", "date": "2025-09-01", "round": "Series K", "raised": 1000000000, "valuation": 100000000000 },
+        { "type": "funding", "date": "2025-12-01", "round": "Series L", "raised": 4000000000, "valuation": 134000000000 }
+      ]
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "description": "Online payment processing platform for internet businesses",
+      "foundedDate": "2010-01-01",
+      "sector": "Fintech",
+      "outcome": "private",
+      "events": [
+        { "type": "funding", "date": "2011-03-01", "round": "Seed", "raised": 2000000, "valuation": 20000000 },
+        { "type": "funding", "date": "2012-02-01", "round": "Series A", "raised": 18000000, "valuation": 100000000 },
+        { "type": "funding", "date": "2014-01-01", "round": "Series C", "raised": 80000000, "valuation": 1750000000 },
+        { "type": "funding", "date": "2015-07-01", "round": "Series D", "raised": 70000000, "valuation": 3500000000 },
+        { "type": "funding", "date": "2016-11-01", "round": "Series E", "raised": 150000000, "valuation": 9000000000 },
+        { "type": "funding", "date": "2018-09-01", "round": "Series F", "raised": 245000000, "valuation": 20000000000 },
+        { "type": "funding", "date": "2019-09-01", "round": "Series G", "raised": 250000000, "valuation": 35000000000 },
+        { "type": "funding", "date": "2021-03-01", "round": "Series H", "raised": 600000000, "valuation": 95000000000 },
+        { "type": "milestone", "date": "2022-07-01", "description": "Internal valuation cut to $74B amid market downturn" },
+        { "type": "funding", "date": "2023-03-01", "round": "Series I", "raised": 7000000000, "valuation": 50000000000 },
+        { "type": "funding", "date": "2025-02-01", "round": "Series I-IV", "raised": 861000000, "valuation": 91500000000 }
+      ]
+    },
+    {
+      "id": "robinhood",
+      "name": "Robinhood",
+      "description": "Commission-free stock trading app that democratized investing",
+      "foundedDate": "2013-04-01",
+      "sector": "Fintech",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2013-12-01", "round": "Seed", "raised": 3000000, "valuation": 15000000 },
+        { "type": "funding", "date": "2014-09-01", "round": "Series A", "raised": 13000000, "valuation": 60000000 },
+        { "type": "funding", "date": "2015-05-01", "round": "Series B", "raised": 50000000, "valuation": 250000000 },
+        { "type": "funding", "date": "2017-04-01", "round": "Series C", "raised": 110000000, "valuation": 1300000000 },
+        { "type": "funding", "date": "2018-05-01", "round": "Series D", "raised": 363000000, "valuation": 5600000000 },
+        { "type": "funding", "date": "2020-05-01", "round": "Series F", "raised": 280000000, "valuation": 8300000000 },
+        { "type": "funding", "date": "2020-08-01", "round": "Series G", "raised": 200000000, "valuation": 11700000000 },
+        { "type": "milestone", "date": "2021-01-28", "description": "GameStop trading restrictions spark massive controversy" },
+        { "type": "funding", "date": "2021-02-01", "round": "Series H", "raised": 3400000000, "valuation": 11700000000 },
+        { "type": "exit", "date": "2021-07-29", "outcome": "ipo", "finalValuation": 32000000000 }
+      ]
+    },
+    {
+      "id": "coinbase",
+      "name": "Coinbase",
+      "description": "Cryptocurrency exchange platform for buying and selling crypto",
+      "foundedDate": "2012-06-01",
+      "sector": "Crypto",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2012-09-01", "round": "Y Combinator", "raised": 150000, "valuation": 1500000 },
+        { "type": "funding", "date": "2013-05-01", "round": "Series A", "raised": 5000000, "valuation": 20000000 },
+        { "type": "funding", "date": "2013-12-01", "round": "Series B", "raised": 25000000, "valuation": 150000000 },
+        { "type": "funding", "date": "2015-01-01", "round": "Series C", "raised": 75000000, "valuation": 500000000 },
+        { "type": "funding", "date": "2017-08-01", "round": "Series D", "raised": 100000000, "valuation": 1600000000 },
+        { "type": "funding", "date": "2018-10-01", "round": "Series E", "raised": 300000000, "valuation": 8000000000 },
+        { "type": "exit", "date": "2021-04-14", "outcome": "ipo", "finalValuation": 100000000000 }
+      ]
+    },
+    {
+      "id": "snap",
+      "name": "Snap (Snapchat)",
+      "description": "Social media app famous for disappearing messages and AR filters",
+      "foundedDate": "2011-09-16",
+      "sector": "Social Media",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2012-04-01", "round": "Seed", "raised": 485000, "valuation": 4000000 },
+        { "type": "funding", "date": "2013-02-01", "round": "Series A", "raised": 13500000, "valuation": 70000000 },
+        { "type": "funding", "date": "2013-06-01", "round": "Series B", "raised": 60000000, "valuation": 860000000 },
+        { "type": "milestone", "date": "2013-11-14", "description": "Rejects $3B acquisition offer from Facebook" },
+        { "type": "funding", "date": "2014-01-01", "round": "Series C", "raised": 54500000, "valuation": 2000000000 },
+        { "type": "funding", "date": "2014-12-01", "round": "Series D", "raised": 485600000, "valuation": 10000000000 },
+        { "type": "funding", "date": "2016-05-01", "round": "Series F", "raised": 1800000000, "valuation": 18000000000 },
+        { "type": "exit", "date": "2017-03-02", "outcome": "ipo", "finalValuation": 33000000000 }
+      ]
+    },
+    {
+      "id": "doordash",
+      "name": "DoorDash",
+      "description": "Food delivery platform connecting restaurants with customers",
+      "foundedDate": "2013-01-01",
+      "sector": "Delivery",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2013-06-01", "round": "Y Combinator", "raised": 120000, "valuation": 1700000 },
+        { "type": "funding", "date": "2013-09-01", "round": "Seed", "raised": 2400000, "valuation": 10000000 },
+        { "type": "funding", "date": "2014-05-01", "round": "Series A", "raised": 17300000, "valuation": 70000000 },
+        { "type": "funding", "date": "2015-03-01", "round": "Series B", "raised": 40000000, "valuation": 250000000 },
+        { "type": "funding", "date": "2016-03-01", "round": "Series C", "raised": 127000000, "valuation": 700000000 },
+        { "type": "funding", "date": "2018-03-01", "round": "Series D", "raised": 535000000, "valuation": 4000000000 },
+        { "type": "funding", "date": "2019-02-01", "round": "Series E", "raised": 400000000, "valuation": 7100000000 },
+        { "type": "funding", "date": "2019-05-01", "round": "Series G", "raised": 600000000, "valuation": 12700000000 },
+        { "type": "funding", "date": "2020-06-01", "round": "Series H", "raised": 400000000, "valuation": 16000000000 },
+        { "type": "exit", "date": "2020-12-09", "outcome": "ipo", "finalValuation": 72000000000 }
+      ]
+    },
+    {
+      "id": "spacex",
+      "name": "SpaceX",
+      "description": "Aerospace manufacturer and space transport company founded by Elon Musk",
+      "foundedDate": "2002-05-06",
+      "sector": "Aerospace",
+      "outcome": "private",
+      "events": [
+        { "type": "funding", "date": "2002-05-01", "round": "Founder Investment", "raised": 100000000, "valuation": 100000000 },
+        { "type": "milestone", "date": "2006-03-24", "description": "First Falcon 1 launch fails" },
+        { "type": "milestone", "date": "2008-08-03", "description": "Third Falcon 1 launch fails, company nearly bankrupt" },
+        { "type": "funding", "date": "2008-08-04", "round": "Series C", "raised": 20000000, "valuation": 200000000 },
+        { "type": "milestone", "date": "2008-09-28", "description": "Falcon 1 becomes first private liquid-fuel rocket to orbit" },
+        { "type": "milestone", "date": "2008-12-23", "description": "NASA awards $1.6B commercial cargo contract" },
+        { "type": "funding", "date": "2010-10-01", "round": "Series E", "raised": 50200000, "valuation": 1000000000 },
+        { "type": "milestone", "date": "2012-05-25", "description": "Dragon becomes first commercial spacecraft to reach ISS" },
+        { "type": "funding", "date": "2015-01-01", "round": "Series F", "raised": 1000000000, "valuation": 12000000000 },
+        { "type": "milestone", "date": "2015-12-21", "description": "First successful Falcon 9 landing" },
+        { "type": "funding", "date": "2017-07-01", "round": "Series G", "raised": 350000000, "valuation": 21000000000 },
+        { "type": "milestone", "date": "2018-02-06", "description": "Falcon Heavy maiden flight success" },
+        { "type": "funding", "date": "2019-05-01", "round": "Series H", "raised": 500000000, "valuation": 33300000000 },
+        { "type": "funding", "date": "2020-08-01", "round": "Series J", "raised": 1900000000, "valuation": 46000000000 },
+        { "type": "milestone", "date": "2020-05-30", "description": "First crewed Dragon mission to ISS" },
+        { "type": "funding", "date": "2021-02-01", "round": "Series K", "raised": 1610000000, "valuation": 74000000000 },
+        { "type": "funding", "date": "2023-01-01", "round": "Series N", "raised": 750000000, "valuation": 137000000000 },
+        { "type": "funding", "date": "2024-12-01", "round": "Secondary", "raised": 1250000000, "valuation": 350000000000 }
+      ]
+    },
+    {
+      "id": "dropbox",
+      "name": "Dropbox",
+      "description": "Cloud storage and file synchronization service",
+      "foundedDate": "2007-06-01",
+      "sector": "Cloud Storage",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2007-08-01", "round": "Y Combinator", "raised": 15000, "valuation": 200000 },
+        { "type": "funding", "date": "2007-09-01", "round": "Seed", "raised": 1200000, "valuation": 5000000 },
+        { "type": "funding", "date": "2008-06-01", "round": "Series A", "raised": 6000000, "valuation": 25000000 },
+        { "type": "funding", "date": "2011-10-01", "round": "Series B", "raised": 250000000, "valuation": 4000000000 },
+        { "type": "funding", "date": "2014-02-01", "round": "Series C", "raised": 350000000, "valuation": 10000000000 },
+        { "type": "milestone", "date": "2016-01-01", "description": "Achieves cash flow positive status" },
+        { "type": "exit", "date": "2018-03-23", "outcome": "ipo", "finalValuation": 7800000000 }
+      ]
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "description": "Workplace messaging and collaboration platform",
+      "foundedDate": "2009-01-01",
+      "sector": "Enterprise Software",
+      "outcome": "acquired",
+      "events": [
+        { "type": "funding", "date": "2009-08-01", "round": "Seed", "raised": 1500000, "valuation": 5000000 },
+        { "type": "funding", "date": "2010-01-01", "round": "Series A", "raised": 5000000, "valuation": 20000000 },
+        { "type": "funding", "date": "2011-03-01", "round": "Series B", "raised": 10700000, "valuation": 50000000 },
+        { "type": "milestone", "date": "2013-08-01", "description": "Pivots from failed game Glitch to launch Slack" },
+        { "type": "funding", "date": "2014-04-01", "round": "Series C", "raised": 42750000, "valuation": 250000000 },
+        { "type": "funding", "date": "2014-10-01", "round": "Series D", "raised": 120000000, "valuation": 1200000000 },
+        { "type": "funding", "date": "2015-03-01", "round": "Series E", "raised": 160000000, "valuation": 2760000000 },
+        { "type": "funding", "date": "2016-04-01", "round": "Series F", "raised": 200000000, "valuation": 3800000000 },
+        { "type": "funding", "date": "2017-09-01", "round": "Series G", "raised": 250000000, "valuation": 5100000000 },
+        { "type": "milestone", "date": "2019-06-20", "description": "Direct listing on NYSE at $23B valuation" },
+        { "type": "exit", "date": "2021-07-21", "outcome": "acquired", "finalValuation": 27700000000, "acquirer": "Salesforce" }
+      ]
+    },
+    {
+      "id": "instacart",
+      "name": "Instacart",
+      "description": "Grocery delivery and pickup service",
+      "foundedDate": "2012-01-01",
+      "sector": "Delivery",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2012-08-01", "round": "Y Combinator", "raised": 120000, "valuation": 1700000 },
+        { "type": "funding", "date": "2013-08-01", "round": "Series A", "raised": 8000000, "valuation": 40000000 },
+        { "type": "funding", "date": "2014-06-01", "round": "Series B", "raised": 44000000, "valuation": 400000000 },
+        { "type": "funding", "date": "2015-01-01", "round": "Series C", "raised": 220000000, "valuation": 2000000000 },
+        { "type": "funding", "date": "2017-03-01", "round": "Series D", "raised": 400000000, "valuation": 3400000000 },
+        { "type": "milestone", "date": "2017-06-16", "description": "Amazon acquires Whole Foods, threatening business model" },
+        { "type": "funding", "date": "2018-10-01", "round": "Series E", "raised": 600000000, "valuation": 7600000000 },
+        { "type": "funding", "date": "2020-06-01", "round": "Series F", "raised": 225000000, "valuation": 13700000000 },
+        { "type": "milestone", "date": "2020-03-01", "description": "COVID-19 causes demand to skyrocket" },
+        { "type": "funding", "date": "2021-03-01", "round": "Series G", "raised": 265000000, "valuation": 39000000000 },
+        { "type": "milestone", "date": "2022-03-01", "description": "Internal valuation cut to $24B" },
+        { "type": "milestone", "date": "2023-03-01", "description": "Internal valuation cut again to $13B" },
+        { "type": "exit", "date": "2023-09-19", "outcome": "ipo", "finalValuation": 10000000000 }
+      ]
+    },
+    {
+      "id": "lyft",
+      "name": "Lyft",
+      "description": "Ride-hailing app and Uber's main US competitor",
+      "foundedDate": "2012-06-01",
+      "sector": "Transportation",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2013-05-01", "round": "Series A", "raised": 60000000, "valuation": 275000000 },
+        { "type": "funding", "date": "2014-04-01", "round": "Series C", "raised": 250000000, "valuation": 700000000 },
+        { "type": "funding", "date": "2015-03-01", "round": "Series D", "raised": 530000000, "valuation": 2500000000 },
+        { "type": "milestone", "date": "2016-01-04", "description": "GM invests $500M for autonomous vehicle partnership" },
+        { "type": "funding", "date": "2017-04-01", "round": "Series E", "raised": 600000000, "valuation": 7500000000 },
+        { "type": "funding", "date": "2018-06-01", "round": "Series I", "raised": 600000000, "valuation": 15100000000 },
+        { "type": "exit", "date": "2019-03-29", "outcome": "ipo", "finalValuation": 24300000000 }
+      ]
+    },
+    {
+      "id": "pinterest",
+      "name": "Pinterest",
+      "description": "Visual discovery and bookmarking platform",
+      "foundedDate": "2010-01-01",
+      "sector": "Social Media",
+      "outcome": "ipo",
+      "events": [
+        { "type": "funding", "date": "2010-01-01", "round": "Seed", "raised": 500000, "valuation": 3000000 },
+        { "type": "funding", "date": "2011-05-01", "round": "Series A", "raised": 10000000, "valuation": 40000000 },
+        { "type": "funding", "date": "2011-10-01", "round": "Series B", "raised": 27000000, "valuation": 200000000 },
+        { "type": "funding", "date": "2012-05-01", "round": "Series C", "raised": 100000000, "valuation": 1500000000 },
+        { "type": "funding", "date": "2013-02-01", "round": "Series D", "raised": 200000000, "valuation": 2500000000 },
+        { "type": "funding", "date": "2013-10-01", "round": "Series E", "raised": 225000000, "valuation": 3800000000 },
+        { "type": "funding", "date": "2014-05-01", "round": "Series F", "raised": 200000000, "valuation": 5000000000 },
+        { "type": "funding", "date": "2015-03-01", "round": "Series G", "raised": 367000000, "valuation": 11000000000 },
+        { "type": "funding", "date": "2017-06-01", "round": "Series H", "raised": 150000000, "valuation": 12300000000 },
+        { "type": "exit", "date": "2019-04-18", "outcome": "ipo", "finalValuation": 12600000000 }
+      ]
+    }
+  ]
+}
