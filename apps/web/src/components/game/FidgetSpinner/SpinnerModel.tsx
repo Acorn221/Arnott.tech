@@ -1,4 +1,4 @@
-import { type FC, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
@@ -77,7 +77,7 @@ const createMaterials = (): SpinnerMaterialMap => ({
     }),
 });
 
-const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props }) => {
+const SpinnerModel = ({ isXray, rgbLevel = 0, ...props }: SpinnerModelProps) => {
   const materials = useRef(createMaterials());
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/fidget-spinner.gltf");

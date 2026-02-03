@@ -1,8 +1,7 @@
-import type { FC } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { selectSpinCount, selectShopUnlocked } from "@/store/slices/gameSlice";
 
-export const StickySpinBalance: FC = () => {
+export const StickySpinBalance = () => {
   const spinCount = useAppSelector(selectSpinCount);
   const shopUnlocked = useAppSelector(selectShopUnlocked);
 

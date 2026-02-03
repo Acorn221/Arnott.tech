@@ -1,4 +1,3 @@
-import type { FC } from "react";
 import { useLocation } from "react-router-dom";
 import { useAppSelector } from "@/store/hooks";
 import {
@@ -10,7 +9,7 @@ import {
 import { UPGRADES } from "./upgrades";
 import UpgradeButton from "./UpgradeButton";
 
-export const Shop: FC = () => {
+export const Shop = () => {
   const location = useLocation();
   const isStimulationPage = location.pathname === "/stimulation-spinner";
 

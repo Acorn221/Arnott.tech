@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import {
@@ -16,7 +16,7 @@ import Shop from "@/components/game/Shop";
 import TheoVideo from "@/components/game/TheoVideo";
 import FTXInvestment from "@/components/game/FTXInvestment";
 
-const StimulationSpinner: FC = () => {
+const StimulationSpinner = () => {
   const dispatch = useAppDispatch();
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);

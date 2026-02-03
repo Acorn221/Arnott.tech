@@ -1,10 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import {
-  useRef,
-  type FC,
-  type ReactNode,
-  type MutableRefObject,
-} from "react";
+import { useRef, type ReactNode, type MutableRefObject } from "react";
 
 interface HighSpeedRendererProps {
   children: ReactNode;
@@ -16,11 +11,11 @@ interface HighSpeedRendererProps {
  * High-speed renderer - monitors speed and tracks high-speed state.
  * Provides hysteresis to prevent flickering at the speed threshold.
  */
-export const HighSpeedRenderer: FC<HighSpeedRendererProps> = ({
+export const HighSpeedRenderer = ({
   children,
   speed,
   speedThreshold = 30,
-}) => {
+}: HighSpeedRendererProps) => {
   const isHighSpeed = useRef(false);
 
   useFrame(() => {

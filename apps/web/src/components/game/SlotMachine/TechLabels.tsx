@@ -1,4 +1,4 @@
-import { type FC, useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type * as THREE from "three";
@@ -14,7 +14,7 @@ interface FloatingLabelProps {
   rotationY?: number; // Base Y rotation to face camera
 }
 
-const FloatingLabel: FC<FloatingLabelProps> = ({
+const FloatingLabel = ({
   text,
   subText,
   position,
@@ -22,7 +22,7 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
   delay,
   visible,
   rotationY = 0,
-}) => {
+}: FloatingLabelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
   const startedRef = useRef(false);
@@ -120,13 +120,13 @@ interface ButtonLabelProps {
   isActive?: boolean;
 }
 
-const ButtonLabel: FC<ButtonLabelProps> = ({
+const ButtonLabel = ({
   text,
   position,
   color,
   activeColor,
   isActive = false,
-}) => {
+}: ButtonLabelProps) => {
   const textRef = useRef<THREE.Mesh>(null);
   const currentColor = isActive && activeColor ? activeColor : color;
 
@@ -148,7 +148,7 @@ const ButtonLabel: FC<ButtonLabelProps> = ({
   );
 };
 
-const TechLabels: FC = () => {
+const TechLabels = () => {
   const { lastResult, isSpinningRef } = useSlotMachine();
 
   // Don't render if no result or still spinning

@@ -13,7 +13,7 @@ import {
   type ThreeEvent,
   useFrame,
 } from "@react-three/fiber";
-import SpinnerModel from "./spinner-model";
+import SpinnerModel from "./SpinnerModel";
 import AutoSpinEffect from "./AutoSpinEffect";
 import type { SpinnerState } from "./spinner-codec";
 import {

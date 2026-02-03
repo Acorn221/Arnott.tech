@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAppDispatch } from "@/store/hooks";
 import { addSpins } from "@/store/slices/gameSlice";
 
@@ -77,7 +77,7 @@ interface FTXInvestmentProps {
   onClose?: () => void;
 }
 
-const FTXInvestment: FC<FTXInvestmentProps> = ({ className, onClose }) => {
+const FTXInvestment = ({ className, onClose }: FTXInvestmentProps) => {
   const dispatch = useAppDispatch();
 
   // Game starts immediately - the purchase WAS the investment

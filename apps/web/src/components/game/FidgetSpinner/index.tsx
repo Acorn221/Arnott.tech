@@ -1,6 +1,5 @@
 import { Canvas } from "@react-three/fiber";
 import {
-  type FC,
   type InputHTMLAttributes,
   Suspense,
   useCallback,
@@ -9,7 +8,7 @@ import {
   useState,
 } from "react";
 import { OrbitControls, Environment } from "@react-three/drei";
-import InteractiveSpinner from "./interactive-spinner";
+import InteractiveSpinner from "./InteractiveSpinner";
 import HighSpeedRenderer from "./HighSpeedRenderer";
 import { useSyncRoom } from "@/lib/sync";
 import {
@@ -74,7 +73,7 @@ interface SceneContentProps {
   handleVelocityChange: (velocity: number) => void;
 }
 
-const SceneContent: FC<SceneContentProps> = ({
+const SceneContent = ({
   enableHighSpeedRenderer,
   velocityRef,
   setSpinCount,
@@ -88,7 +87,7 @@ const SceneContent: FC<SceneContentProps> = ({
   isDraggingRef,
   autoSpinPulse,
   handleVelocityChange,
-}) => {
+}: SceneContentProps) => {
   const content = (
     <>
       <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
@@ -142,13 +141,13 @@ interface FidgetSpinnerProps extends InputHTMLAttributes<HTMLDivElement> {
   enableHighSpeedRenderer?: boolean;
 }
 
-const FidgetSpinner: FC<FidgetSpinnerProps> = ({
+const FidgetSpinner = ({
   disableSync = false,
   hideStatusBar = false,
   enableAutoSpin = false,
   enableHighSpeedRenderer = false,
   ...props
-}) => {
+}: FidgetSpinnerProps) => {
   const dispatch = useAppDispatch();
   const spinCount = useAppSelector(selectSpinCount);
   const speedMultiplier = useAppSelector(selectUpgradeEffect("bearingUpgrade"));

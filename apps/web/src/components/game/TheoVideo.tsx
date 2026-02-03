@@ -1,5 +1,3 @@
-import type { FC } from "react";
-
 // Videos per level (level 1, 2, 3)
 const THEO_VIDEOS = [
   "mMQCLQTky34", // Level 1: Original rant
@@ -16,7 +14,7 @@ interface TheoVideoProps {
  * Shows all unlocked videos tiled horizontally
  * Autoplays muted
  */
-const TheoVideo: FC<TheoVideoProps> = ({ level = 1 }) => {
+const TheoVideo = ({ level = 1 }: TheoVideoProps) => {
   // Get videos to show (all up to current level)
   const videosToShow = THEO_VIDEOS.slice(
     0,

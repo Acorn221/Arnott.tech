@@ -1,4 +1,4 @@
-import { type FC, useCallback } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -16,7 +16,7 @@ interface UpgradeButtonProps {
   upgradeId: string;
 }
 
-export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
+export const UpgradeButton = ({ upgradeId }: UpgradeButtonProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const spinCount = useAppSelector(selectSpinCount);

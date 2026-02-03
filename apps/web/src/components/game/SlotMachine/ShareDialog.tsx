@@ -1,4 +1,4 @@
-import { type FC, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { SpinResult } from "./SlotMachineContext";
 
 interface ShareDialogProps {
@@ -8,12 +8,12 @@ interface ShareDialogProps {
   screenshot: string | null;
 }
 
-const ShareDialog: FC<ShareDialogProps> = ({
+const ShareDialog = ({
   isOpen,
   onClose,
   result,
   screenshot,
-}) => {
+}: ShareDialogProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   // Close on escape key

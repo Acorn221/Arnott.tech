@@ -1,16 +1,21 @@
-import { XyzTransition } from "@animxyz/react";
-import { AiFillGithub, AiFillChrome } from "react-icons/ai";
-import { ImFirefox } from "react-icons/im";
-import { BiLinkExternal } from "react-icons/bi";
-import ReactGA from "react-ga4";
+// React
 import { useEffect, useState } from "react";
+
+// External libraries
+import { XyzTransition } from "@animxyz/react";
+import ReactGA from "react-ga4";
+import { AiFillGithub, AiFillChrome } from "react-icons/ai";
+import { BiLinkExternal } from "react-icons/bi";
+import { GiArchiveResearch } from "react-icons/gi";
+import { ImFirefox } from "react-icons/im";
+
+// Internal modules
 import { createLogger } from "@arnott/logger";
+import TechStackSlotMachine from "@/components/game/SlotMachine";
 import Text from "@/misc/Text";
+import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
 
 const log = createLogger("ui:projects");
-import TechStackSlotMachine from "@/components/game/SlotMachine";
-import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
-import { GiArchiveResearch } from "react-icons/gi";
 
 const txt = Text.home.projects;
 

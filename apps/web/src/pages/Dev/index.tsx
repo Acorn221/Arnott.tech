@@ -1,7 +1,6 @@
-import { type FC } from "react";
 import TechStackSlotMachine from "@/components/game/SlotMachine";
 
-const Dev: FC = () => (
+const Dev = () => (
   <div
     className="w-full h-screen flex items-center justify-center relative overflow-hidden"
     style={{

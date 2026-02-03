@@ -1,10 +1,10 @@
-import { type FC, useRef, useCallback, Suspense, useEffect } from "react";
+import { useRef, useCallback, Suspense, useEffect } from "react";
 import type * as THREE from "three";
 import { type Group } from "three";
 import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
 import { useSlotMachine } from "./SlotMachineContext";
-import SlotMachineModel from "./slot-machine-model";
+import SlotMachineModel from "./SlotMachineModel";
 import { useSlotMachineHandle } from "./useSlotMachineHandle";
 import TechLabels from "./TechLabels";
 import {
@@ -26,11 +26,11 @@ type InteractiveSlotMachineProps = ThreeElements["group"] & {
   position: [number, number, number];
 };
 
-const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
+const InteractiveSlotMachine = ({
   scale,
   position,
   ...props
-}) => {
+}: InteractiveSlotMachineProps) => {
   const groupRef = useRef<Group>(null);
   const {
     startGame,

@@ -3,7 +3,6 @@ import {
   useContext,
   useRef,
   useCallback,
-  type FC,
   type ReactNode,
   useMemo,
   useState,
@@ -153,7 +152,7 @@ interface SlotMachineProviderProps {
   gamblingMultiplier?: number;
 }
 
-export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
+export const SlotMachineProvider = ({
   children,
   onShareDialog,
   captureScreenshot,
@@ -161,7 +160,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   onSpinComplete,
   gamblingEnabled,
   gamblingMultiplier = 1,
-}) => {
+}: SlotMachineProviderProps) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
   const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
