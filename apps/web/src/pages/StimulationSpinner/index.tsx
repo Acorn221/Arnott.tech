@@ -1,22 +1,23 @@
-import { type FC, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import {
-  selectStimulationUnlocked,
-  selectSpinCount,
-  selectTheoModeUnlocked,
-  selectFtxModeUnlocked,
-  selectUpgradeLevel,
-  restoreState,
-} from "@/store/slices/gameSlice";
-import { decodeGameState } from "@/lib/stateCodec";
-import FidgetSpinner from "@/components/game/FidgetSpinner";
-import SlotMachine from "@/components/game/SlotMachine";
-import Shop from "@/components/game/Shop";
-import TheoVideo from "@/components/game/TheoVideo";
-import FTXInvestment from "@/components/game/FTXInvestment";
 
-const StimulationSpinner: FC = () => {
+import { FidgetSpinner } from "@/components/game/FidgetSpinner";
+import { FTXInvestment } from "@/components/game/FTXInvestment";
+import { Shop } from "@/components/game/Shop";
+import { TechStackSlotMachine as SlotMachine } from "@/components/game/SlotMachine";
+import { TheoVideo } from "@/components/game/TheoVideo";
+import { decodeGameState } from "@/lib/stateCodec";
+import { useAppDispatch,useAppSelector } from "@/store/hooks";
+import {
+  restoreState,
+  selectFtxModeUnlocked,
+  selectSpinCount,
+  selectStimulationUnlocked,
+  selectTheoModeUnlocked,
+  selectUpgradeLevel,
+} from "@/store/slices/gameSlice";
+
+export const StimulationSpinner = () => {
   const dispatch = useAppDispatch();
   const isUnlocked = useAppSelector(selectStimulationUnlocked);
   const spinCount = useAppSelector(selectSpinCount);
@@ -63,6 +64,7 @@ const StimulationSpinner: FC = () => {
           disableSync
           hideStatusBar
           enableAutoSpin
+          enableHighSpeedRenderer
           className="w-full max-w-[500px] h-[300px]"
         />
         <Shop />
@@ -93,6 +95,7 @@ const StimulationSpinner: FC = () => {
             disableSync
             hideStatusBar
             enableAutoSpin
+            enableHighSpeedRenderer
             className="w-[700px] h-[400px]"
           />
           <Shop />
@@ -118,5 +121,3 @@ const StimulationSpinner: FC = () => {
     </div>
   );
 };
-
-export default StimulationSpinner;

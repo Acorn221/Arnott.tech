@@ -1,11 +1,13 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { RootState } from '../index';
+
 import {
-  UPGRADES,
-  getUpgradeCost as getUpgradeCostFromDef,
   getMaxLevel,
   getUpgradeById,
+  getUpgradeCost as getUpgradeCostFromDef,
+  UPGRADES,
 } from '@/components/game/upgrades';
+
+import type { RootState } from '../index';
 
 const SHOP_UNLOCK_THRESHOLD = 10;
 
@@ -81,21 +83,21 @@ export const selectIsUpgradeMaxed = (id: string) => (state: RootState) => {
 export const selectAllUpgradesMaxed = (state: RootState) =>
   UPGRADES.every((u) => (state.game.upgrades[u.id] ?? 0) >= getMaxLevel(u));
 export const selectGamblingUnlocked = (state: RootState) =>
-  (state.game.upgrades["gamblingMode"] ?? 0) > 0;
+  (state.game.upgrades.gamblingMode ?? 0) > 0;
 export const selectGamblingMultiplier = (state: RootState) => {
-  const level = state.game.upgrades["gamblingMode"] ?? 0;
+  const level = state.game.upgrades.gamblingMode ?? 0;
   return level > 0 ? Math.pow(10, level - 1) : 0; // 1x at level 1 (200 cost), 10x at level 2 (2000 cost)
 };
 export const selectStimulationUnlocked = (state: RootState) =>
-  (state.game.upgrades["stimulationMode"] ?? 0) > 0;
+  (state.game.upgrades.stimulationMode ?? 0) > 0;
 export const selectAutoSpinUnlocked = (state: RootState) =>
-  (state.game.upgrades["autoSpin"] ?? 0) > 0;
+  (state.game.upgrades.autoSpin ?? 0) > 0;
 export const selectAutoSpinLevel = (state: RootState) =>
-  state.game.upgrades["autoSpin"] ?? 0;
+  state.game.upgrades.autoSpin ?? 0;
 export const selectTheoModeUnlocked = (state: RootState) =>
-  (state.game.upgrades["theoMode"] ?? 0) > 0;
+  (state.game.upgrades.theoMode ?? 0) > 0;
 export const selectFtxModeUnlocked = (state: RootState) =>
-  (state.game.upgrades["ftxMode"] ?? 0) > 0;
+  (state.game.upgrades.ftxMode ?? 0) > 0;
 export const selectUpgrades = (state: RootState) => state.game.upgrades;
 
 export default gameSlice.reducer;

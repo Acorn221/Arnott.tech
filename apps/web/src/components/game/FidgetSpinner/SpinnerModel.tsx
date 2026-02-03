@@ -1,7 +1,7 @@
-import { type FC, useRef, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
-import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useEffect,useRef } from "react";
+import * as THREE from "three";
 
 interface SpinnerModelProps {
   isXray: boolean;
@@ -77,7 +77,11 @@ const createMaterials = (): SpinnerMaterialMap => ({
     }),
 });
 
-const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props }) => {
+export const SpinnerModel = ({
+  isXray,
+  rgbLevel = 0,
+  ...props
+}: SpinnerModelProps) => {
   const materials = useRef(createMaterials());
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/fidget-spinner.gltf");
@@ -123,7 +127,7 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props })
         }
       }
     });
-  }, [isXray]);
+  }, [isXray, scene]);
 
   // Apply slight offset animation (synced across tabs via Date.now)
   useFrame(() => {
@@ -156,7 +160,5 @@ const SpinnerModel: FC<SpinnerModelProps> = ({ isXray, rgbLevel = 0, ...props })
     </group>
   );
 };
-
-export default SpinnerModel;
 
 useGLTF.preload("/fidget-spinner.gltf");

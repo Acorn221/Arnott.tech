@@ -1,23 +1,33 @@
 import { XyzTransition } from "@animxyz/react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import ReactGA from "react-ga4";
 import { AiFillLinkedin } from "react-icons/ai";
 import { MdEmail } from "react-icons/md";
 import { SiGmail } from "react-icons/si";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import ReactGA from "react-ga4";
-import Text from "@/misc/Text";
-import Carousel from "./Carousel";
-import Frontend from "./Carousel/Slides/Frontend";
-import DevTools from "./Carousel/Slides/DevTools";
-import Backend from "./Carousel/Slides/Backend";
-import OtherPrograms from "./Carousel/Slides/OtherPrograms";
-import Projects from "./Projects";
+
+import { StyledToolTip } from "@/misc/StyledComponents/StyledToolTip";
+import { Text } from "@/misc/Text";
+
+import { Carousel } from "./Carousel";
+import { Backend } from "./Carousel/Slides/Backend";
+import { DevTools } from "./Carousel/Slides/DevTools";
+import { Frontend } from "./Carousel/Slides/Frontend";
+import { OtherPrograms } from "./Carousel/Slides/OtherPrograms";
+import { Projects } from "./Projects";
 import { getEmail } from "./util/misc";
-import StyledToolTip from "@/misc/StyledComponents/StyledToolTip";
 
 // Lazy load game components (Three.js is heavy)
-const FidgetSpinner = lazy(() => import("@/components/game/FidgetSpinner"));
-const Shop = lazy(() => import("@/components/game/Shop"));
-const StickySpinBalance = lazy(() => import("@/components/game/StickySpinBalance"));
+const FidgetSpinner = lazy(() =>
+  import("@/components/game/FidgetSpinner").then((m) => ({ default: m.FidgetSpinner })),
+);
+const Shop = lazy(() =>
+  import("@/components/game/Shop").then((m) => ({ default: m.Shop })),
+);
+const StickySpinBalance = lazy(() =>
+  import("@/components/game/StickySpinBalance").then((m) => ({
+    default: m.StickySpinBalance,
+  })),
+);
 
 const txt = Text.home;
 
@@ -25,7 +35,7 @@ const fadeAnimation = "fade in-out delay-4 duration-24";
 
 const slides = [Frontend, Backend, DevTools, OtherPrograms];
 
-const Home = () => {
+export const Home = () => {
   const [email, setEmail] = useState("/");
 
   const requestEmail = useCallback(() => {
@@ -45,10 +55,13 @@ const Home = () => {
     requestEmail();
   });
 
-  const getGmailLink = () =>
-    `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
-      requestEmail(),
-    )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
+  const getGmailLink = useCallback(
+    () =>
+      `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
+        requestEmail(),
+      )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`,
+    [requestEmail],
+  );
 
   const handleGmailLinkClick = useCallback(() => {
     ReactGA.send({
@@ -58,7 +71,7 @@ const Home = () => {
       title: document.title,
     });
     window.open(getGmailLink());
-  }, [email, getGmailLink]);
+  }, [getGmailLink]);
 
   const handleLinkedInLinkClick = useCallback(() => {
     ReactGA.send({
@@ -68,7 +81,7 @@ const Home = () => {
       title: document.title,
     });
     window.open("https://www.linkedin.com/in/james-arnott-341705143/");
-  }, [email]);
+  }, []);
 
   const handleEmailLinkClick = useCallback(() => {
     ReactGA.send({
@@ -78,7 +91,7 @@ const Home = () => {
       title: document.title,
     });
     window.open(`mailto:${requestEmail()}`);
-  }, [email]);
+  }, [requestEmail]);
 
   return (
     <div className="h-full text-white">
@@ -201,5 +214,3 @@ const Home = () => {
     </div>
   );
 };
-
-export default Home;

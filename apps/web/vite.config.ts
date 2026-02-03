@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import * as path from "path";
+import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -23,5 +23,19 @@ export default defineConfig({
   },
   define: {
     _global: {},
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Three.js and 3D rendering (largest)
+          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          // React core
+          react: ["react", "react-dom", "react-router-dom"],
+          // Redux state management
+          redux: ["@reduxjs/toolkit", "react-redux"],
+        },
+      },
+    },
   },
 });

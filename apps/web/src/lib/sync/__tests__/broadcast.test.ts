@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { BroadcastTransport } from "../transports/broadcast";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { TransportState } from "../interfaces/types";
+import { BroadcastTransport } from "../transports/broadcast";
 
 // Mock BroadcastChannel
 class MockBroadcastChannel {
@@ -172,7 +173,7 @@ describe("BroadcastTransport", () => {
       const postMessageSpy = vi.spyOn(MockBroadcastChannel.instances[0], "postMessage");
 
       const data = new TextEncoder().encode("test message");
-      transport.broadcast(data.buffer as ArrayBuffer);
+      transport.broadcast(data.buffer);
 
       expect(postMessageSpy).toHaveBeenCalledTimes(1);
       const sentMessage = postMessageSpy.mock.calls[0][0] as {
@@ -186,7 +187,7 @@ describe("BroadcastTransport", () => {
 
     it("does not send when not connected", () => {
       const data = new TextEncoder().encode("test");
-      transport.broadcast(data.buffer as ArrayBuffer);
+      transport.broadcast(data.buffer);
 
       expect(MockBroadcastChannel.instances).toHaveLength(0);
     });
@@ -199,7 +200,7 @@ describe("BroadcastTransport", () => {
       const postMessageSpy = vi.spyOn(MockBroadcastChannel.instances[0], "postMessage");
 
       const data = new TextEncoder().encode("test message");
-      transport.send("peer-1", data.buffer as ArrayBuffer);
+      transport.send("peer-1", data.buffer);
 
       expect(postMessageSpy).toHaveBeenCalledTimes(1);
     });
@@ -317,7 +318,7 @@ describe("BroadcastTransport", () => {
       };
 
       const testData = new TextEncoder().encode("hello from tab 1");
-      transport1.broadcast(testData.buffer as ArrayBuffer);
+      transport1.broadcast(testData.buffer);
 
       // Wait for async delivery
       await new Promise((resolve) => setTimeout(resolve, 10));

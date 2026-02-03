@@ -1,33 +1,35 @@
+import { Environment,OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import {
-  type FC,
   type InputHTMLAttributes,
   Suspense,
   useCallback,
-  useRef,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import { OrbitControls, Environment } from "@react-three/drei";
-import InteractiveSpinner from "./interactive-spinner";
+
 import { useSyncRoom } from "@/lib/sync";
-import {
-  encodeSpinnerEvent,
-  decodeSpinnerEvent,
-  spinnerStateComputer,
-  spinnerConflictResolver,
-  type SpinnerEvent,
-  type SpinnerState,
-} from "./spinner-codec";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addSpins,
+  selectAutoSpinLevel,
+  selectAutoSpinUnlocked,
   selectSpinCount,
   selectUpgradeEffect,
   selectUpgradeLevel,
-  selectAutoSpinUnlocked,
-  selectAutoSpinLevel,
 } from "@/store/slices/gameSlice";
+
+import { HighSpeedRenderer } from "./HighSpeedRenderer";
+import { InteractiveSpinner } from "./InteractiveSpinner";
+import {
+  decodeSpinnerEvent,
+  encodeSpinnerEvent,
+  spinnerConflictResolver,
+  type SpinnerEvent,
+  type SpinnerState,
+  spinnerStateComputer,
+} from "./spinner-codec";
 
 // Test instrumentation
 declare global {
@@ -56,6 +58,80 @@ const AUTO_SPIN_INTERVALS = [1000, 800, 650, 500, 400, 300, 200, 150];
 /** Auto spin velocity boosts by level (radians/second) - top 3 levels exceed manual spinning */
 const AUTO_SPIN_BOOSTS = [4, 5, 6, 8, 10, 25, 35, 50];
 
+/** Scene content wrapper - conditionally uses HighSpeedRenderer */
+interface SceneContentProps {
+  enableHighSpeedRenderer: boolean;
+  velocityRef: React.MutableRefObject<number>;
+  setSpinCount: (updater: React.SetStateAction<number>) => void;
+  computeState: (now: number) => SpinnerState;
+  grab: (rotation: number) => void;
+  drag: (rotation: number, velocity: number) => void;
+  release: (rotation: number, velocity: number) => void;
+  isSynced: boolean;
+  speedMultiplier: number;
+  rgbLevel: number;
+  isDraggingRef: React.MutableRefObject<boolean>;
+  autoSpinPulse: boolean;
+  handleVelocityChange: (velocity: number) => void;
+}
+
+const SceneContent = ({
+  enableHighSpeedRenderer,
+  velocityRef,
+  setSpinCount,
+  computeState,
+  grab,
+  drag,
+  release,
+  isSynced,
+  speedMultiplier,
+  rgbLevel,
+  isDraggingRef,
+  autoSpinPulse,
+  handleVelocityChange,
+}: SceneContentProps) => {
+  const content = (
+    <>
+      <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
+      <ambientLight intensity={0.2} />
+      <OrbitControls
+        enableZoom={false}
+        enablePan={false}
+        enableRotate={false}
+        minPolarAngle={Math.PI / 4}
+        maxPolarAngle={Math.PI / 4}
+      />
+      <Suspense fallback={null}>
+        <InteractiveSpinner
+          position={[0, 0, 0]}
+          scale={20}
+          setSpinCount={setSpinCount}
+          computeState={computeState}
+          onGrab={grab}
+          onDrag={drag}
+          onRelease={release}
+          isSynced={isSynced}
+          speedMultiplier={speedMultiplier}
+          rgbLevel={rgbLevel}
+          isDraggingRef={isDraggingRef}
+          autoSpinPulse={autoSpinPulse}
+          onVelocityChange={handleVelocityChange}
+        />
+      </Suspense>
+    </>
+  );
+
+  if (enableHighSpeedRenderer) {
+    return (
+      <HighSpeedRenderer speed={velocityRef} speedThreshold={30}>
+        {content}
+      </HighSpeedRenderer>
+    );
+  }
+
+  return content;
+};
+
 interface FidgetSpinnerProps extends InputHTMLAttributes<HTMLDivElement> {
   /** Disable WebRTC sync (for standalone/stimulation mode) */
   disableSync?: boolean;
@@ -63,14 +139,17 @@ interface FidgetSpinnerProps extends InputHTMLAttributes<HTMLDivElement> {
   hideStatusBar?: boolean;
   /** Enable auto-spin feature (requires upgrade) */
   enableAutoSpin?: boolean;
+  /** Enable high-speed renderer with frame caching and motion blur */
+  enableHighSpeedRenderer?: boolean;
 }
 
-const FidgetSpinner: FC<FidgetSpinnerProps> = ({
+export const FidgetSpinner = ({
   disableSync = false,
   hideStatusBar = false,
   enableAutoSpin = false,
+  enableHighSpeedRenderer = false,
   ...props
-}) => {
+}: FidgetSpinnerProps) => {
   const dispatch = useAppDispatch();
   const spinCount = useAppSelector(selectSpinCount);
   const speedMultiplier = useAppSelector(selectUpgradeEffect("bearingUpgrade"));
@@ -89,6 +168,13 @@ const FidgetSpinner: FC<FidgetSpinnerProps> = ({
   const [autoSpinPulse, setAutoSpinPulse] = useState(false);
   // Track previous auto-spin level to detect upgrades
   const prevAutoSpinLevelRef = useRef(autoSpinLevel);
+  // Track current angular velocity for high-speed renderer (ref to avoid re-renders)
+  const velocityRef = useRef(0);
+
+  // Update velocity ref (no re-renders needed - HighSpeedRenderer reads from useFrame)
+  const handleVelocityChange = useCallback((velocity: number) => {
+    velocityRef.current = velocity;
+  }, []);
 
   // Reset cooldown and trigger immediate spin when auto-spin is upgraded
   useEffect(() => {
@@ -370,34 +456,22 @@ const FidgetSpinner: FC<FidgetSpinnerProps> = ({
         dpr={[1, 1.5]}
         gl={{ antialias: true, powerPreference: "high-performance" }}
       >
-        <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
-        <ambientLight intensity={0.2} />
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          enableRotate={false}
-          minPolarAngle={Math.PI / 4}
-          maxPolarAngle={Math.PI / 4}
+        <SceneContent
+          enableHighSpeedRenderer={enableHighSpeedRenderer}
+          velocityRef={velocityRef}
+          setSpinCount={setSpinCount}
+          computeState={computeState}
+          grab={grab}
+          drag={drag}
+          release={release}
+          isSynced={isSynced}
+          speedMultiplier={speedMultiplier}
+          rgbLevel={rgbLevel}
+          isDraggingRef={isDraggingRef}
+          autoSpinPulse={autoSpinPulse}
+          handleVelocityChange={handleVelocityChange}
         />
-        <Suspense fallback={null}>
-          <InteractiveSpinner
-            position={[0, 0, 0]}
-            scale={20}
-            setSpinCount={setSpinCount}
-            computeState={computeState}
-            onGrab={grab}
-            onDrag={drag}
-            onRelease={release}
-            isSynced={isSynced}
-            speedMultiplier={speedMultiplier}
-            rgbLevel={rgbLevel}
-            isDraggingRef={isDraggingRef}
-            autoSpinPulse={autoSpinPulse}
-          />
-        </Suspense>
       </Canvas>
     </div>
   );
 };
-
-export default FidgetSpinner;

@@ -12,10 +12,11 @@
  */
 
 import { createLogger } from "@arnott/logger";
+
 import {
   LEADER_HEARTBEAT_INTERVAL_MS,
-  LEADER_TIMEOUT_MS,
   LEADER_INITIAL_CHECK_DELAY_MS,
+  LEADER_TIMEOUT_MS,
 } from "./config";
 
 const log = createLogger("sync:leader");

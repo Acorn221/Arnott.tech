@@ -9,10 +9,11 @@
  * Peer tracking is internal - app just receives messages.
  */
 
-import { useRef, useCallback, useEffect, useState } from "react";
 import { createLogger } from "@arnott/logger";
-import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { TEST_MAX_MESSAGES } from "../config";
+import { type CoordinatorState,SyncCoordinator } from "../sync-coordinator";
 
 // Test instrumentation types
 interface SyncTestState {

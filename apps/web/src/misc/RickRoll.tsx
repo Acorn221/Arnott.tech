@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
 
-const RickRoll = () => {
+export const RickRoll = () => {
   useEffect(() => {
     ReactGA.send({
       category: "UrlClick",
@@ -13,5 +13,3 @@ const RickRoll = () => {
   });
   return <div>you know the rules and so do i</div>;
 };
-
-export default RickRoll;

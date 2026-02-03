@@ -1,8 +1,8 @@
-import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink } from "@trpc/client";
-import { QueryClient } from "@tanstack/react-query";
-import superjson from "superjson";
 import type { AppRouter } from "@arnott/api";
+import { QueryClient } from "@tanstack/react-query";
+import { httpBatchLink } from "@trpc/client";
+import { createTRPCReact } from "@trpc/react-query";
+import superjson from "superjson";
 
 /**
  * tRPC React client hooks

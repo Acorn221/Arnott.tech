@@ -1,35 +1,36 @@
+import { createLogger } from "@arnott/logger";
 import {
   createContext,
-  useContext,
-  useRef,
-  useCallback,
-  type FC,
   type ReactNode,
-  useMemo,
-  useState,
+  useCallback,
+  useContext,
   useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import type * as THREE from "three";
-import { createLogger } from "@arnott/logger";
 
-const log = createLogger("ui:slot-machine");
+import { calculateSpinsWon,SPIN_COST } from "./config/gambling";
+import {
+  createReelTextureManager,
+  detectFrontFaceByPosition,
+  initializeTexturePool,
+  type ReelTextureManager,
+  shuffleReel,
+} from "./config/reel-textures";
+import {
+  calculateScore,
+  getScoreMessage,
+  type ScoreResult,
+} from "./config/scoring";
+import { type Technology } from "./config/technologies";
 import { type AnimatedGlowBorderMaterial } from "./display-border-material";
 import { type DynamicDisplayPlate } from "./display-plate";
 import { type AnimatedFaceplateMaterial } from "./faceplate-material";
-import {
-  type ReelTextureManager,
-  createReelTextureManager,
-  detectFrontFaceByPosition,
-  shuffleReel,
-} from "./config/reel-textures";
-import { type Technology } from "./config/technologies";
-import {
-  calculateScore,
-  type ScoreResult,
-  getScoreMessage,
-} from "./config/scoring";
 import { soundManager } from "./sounds";
-import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
+
+const log = createLogger("ui:slot-machine");
 
 // Share button material type
 export interface ShareButtonMaterial {
@@ -152,7 +153,7 @@ interface SlotMachineProviderProps {
   gamblingMultiplier?: number;
 }
 
-export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
+export const SlotMachineProvider = ({
   children,
   onShareDialog,
   captureScreenshot,
@@ -160,7 +161,7 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   onSpinComplete,
   gamblingEnabled,
   gamblingMultiplier = 1,
-}) => {
+}: SlotMachineProviderProps) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
   const spinnersRef = useRef<Record<string, THREE.Object3D>>({});
@@ -196,6 +197,9 @@ export const SlotMachineProvider: FC<SlotMachineProviderProps> = ({
   // Initialize reel texture managers
   const initializeReels = useCallback(async () => {
     if (reelManagersRef.current) return;
+
+    // Initialize texture pool first (pre-generates all textures)
+    await initializeTexturePool();
 
     const [backend, frontend, database] = await Promise.all([
       createReelTextureManager("backend"),

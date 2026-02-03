@@ -1,28 +1,30 @@
 import {
-  useRef,
-  useEffect,
-  useState,
-  type SetStateAction,
-  type Dispatch,
-  type MutableRefObject,
-  useCallback,
-} from "react";
-import * as THREE from "three";
-import {
   type ThreeElements,
   type ThreeEvent,
   useFrame,
 } from "@react-three/fiber";
-import SpinnerModel from "./spinner-model";
-import AutoSpinEffect from "./AutoSpinEffect";
-import type { SpinnerState } from "./spinner-codec";
 import {
-  FRICTION_BASE,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import * as THREE from "three";
+
+import {
   FIXED_DT,
-  VELOCITY_THRESHOLD,
-  MAX_ANGULAR_VELOCITY,
+  FRICTION_BASE,
   FULL_ROTATION,
+  MAX_ANGULAR_VELOCITY,
+  VELOCITY_THRESHOLD,
 } from "@/lib/physics";
+
+import { AutoSpinEffect } from "./AutoSpinEffect";
+import type { SpinnerState } from "./spinner-codec";
+import { SpinnerModel } from "./SpinnerModel";
 
 /** Helper to track rotation and count complete spins */
 const trackRotationAndCountSpins = (
@@ -64,9 +66,11 @@ export type InteractiveSpinnerProps = ThreeElements["group"] & {
   isDraggingRef?: MutableRefObject<boolean>;
   /** Visual pulse when auto-spin triggers */
   autoSpinPulse?: boolean;
+  /** Callback to report current velocity (for high-speed renderer) */
+  onVelocityChange?: (velocity: number) => void;
 };
 
-const InteractiveSpinner = ({
+export const InteractiveSpinner = ({
   setSpinCount,
   computeState,
   onGrab,
@@ -77,6 +81,7 @@ const InteractiveSpinner = ({
   rgbLevel = 0,
   isDraggingRef,
   autoSpinPulse = false,
+  onVelocityChange,
   ...props
 }: InteractiveSpinnerProps) => {
   const groupRef = useRef<THREE.Group>(null);
@@ -292,6 +297,8 @@ const InteractiveSpinner = ({
       }
     }
 
+    // Report velocity to parent for high-speed renderer
+    onVelocityChange?.(angularVelocity.current);
   });
 
   return (
@@ -310,5 +317,3 @@ const InteractiveSpinner = ({
 };
 
 InteractiveSpinner.displayName = "InteractiveSpinner";
-
-export default InteractiveSpinner;

@@ -9,7 +9,7 @@
  * All state management is handled by SyncCoordinator and PeerRegistry.
  */
 
-import type { TransportType, TransportState, TransportConfig } from "./types";
+import type { TransportConfig,TransportState, TransportType } from "./types";
 
 /**
  * Transport interface - all transports implement this.

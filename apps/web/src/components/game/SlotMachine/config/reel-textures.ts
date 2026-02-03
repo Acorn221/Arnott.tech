@@ -1,11 +1,13 @@
-import * as THREE from "three";
 import { createLogger } from "@arnott/logger";
+import * as THREE from "three";
+
 import {
-  type Technology,
+  ALL_TECHNOLOGIES,
   BACKEND_TECHNOLOGIES,
-  FRONTEND_TECHNOLOGIES,
   DATABASE_TECHNOLOGIES,
+  FRONTEND_TECHNOLOGIES,
   type ReelCategory,
+  type Technology,
 } from "./technologies";
 
 const log = createLogger("ui:reel-textures");
@@ -44,6 +46,80 @@ export interface ReelState {
 
 const TEXTURE_SIZE = 512;
 const FACES_PER_REEL = 8;
+
+// ============================================================================
+// Texture Pool (Pre-generated textures for performance)
+// ============================================================================
+
+interface PrerenderedTexture {
+  texture: THREE.CanvasTexture;
+}
+
+// Two pools: one for even backgrounds, one for odd backgrounds
+const texturePoolEven = new Map<string, PrerenderedTexture>();
+const texturePoolOdd = new Map<string, PrerenderedTexture>();
+let texturePoolInitialized = false;
+let texturePoolInitializing = false;
+
+// Shared loaded images for texture generation
+let sharedLoadedImages: Map<string, HTMLImageElement> | null = null;
+
+/** Pre-generate all face textures at startup */
+export const initializeTexturePool = async (): Promise<void> => {
+  if (texturePoolInitialized || texturePoolInitializing) return;
+  texturePoolInitializing = true;
+
+  const startTime = performance.now();
+
+  // Load all images first
+  sharedLoadedImages = await preloadImages(ALL_TECHNOLOGIES);
+
+  // Generate textures for each technology (both backgrounds)
+  for (const tech of ALL_TECHNOLOGIES) {
+    // Even background
+    const canvasEven = document.createElement("canvas");
+    canvasEven.width = TEXTURE_SIZE;
+    canvasEven.height = TEXTURE_SIZE;
+    const ctxEven = canvasEven.getContext("2d")!;
+    drawFaceTexture(ctxEven, tech, sharedLoadedImages, 0);
+    const textureEven = new THREE.CanvasTexture(canvasEven);
+    textureEven.anisotropy = 16;
+    textureEven.needsUpdate = true;
+    texturePoolEven.set(tech.name, { texture: textureEven });
+
+    // Odd background
+    const canvasOdd = document.createElement("canvas");
+    canvasOdd.width = TEXTURE_SIZE;
+    canvasOdd.height = TEXTURE_SIZE;
+    const ctxOdd = canvasOdd.getContext("2d")!;
+    drawFaceTexture(ctxOdd, tech, sharedLoadedImages, 1);
+    const textureOdd = new THREE.CanvasTexture(canvasOdd);
+    textureOdd.anisotropy = 16;
+    textureOdd.needsUpdate = true;
+    texturePoolOdd.set(tech.name, { texture: textureOdd });
+  }
+
+  texturePoolInitialized = true;
+  texturePoolInitializing = false;
+
+  const elapsed = performance.now() - startTime;
+  log.info("Texture pool initialized", {
+    count: ALL_TECHNOLOGIES.length * 2,
+    timeMs: elapsed.toFixed(1),
+  });
+};
+
+/** Check if texture pool is initialized */
+export const isTexturePoolInitialized = (): boolean => texturePoolInitialized;
+
+/** Get pre-rendered texture for a technology */
+const getPrerenderedTexture = (
+  tech: Technology,
+  faceIndex: number,
+): PrerenderedTexture | undefined => {
+  const pool = faceIndex % 2 === 0 ? texturePoolEven : texturePoolOdd;
+  return pool.get(tech.name);
+};
 
 // ============================================================================
 // Texture Creation
@@ -88,22 +164,19 @@ const drawFaceTexture = (
   ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
 
   // Icon - draw with original colors
-  // Compensate for face aspect ratio (wider than tall on octagon)
   const img = loadedImages.get(tech.id);
   if (img) {
-    // Draw icon taller than wide to counteract horizontal stretch on face
     const iconWidth = TEXTURE_SIZE * 0.5;
-    const iconHeight = TEXTURE_SIZE * 0.65; // Taller to compensate for stretch
+    const iconHeight = TEXTURE_SIZE * 0.65;
 
     ctx.save();
     ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE / 2);
-    // Rotate 90 degrees for correct orientation on cylinder face
     ctx.rotate(-Math.PI / 2);
     ctx.drawImage(img, -iconWidth / 2, -iconHeight / 2, iconWidth, iconHeight);
     ctx.restore();
   }
 
-  // Tech name at bottom - white text
+  // Tech name at bottom
   ctx.save();
   ctx.translate(TEXTURE_SIZE / 2, TEXTURE_SIZE - 40);
   ctx.rotate(-Math.PI / 2);
@@ -134,9 +207,12 @@ const createFaceMaterial = (
   texture.anisotropy = 16;
   texture.needsUpdate = true;
 
-  // Create material - fully matte for readability
+  // Use pre-rendered texture if available
+  const prerendered = getPrerenderedTexture(tech, faceIndex);
+
+  // Create material
   const material = new THREE.MeshStandardMaterial({
-    map: texture,
+    map: prerendered?.texture ?? texture,
     metalness: 0,
     roughness: 1,
     color: 0xffffff,
@@ -154,13 +230,11 @@ const createFaceMaterial = (
 
 /**
  * Pick technologies ensuring unique icons.
- * When multiple techs share an icon, randomly pick one (preferring TS over JS).
  */
 const pickUniqueIconTechs = (
   techs: Technology[],
   count: number,
 ): Technology[] => {
-  // Group techs by their icon URL
   const byIcon = new Map<string, Technology[]>();
   for (const tech of techs) {
     const existing = byIcon.get(tech.icon) || [];
@@ -168,27 +242,22 @@ const pickUniqueIconTechs = (
     byIcon.set(tech.icon, existing);
   }
 
-  // For each icon group, pick one randomly (slightly prefer TS variants)
   const candidates: Technology[] = [];
   for (const group of byIcon.values()) {
     if (group.length === 1) {
       candidates.push(group[0]);
     } else {
-      // Prefer TS variants slightly (70% chance if both exist)
       const tsVariant = group.find((t) => t.id.endsWith("-ts"));
       const jsVariant = group.find((t) => t.id.endsWith("-js"));
 
       if (tsVariant && jsVariant) {
-        // Has both TS and JS - randomly pick with TS preference
         candidates.push(Math.random() < 0.7 ? tsVariant : jsVariant);
       } else {
-        // Just pick randomly from the group
         candidates.push(group[Math.floor(Math.random() * group.length)]);
       }
     }
   }
 
-  // Shuffle and pick requested count
   const shuffled = [...candidates].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 };
@@ -197,7 +266,6 @@ const pickUniqueIconTechs = (
 export const createReelTextureManager = async (
   category: ReelCategory,
 ): Promise<ReelTextureManager> => {
-  // Get all techs for this category
   let allTechs: Technology[];
   switch (category) {
     case "backend":
@@ -213,13 +281,9 @@ export const createReelTextureManager = async (
       throw new Error(`Unknown category: ${category as string}`);
   }
 
-  // Pick 8 techs with unique icons
   const currentTechs = pickUniqueIconTechs(allTechs, FACES_PER_REEL);
-
-  // Preload images
   const loadedImages = await preloadImages(allTechs);
 
-  // Create face materials
   const faces = currentTechs.map((tech, i) =>
     createFaceMaterial(tech, loadedImages, i),
   );
@@ -241,10 +305,20 @@ export const updateReelFace = (
   const face = manager.faces[faceIndex];
   if (!face) return;
 
-  drawFaceTexture(face.context, tech, manager.loadedImages, faceIndex);
-  face.currentTech = tech;
-  face.texture.needsUpdate = true;
-  manager.currentTechs[faceIndex] = tech;
+  // Use pre-rendered texture if available (swap reference - no canvas ops)
+  const prerendered = getPrerenderedTexture(tech, faceIndex);
+  if (prerendered) {
+    face.material.map = prerendered.texture;
+    face.material.needsUpdate = true;
+    face.currentTech = tech;
+    manager.currentTechs[faceIndex] = tech;
+  } else {
+    // Fallback: draw texture (happens before pool is initialized)
+    drawFaceTexture(face.context, tech, manager.loadedImages, faceIndex);
+    face.currentTech = tech;
+    face.texture.needsUpdate = true;
+    manager.currentTechs[faceIndex] = tech;
+  }
 };
 
 /** Get a random tech that's not currently displayed and has a unique icon */
@@ -254,18 +328,15 @@ export const getRandomUnusedTech = (
   const usedIds = new Set(manager.currentTechs.map((t) => t.id));
   const usedIcons = new Set(manager.currentTechs.map((t) => t.icon));
 
-  // Filter to techs not used AND with unique icons
   const unused = manager.allTechs.filter(
     (t) => !usedIds.has(t.id) && !usedIcons.has(t.icon),
   );
 
   if (unused.length === 0) {
-    // Fallback: just avoid same ID
     const fallback = manager.allTechs.filter((t) => !usedIds.has(t.id));
     if (fallback.length > 0) {
       return fallback[Math.floor(Math.random() * fallback.length)];
     }
-    // Last resort: return any random tech
     return manager.allTechs[
       Math.floor(Math.random() * manager.allTechs.length)
     ];
@@ -291,10 +362,6 @@ export const getTechAtFace = (
 
 /**
  * Detect which face is at front by checking world Z positions.
- * Uses bounding box center since face groups are at same origin.
- * The face with highest Z is facing the camera.
- * @param faceObjects - Map of faceIndex (0-7) to THREE.Object3D
- * @returns The index (0-7) of the face at front
  */
 export const detectFrontFaceByPosition = (
   faceObjects: Map<number, THREE.Object3D>,
@@ -303,10 +370,8 @@ export const detectFrontFaceByPosition = (
   let frontFaceIndex = 0;
 
   faceObjects.forEach((obj, faceIndex) => {
-    // Ensure world matrix is up to date after rotation
     obj.updateMatrixWorld(true);
 
-    // Get bounding box center in world coordinates
     const bbox = new THREE.Box3().setFromObject(obj);
     const center = new THREE.Vector3();
     bbox.getCenter(center);
@@ -322,15 +387,11 @@ export const detectFrontFaceByPosition = (
 
 /**
  * Calculate which face is currently at the front based on rotation angle.
- * Note: For final result detection, use detectFrontFaceByPosition instead.
- * This angle-based calculation is still used for getHiddenFaces during spin animation.
  */
 const getFrontFaceIndex = (angle: number): number => {
   const radiansPerFace = (Math.PI * 2) / FACES_PER_REEL;
-  // Normalize angle to 0-2π range
   const normalizedAngle =
     ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  // Calculate raw face index
   const rawIndex = Math.round(normalizedAngle / radiansPerFace);
   const calculatedIndex = (FACES_PER_REEL - rawIndex) % FACES_PER_REEL;
   return calculatedIndex;
@@ -341,7 +402,6 @@ export const getHiddenFaces = (angle: number): number[] => {
   const frontFace = getFrontFaceIndex(angle);
   const hidden: number[] = [];
 
-  // Faces 3-5 positions away from front are hidden (back of cylinder)
   for (let offset = 3; offset <= 5; offset++) {
     hidden.push((frontFace + offset) % FACES_PER_REEL);
   }

@@ -1,1 +1,1 @@
-export { useSyncRoom, type UseSyncRoomOptions, type UseSyncRoomReturn, type PeerInfo, type RemoteTransport } from "./useSyncRoom";
+export { type PeerInfo, type RemoteTransport,useSyncRoom, type UseSyncRoomOptions, type UseSyncRoomReturn } from "./useSyncRoom";

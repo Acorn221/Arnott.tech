@@ -1,16 +1,18 @@
 import { XyzTransition } from "@animxyz/react";
-import { AiFillGithub, AiFillChrome } from "react-icons/ai";
-import { ImFirefox } from "react-icons/im";
-import { BiLinkExternal } from "react-icons/bi";
-import ReactGA from "react-ga4";
-import { useEffect, useState } from "react";
 import { createLogger } from "@arnott/logger";
-import Text from "@/misc/Text";
+import { useEffect, useState } from "react";
+import ReactGA from "react-ga4";
+import { AiFillChrome,AiFillGithub } from "react-icons/ai";
+import { BiLinkExternal } from "react-icons/bi";
+import { GiArchiveResearch } from "react-icons/gi";
+import { ImFirefox } from "react-icons/im";
+
+import { TechStackSlotMachine } from "@/components/game/SlotMachine";
+import { Text } from "@/misc/Text";
+
+import { CrashProjectCard } from "../CrashMyPc/ProjectCard";
 
 const log = createLogger("ui:projects");
-import TechStackSlotMachine from "@/components/game/SlotMachine";
-import { CrashProjectCard } from "../Crash-My-Pc/ProjectCard";
-import { GiArchiveResearch } from "react-icons/gi";
 
 const txt = Text.home.projects;
 
@@ -23,7 +25,7 @@ const openLink = (link: string) => {
   window.open(link, "_blank");
 };
 
-const Projects = () => {
+export const Projects = () => {
   const [referrerSource, setReferrerSource] = useState<string | null>(null);
 
   useEffect(() => {
@@ -142,5 +144,3 @@ const Projects = () => {
     </div>
   );
 };
-
-export default Projects;

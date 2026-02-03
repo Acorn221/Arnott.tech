@@ -1,16 +1,17 @@
-import type { FC } from "react";
 import { useLocation } from "react-router-dom";
+
 import { useAppSelector } from "@/store/hooks";
 import {
-  selectShopUnlocked,
   selectAllUpgradesMaxed,
   selectIsUpgradeMaxed,
+  selectShopUnlocked,
   selectUpgradeLevel,
 } from "@/store/slices/gameSlice";
-import { UPGRADES } from "./upgrades";
-import UpgradeButton from "./UpgradeButton";
 
-export const Shop: FC = () => {
+import { UpgradeButton } from "./UpgradeButton";
+import { UPGRADES } from "./upgrades";
+
+export const Shop = () => {
   const location = useLocation();
   const isStimulationPage = location.pathname === "/stimulation-spinner";
 
@@ -18,7 +19,6 @@ export const Shop: FC = () => {
   const allMaxed = useAppSelector(selectAllUpgradesMaxed);
   const bearingMaxed = useAppSelector(selectIsUpgradeMaxed("bearingUpgrade"));
   const gamblingLevel = useAppSelector(selectUpgradeLevel("gamblingMode"));
-  const gamblingMaxed = useAppSelector(selectIsUpgradeMaxed("gamblingMode"));
   const stimulationMaxed = useAppSelector(selectIsUpgradeMaxed("stimulationMode"));
 
   if (!shopUnlocked) return null;
@@ -71,5 +71,3 @@ export const Shop: FC = () => {
     </div>
   );
 };
-
-export default Shop;

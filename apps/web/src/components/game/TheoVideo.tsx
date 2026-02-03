@@ -1,5 +1,3 @@
-import type { FC } from "react";
-
 // Videos per level (level 1, 2, 3)
 const THEO_VIDEOS = [
   "mMQCLQTky34", // Level 1: Original rant
@@ -16,9 +14,12 @@ interface TheoVideoProps {
  * Shows all unlocked videos tiled horizontally
  * Autoplays muted
  */
-const TheoVideo: FC<TheoVideoProps> = ({ level = 1 }) => {
+export const TheoVideo = ({ level = 1 }: TheoVideoProps) => {
   // Get videos to show (all up to current level)
-  const videosToShow = THEO_VIDEOS.slice(0, Math.min(level, THEO_VIDEOS.length));
+  const videosToShow = THEO_VIDEOS.slice(
+    0,
+    Math.min(level, THEO_VIDEOS.length),
+  );
 
   // Calculate size based on number of videos
   const videoWidth = level === 1 ? 480 : level === 2 ? 380 : 320;
@@ -32,7 +33,9 @@ const TheoVideo: FC<TheoVideoProps> = ({ level = 1 }) => {
         </span>
         <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
       </div>
-      <div style={{ display: "flex", flexDirection: "row", flexWrap: "nowrap" }}>
+      <div
+        style={{ display: "flex", flexDirection: "column", flexWrap: "nowrap" }}
+      >
         {videosToShow.map((videoId, index) => (
           <iframe
             key={videoId}
@@ -50,5 +53,3 @@ const TheoVideo: FC<TheoVideoProps> = ({ level = 1 }) => {
     </div>
   );
 };
-
-export default TheoVideo;

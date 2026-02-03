@@ -1,13 +1,13 @@
 import {
   Cog,
-  Rainbow,
   Dices,
-  Sparkles,
+  type LucideIcon,
+  Rainbow,
   RotateCw,
   Share2,
-  Tv,
+  Sparkles,
   TrendingUp,
-  type LucideIcon,
+  Tv,
 } from "lucide-react";
 
 export interface UpgradeDefinition {

@@ -10,18 +10,19 @@
  */
 
 import { createLogger } from "@arnott/logger";
+
+import {
+  RECONNECT_BACKOFF_MULTIPLIER,
+  RECONNECT_INITIAL_DELAY_MS,
+  RECONNECT_MAX_DELAY_MS,
+  WEBRTC_CONNECTION_TIMEOUT_MS,
+} from "../config";
 import type { ITransport } from "../interfaces/transport";
 import {
   SYNC_ROOM_ID,
-  type TransportState,
   type TransportConfig,
+  type TransportState,
 } from "../interfaces/types";
-import {
-  RECONNECT_INITIAL_DELAY_MS,
-  RECONNECT_MAX_DELAY_MS,
-  RECONNECT_BACKOFF_MULTIPLIER,
-  WEBRTC_CONNECTION_TIMEOUT_MS,
-} from "../config";
 
 const log = createLogger("sync:signaling");
 const rtcLog = createLogger("sync:webrtc");

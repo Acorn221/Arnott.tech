@@ -1,52 +1,36 @@
-import { type FC, useRef, useCallback, Suspense } from "react";
+import { type ThreeElements, useFrame, useThree } from "@react-three/fiber";
+import { Suspense, useCallback, useEffect,useRef } from "react";
 import type * as THREE from "three";
 import { type Group } from "three";
-import { useFrame, type ThreeElements, useThree } from "@react-three/fiber";
 
-import { useSlotMachine } from "./SlotMachineContext";
-import SlotMachineModel from "./slot-machine-model";
-import { useSlotMachineHandle } from "./useSlotMachineHandle";
-import TechLabels from "./TechLabels";
+import {
+  BUTTON,
+  REEL,
+  RUMBLE,
+  SOUND,
+  SPINNER_NAMES,
+} from "./config/animation-constants";
 import {
   getHiddenFaces,
   getRandomUnusedTech,
   updateReelFace,
 } from "./config/reel-textures";
+import { useSlotMachine } from "./SlotMachineContext";
+import { SlotMachineModel } from "./SlotMachineModel";
 import { soundManager } from "./sounds";
-
-// Rumble configuration
-const RUMBLE_DURATION = 0.5;
-const RUMBLE_INTENSITY = 0.02;
-const RUMBLE_FREQUENCY = 6;
-
-// Reel animation constants
-const GEOMETRY_FACES = 8;
-const FRICTION = 0.92;
-const MIN_VELOCITY = 0.5;
-const SWAP_INTERVAL = 0.3;
-// Offset to center faces (360/8/2 = 22.5 degrees = π/8 radians)
-const FACE_ALIGNMENT_OFFSET = Math.PI / 8;
-
-// Share button animation
-const SHARE_BUTTON_PRESS_DEPTH = 0.0006; // Deeper press for more satisfying click
-const SHARE_BUTTON_PRESS_DURATION = 0.08; // Snappier press
-
-const SPINNER_NAMES = [
-  "slot-spinner-1",
-  "slot-spinner-2",
-  "slot-spinner-3",
-] as const;
+import { TechLabels } from "./TechLabels";
+import { useSlotMachineHandle } from "./useSlotMachineHandle";
 
 type InteractiveSlotMachineProps = ThreeElements["group"] & {
   scale: number;
   position: [number, number, number];
 };
 
-const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
+export const InteractiveSlotMachine = ({
   scale,
   position,
   ...props
-}) => {
+}: InteractiveSlotMachineProps) => {
   const groupRef = useRef<Group>(null);
   const {
     startGame,
@@ -74,20 +58,23 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
   // Indicator animation state
   const indicatorTimeRef = useRef(0);
+  const indicatorFrameSkip = useRef(0);
+  const settledHueRef = useRef(0);
 
   // Button animation state (both buttons RGB cycle)
   const buttonGlowTime = useRef(0);
   const spinButtonBaseZ = useRef<number | null>(null);
   const spinButtonPressProgress = useRef(0);
   const isSpinButtonPressed = useRef(false);
+  const spinButtonDimmed = useRef(false);
   const shareButtonBaseZ = useRef<number | null>(null);
   const shareButtonPressProgress = useRef(0);
   const isShareButtonPressed = useRef(false);
+  const shareButtonDimmed = useRef(false);
 
   // Sound effect state
   const prevPhasesRef = useRef<string[]>(["stopped", "stopped", "stopped"]);
   const clickTimerRef = useRef(0);
-  const CLICK_INTERVAL = 0.08; // Time between clicks during spin
 
   const triggerRumble = useCallback(() => {
     isRumblingRef.current = true;
@@ -184,6 +171,14 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     handlePointerOut();
   }, [gl, handlePointerOut]);
 
+  // Cache settled hue when result changes (Optimization 3)
+  useEffect(() => {
+    if (lastResult) {
+      const { score } = lastResult.score;
+      settledHueRef.current = score > 70 ? 0.33 : score > 40 ? 0.12 : 0;
+    }
+  }, [lastResult]);
+
   // Main animation loop - handles reels, rumble, and cursor
   useFrame((_, delta) => {
     const managers = reelManagersRef.current;
@@ -203,7 +198,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (managers && state.phase === "spinning") {
         swapTimersRef.current[i] += delta;
 
-        if (swapTimersRef.current[i] >= SWAP_INTERVAL) {
+        if (swapTimersRef.current[i] >= REEL.SWAP_INTERVAL) {
           swapTimersRef.current[i] = 0;
 
           const hiddenFaces = getHiddenFaces(state.angle);
@@ -223,13 +218,13 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (state.phase === "spinning") {
         state.angle += state.velocity * delta;
       } else if (state.phase === "decelerating") {
-        state.velocity *= FRICTION;
+        state.velocity *= REEL.FRICTION;
         state.angle += state.velocity * delta;
-        if (state.velocity < MIN_VELOCITY) {
+        if (state.velocity < REEL.MIN_VELOCITY) {
           state.phase = "settling";
         }
       } else if (state.phase === "settling") {
-        const radiansPerFace = (Math.PI * 2) / GEOMETRY_FACES;
+        const radiansPerFace = (Math.PI * 2) / REEL.GEOMETRY_FACES;
         const nearestSlot =
           Math.round(state.angle / radiansPerFace) * radiansPerFace;
         const diff = state.angle - nearestSlot;
@@ -243,7 +238,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         }
       }
 
-      spinner.rotation.x = -state.angle + FACE_ALIGNMENT_OFFSET;
+      spinner.rotation.x = -state.angle + REEL.FACE_ALIGNMENT_OFFSET;
 
       // Play stop sound when reel transitions to stopped
       if (state.phase === "stopped" && prevPhasesRef.current[i] !== "stopped") {
@@ -255,7 +250,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     // Play clicking sounds during spin
     if (isSpinningRef.current) {
       clickTimerRef.current += delta;
-      if (clickTimerRef.current >= CLICK_INTERVAL) {
+      if (clickTimerRef.current >= SOUND.CLICK_INTERVAL) {
         clickTimerRef.current = 0;
         soundManager.playReelClick();
       }
@@ -273,7 +268,12 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     // Indicator animation
     // Note: Keep emissiveIntensity above bloom threshold (0.3) to prevent flash
     const indicators = indicatorMaterialsRef.current;
-    if (indicators.length > 0) {
+    // Optimization 2: Skip frames for idle/settled states (subtle animations)
+    indicatorFrameSkip.current++;
+    const shouldUpdateIndicators =
+      isSpinningRef.current || indicatorFrameSkip.current % 2 === 0;
+
+    if (indicators.length > 0 && shouldUpdateIndicators) {
       indicatorTimeRef.current += delta;
       const t = indicatorTimeRef.current;
 
@@ -289,14 +289,8 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           mat.color.setHSL(hue, 1, 0.5);
         });
       } else if (lastResult) {
-        // Settled state - glow based on score
-        const { score } = lastResult.score;
-        let hue = 0; // Red (low score)
-        if (score > 70) {
-          hue = 0.33; // Green
-        } else if (score > 40) {
-          hue = 0.12; // Orange
-        }
+        // Settled state - glow based on score (Optimization 3: use cached hue)
+        const hue = settledHueRef.current;
         indicators.forEach((mat) => {
           const pulse = 0.5 + Math.sin(t * 1.2) * 0.15; // Range: 0.35-0.65
           mat.emissiveIntensity = pulse;
@@ -316,8 +310,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     }
 
     // RGB button animations - BOTH are share buttons, only glow when there's a result
-    buttonGlowTime.current += delta;
-    const rgbTime = buttonGlowTime.current;
+    // Optimization 4: Only update button animations when there's a result or press animation
     const hasResult = lastResult !== null;
 
     // LEFT SHARE BUTTON - RGB cycle
@@ -328,22 +321,30 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         spinButtonBaseZ.current = spinButton.position.z;
       }
 
-      if (hasResult && !isSpinButtonPressed.current) {
-        // RGB rainbow cycle (toned down)
-        const hue = (rgbTime * 0.3) % 1;
-        const pulse = 0.8 + Math.sin(rgbTime * 4) * 0.4;
-        spinButtonMaterial.material.emissive.setHSL(hue, 0.9, 0.4);
-        spinButtonMaterial.material.color.setHSL(hue, 0.7, 0.3);
-        spinButtonMaterial.material.emissiveIntensity = pulse;
-      } else if (!hasResult) {
-        // Dim when no result
+      if (hasResult) {
+        // Reset dimmed flag when we have a result
+        spinButtonDimmed.current = false;
+
+        if (!isSpinButtonPressed.current) {
+          // RGB rainbow cycle (toned down)
+          buttonGlowTime.current += delta;
+          const rgbTime = buttonGlowTime.current;
+          const hue = (rgbTime * 0.3) % 1;
+          const pulse = 0.8 + Math.sin(rgbTime * 4) * 0.4;
+          spinButtonMaterial.material.emissive.setHSL(hue, 0.9, 0.4);
+          spinButtonMaterial.material.color.setHSL(hue, 0.7, 0.3);
+          spinButtonMaterial.material.emissiveIntensity = pulse;
+        }
+      } else if (!spinButtonDimmed.current) {
+        // Dim when no result - only set once
         spinButtonMaterial.material.emissiveIntensity = 0;
         spinButtonMaterial.material.color.set("#1a1a1a");
+        spinButtonDimmed.current = true;
       }
 
       // Press animation
       if (isSpinButtonPressed.current) {
-        spinButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
+        spinButtonPressProgress.current += delta / BUTTON.PRESS_DURATION;
         if (spinButtonPressProgress.current >= 1.5) {
           isSpinButtonPressed.current = false;
           spinButtonPressProgress.current = 0;
@@ -353,7 +354,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           const release = Math.max(0, spinButtonPressProgress.current - 1) * 2;
           const depth = press * (1 - release);
           spinButton.position.z =
-            spinButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+            spinButtonBaseZ.current + BUTTON.PRESS_DEPTH * depth;
           spinButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }
@@ -367,22 +368,29 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         shareButtonBaseZ.current = shareButton.position.z;
       }
 
-      if (hasResult && !isShareButtonPressed.current) {
-        // RGB rainbow cycle - offset by 0.5 for opposite colors (toned down)
-        const hue = (rgbTime * 0.3 + 0.5) % 1;
-        const pulse = 0.8 + Math.sin(rgbTime * 4) * 0.4;
-        shareButtonMaterial.material.emissive.setHSL(hue, 0.9, 0.4);
-        shareButtonMaterial.material.color.setHSL(hue, 0.7, 0.3);
-        shareButtonMaterial.material.emissiveIntensity = pulse;
-      } else if (!hasResult) {
-        // Dim when no result
+      if (hasResult) {
+        // Reset dimmed flag when we have a result
+        shareButtonDimmed.current = false;
+
+        if (!isShareButtonPressed.current) {
+          // RGB rainbow cycle - offset by 0.5 for opposite colors (toned down)
+          const rgbTime = buttonGlowTime.current;
+          const hue = (rgbTime * 0.3 + 0.5) % 1;
+          const pulse = 0.8 + Math.sin(rgbTime * 4) * 0.4;
+          shareButtonMaterial.material.emissive.setHSL(hue, 0.9, 0.4);
+          shareButtonMaterial.material.color.setHSL(hue, 0.7, 0.3);
+          shareButtonMaterial.material.emissiveIntensity = pulse;
+        }
+      } else if (!shareButtonDimmed.current) {
+        // Dim when no result - only set once
         shareButtonMaterial.material.emissiveIntensity = 0;
         shareButtonMaterial.material.color.set("#1a1a1a");
+        shareButtonDimmed.current = true;
       }
 
       // Press animation
       if (isShareButtonPressed.current) {
-        shareButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
+        shareButtonPressProgress.current += delta / BUTTON.PRESS_DURATION;
         if (shareButtonPressProgress.current >= 1.5) {
           isShareButtonPressed.current = false;
           shareButtonPressProgress.current = 0;
@@ -392,7 +400,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           const release = Math.max(0, shareButtonPressProgress.current - 1) * 2;
           const depth = press * (1 - release);
           shareButton.position.z =
-            shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+            shareButtonBaseZ.current + BUTTON.PRESS_DEPTH * depth;
           shareButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }
@@ -403,7 +411,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
     rumbleTimeRef.current += delta;
 
-    if (rumbleTimeRef.current >= RUMBLE_DURATION) {
+    if (rumbleTimeRef.current >= RUMBLE.DURATION) {
       isRumblingRef.current = false;
       groupRef.current.position.set(...basePosition.current);
       groupRef.current.rotation.set(0, 0, 0);
@@ -411,10 +419,10 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     }
 
     // Bell curve intensity (slow -> fast -> slow)
-    const progress = rumbleTimeRef.current / RUMBLE_DURATION;
+    const progress = rumbleTimeRef.current / RUMBLE.DURATION;
     const bellCurve = Math.sin(progress * Math.PI);
-    const time = rumbleTimeRef.current * RUMBLE_FREQUENCY;
-    const intensity = RUMBLE_INTENSITY * bellCurve;
+    const time = rumbleTimeRef.current * RUMBLE.FREQUENCY;
+    const intensity = RUMBLE.INTENSITY * bellCurve;
 
     // Apply shake
     const offsetX = Math.sin(time * 4.7) * intensity;
@@ -449,5 +457,3 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     </group>
   );
 };
-
-export default InteractiveSlotMachine;

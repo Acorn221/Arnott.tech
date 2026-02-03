@@ -1,15 +1,16 @@
 import * as THREE from "three";
+
+import {
+  type AnimatedGlowBorderMaterial,
+  createAnimatedGlowBorder,
+} from "./display-border-material";
 import {
   createAnimatedDisplayPlate,
   type DynamicDisplayPlate,
 } from "./display-plate";
 import {
-  createAnimatedGlowBorder,
-  type AnimatedGlowBorderMaterial,
-} from "./display-border-material";
-import {
-  createAnimatedFaceplate,
   type AnimatedFaceplateMaterial,
+  createAnimatedFaceplate,
 } from "./faceplate-material";
 import { type ShareButtonMaterial } from "./SlotMachineContext";
 

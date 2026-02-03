@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { encodeGameState, decodeGameState } from "../stateCodec";
+import { describe, expect,it } from "vitest";
+
+import { decodeGameState,encodeGameState } from "../stateCodec";
 
 describe("stateCodec", () => {
   describe("encodeGameState", () => {

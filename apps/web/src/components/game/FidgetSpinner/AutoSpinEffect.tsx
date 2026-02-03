@@ -1,5 +1,5 @@
-import { useRef, useMemo, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
+import { type MutableRefObject,useMemo, useRef } from "react";
 import * as THREE from "three";
 
 interface AutoSpinEffectProps {
@@ -16,7 +16,7 @@ const PARTICLE_LIFETIME = 0.4; // seconds
  * Wind/burst effect that plays when auto-spin triggers
  * Creates speed lines that spiral outward from the spinner
  */
-const AutoSpinEffect = ({ active, parentRef }: AutoSpinEffectProps) => {
+export const AutoSpinEffect = ({ active, parentRef }: AutoSpinEffectProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const particlesRef = useRef<THREE.InstancedMesh>(null);
   const startTimeRef = useRef(PARTICLE_LIFETIME + 1); // Start past lifetime so no animation on load
@@ -131,5 +131,3 @@ const AutoSpinEffect = ({ active, parentRef }: AutoSpinEffectProps) => {
     </group>
   );
 };
-
-export default AutoSpinEffect;

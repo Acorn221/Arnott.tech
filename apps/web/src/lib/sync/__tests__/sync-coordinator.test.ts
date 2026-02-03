@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { SyncCoordinator, type CoordinatorState } from "../sync-coordinator";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { type CoordinatorState,SyncCoordinator } from "../sync-coordinator";
 
 // Mock BroadcastChannel
 class MockBroadcastChannel {
@@ -192,14 +193,14 @@ describe("SyncCoordinator", () => {
       const postMessageSpy = vi.spyOn(syncChannel, "postMessage");
 
       const data = new TextEncoder().encode("hello");
-      coordinator.broadcast(data.buffer as ArrayBuffer);
+      coordinator.broadcast(data.buffer);
 
       expect(postMessageSpy).toHaveBeenCalledTimes(1);
     });
 
     it("does not send when disconnected", () => {
       const data = new TextEncoder().encode("hello");
-      coordinator.broadcast(data.buffer as ArrayBuffer);
+      coordinator.broadcast(data.buffer);
 
       // No channels should exist
       expect(MockBroadcastChannel.instances.filter((ch) => ch.name.startsWith("sync-")).length).toBe(0);
@@ -215,7 +216,7 @@ describe("SyncCoordinator", () => {
 
       // Send a message
       const data = new TextEncoder().encode("hello from self");
-      coordinator.broadcast(data.buffer as ArrayBuffer);
+      coordinator.broadcast(data.buffer);
 
       // Simulate receiving our own message back (shouldn't happen with real BC, but testing dedup)
       const syncChannel = MockBroadcastChannel.instances.find((ch) => ch.name === "sync-spinner")!;
@@ -426,7 +427,7 @@ describe("SyncCoordinator", () => {
       postMessageSpy.mockClear();
 
       const data = new TextEncoder().encode("to peer");
-      coordinator.sendTo("peer-123", data.buffer as ArrayBuffer);
+      coordinator.sendTo("peer-123", data.buffer);
 
       // Should send (BroadcastChannel broadcasts everything, but coordinator routes)
       expect(postMessageSpy).toHaveBeenCalled();
@@ -440,7 +441,7 @@ describe("SyncCoordinator", () => {
       postMessageSpy.mockClear();
 
       const data = new TextEncoder().encode("to unknown");
-      coordinator.sendTo("unknown-peer", data.buffer as ArrayBuffer);
+      coordinator.sendTo("unknown-peer", data.buffer);
 
       expect(postMessageSpy).not.toHaveBeenCalled();
     });
@@ -480,7 +481,7 @@ describe("SyncCoordinator", () => {
       };
 
       const message = new TextEncoder().encode("hello from coord1");
-      coord1.broadcast(message.buffer as ArrayBuffer);
+      coord1.broadcast(message.buffer);
 
       // Wait for async delivery
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -503,8 +504,8 @@ describe("SyncCoordinator", () => {
       // Send messages to trigger peer discovery
       const msg1 = new TextEncoder().encode("from 1");
       const msg2 = new TextEncoder().encode("from 2");
-      coord1.broadcast(msg1.buffer as ArrayBuffer);
-      coord2.broadcast(msg2.buffer as ArrayBuffer);
+      coord1.broadcast(msg1.buffer);
+      coord2.broadcast(msg2.buffer);
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 

@@ -1,4 +1,4 @@
-const Arrow = (props: {
+export const Arrow = (props: {
   left?: boolean;
   onClick: (e: React.MouseEvent<HTMLDivElement>) => void | Promise<void>;
 }) => {
@@ -29,5 +29,3 @@ const Arrow = (props: {
 Arrow.defaultProps = {
   left: false,
 };
-
-export default Arrow;

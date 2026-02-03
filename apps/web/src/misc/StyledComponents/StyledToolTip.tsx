@@ -3,9 +3,9 @@ import Tooltip, {
   tooltipClasses,
   type TooltipProps,
 } from "@mui/material/Tooltip";
-import type { FC } from "react";
+import type { ComponentType } from "react";
 
-const StyledToolTip: FC<TooltipProps> = styled(
+export const StyledToolTip: ComponentType<TooltipProps> = styled(
   ({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
   ),
@@ -14,5 +14,3 @@ const StyledToolTip: FC<TooltipProps> = styled(
     fontSize: "1.2rem",
   },
 }));
-
-export default StyledToolTip;

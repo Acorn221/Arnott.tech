@@ -1,25 +1,26 @@
+import { BakeShadows,Environment, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
+import { EffectComposer, Vignette } from "@react-three/postprocessing";
 import {
-  type FC,
   type HTMLAttributes,
   Suspense,
-  useState,
-  useRef,
   useCallback,
+  useRef,
+  useState,
 } from "react";
-import { OrbitControls, Environment, BakeShadows } from "@react-three/drei";
-import { EffectComposer, Vignette } from "@react-three/postprocessing";
-import InteractiveSlotMachine from "./interactive-slot-machine";
-import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
-import ShareDialog from "./ShareDialog";
+
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addSpins, spendSpins, selectSpinCount, selectGamblingUnlocked, selectGamblingMultiplier } from "@/store/slices/gameSlice";
-import { SPIN_COST, calculateSpinsWon } from "./config/gambling";
+import { addSpins, selectGamblingMultiplier,selectGamblingUnlocked, selectSpinCount, spendSpins } from "@/store/slices/gameSlice";
+
+import { calculateSpinsWon,SPIN_COST } from "./config/gambling";
+import { InteractiveSlotMachine } from "./InteractiveSlotMachine";
+import { ShareDialog } from "./ShareDialog";
+import { SlotMachineProvider, type SpinResult } from "./SlotMachineContext";
 
 /** Main component with Canvas - Provider is INSIDE Canvas for R3F compatibility */
-const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
+export const TechStackSlotMachine = ({
   ...props
-}) => {
+}: HTMLAttributes<HTMLDivElement>) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
@@ -213,5 +214,3 @@ const TechStackSlotMachine: FC<HTMLAttributes<HTMLDivElement>> = ({
     </div>
   );
 };
-
-export default TechStackSlotMachine;

@@ -1,22 +1,24 @@
-import { type FC, useCallback } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { generateContinueUrl } from "@/lib/stateCodec";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   purchaseUpgrade,
-  selectSpinCount,
-  selectUpgradeLevel,
-  selectUpgradeCost,
   selectIsUpgradeMaxed,
+  selectSpinCount,
+  selectUpgradeCost,
+  selectUpgradeLevel,
   selectUpgrades,
 } from "@/store/slices/gameSlice";
+
 import { getUpgradeById } from "./upgrades";
-import { generateContinueUrl } from "@/lib/stateCodec";
 
 interface UpgradeButtonProps {
   upgradeId: string;
 }
 
-export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
+export const UpgradeButton = ({ upgradeId }: UpgradeButtonProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const spinCount = useAppSelector(selectSpinCount);
@@ -41,11 +43,11 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
           })
           .catch(() => {
             // User cancelled or share failed - fallback to clipboard
-            navigator.clipboard.writeText(url);
+            void navigator.clipboard.writeText(url);
           });
       } else {
         // Fallback for browsers without Share API
-        navigator.clipboard.writeText(url);
+        void navigator.clipboard.writeText(url);
       }
       return;
     }
@@ -63,7 +65,7 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
     // Navigate to stimulation spinner page after purchasing
     if (upgradeId === "stimulationMode") {
       setTimeout(() => {
-        navigate("/stimulation-spinner");
+        void navigate("/stimulation-spinner");
       }, 100);
     }
   }, [dispatch, upgradeId, navigate, spinCount, upgrades]);
@@ -119,5 +121,3 @@ export const UpgradeButton: FC<UpgradeButtonProps> = ({ upgradeId }) => {
     </button>
   );
 };
-
-export default UpgradeButton;

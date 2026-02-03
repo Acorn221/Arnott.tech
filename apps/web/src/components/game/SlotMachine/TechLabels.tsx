@@ -1,7 +1,8 @@
-import { type FC, useRef, useEffect, useMemo } from "react";
 import { Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo,useRef } from "react";
 import type * as THREE from "three";
+
 import { useSlotMachine } from "./SlotMachineContext";
 
 interface FloatingLabelProps {
@@ -14,7 +15,7 @@ interface FloatingLabelProps {
   rotationY?: number; // Base Y rotation to face camera
 }
 
-const FloatingLabel: FC<FloatingLabelProps> = ({
+const FloatingLabel = ({
   text,
   subText,
   position,
@@ -22,7 +23,7 @@ const FloatingLabel: FC<FloatingLabelProps> = ({
   delay,
   visible,
   rotationY = 0,
-}) => {
+}: FloatingLabelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
   const startedRef = useRef(false);
@@ -120,13 +121,13 @@ interface ButtonLabelProps {
   isActive?: boolean;
 }
 
-const ButtonLabel: FC<ButtonLabelProps> = ({
+const ButtonLabel = ({
   text,
   position,
   color,
   activeColor,
   isActive = false,
-}) => {
+}: ButtonLabelProps) => {
   const textRef = useRef<THREE.Mesh>(null);
   const currentColor = isActive && activeColor ? activeColor : color;
 
@@ -148,11 +149,14 @@ const ButtonLabel: FC<ButtonLabelProps> = ({
   );
 };
 
-const TechLabels: FC = () => {
+export const TechLabels = () => {
   const { lastResult, isSpinningRef } = useSlotMachine();
 
   // Don't render if no result or still spinning
-  const showLabels = lastResult && !isSpinningRef.current;
+  const showLabels = useMemo(
+    () => lastResult && !isSpinningRef.current,
+    [lastResult, isSpinningRef],
+  );
 
   // Button label positions (in model space, before rotation)
   // These are approximate - adjust based on actual button positions
@@ -224,5 +228,3 @@ const getColorForScore = (techScore: number) => {
   if (techScore >= 40) return "#F97316"; // Orange
   return "#EF4444"; // Red
 };
-
-export default TechLabels;

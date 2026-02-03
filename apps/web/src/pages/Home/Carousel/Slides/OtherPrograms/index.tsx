@@ -1,26 +1,26 @@
-import { XyzTransitionGroup } from "@animxyz/react";
 
+import { XyzTransitionGroup } from "@animxyz/react";
 import React, { useContext, useEffect, useState } from "react";
-import { OtherProgramsIcons } from "../util/Icons";
+
+import { Text } from "@/misc/Text";
 import { CarouselContext } from "@/pages/Home/Carousel/";
-import Text from "@/misc/Text";
-import Slide from "../Slide";
-import IconContainer from "../util/IconContainer";
+
+import { Slide } from "../Slide";
+import { IconContainer } from "../util/IconContainer";
+import { OtherProgramsIcons } from "../util/Icons";
 
 const txt = Text.home.slides.otherPrograms;
 
 const iconStyles = "h-[12vmin] max-h-[8vh] max-w-[8vmin]";
 
-const OtherPrograms = ({ index }: { index: number }) => {
+export const OtherPrograms = ({ index }: { index: number }) => {
   const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
-    if (!seen) {
-      if (currentSlide === index) {
-        setSeen(true);
-      }
+    if (!seen && currentSlide === index) {
+      setSeen(true);
     }
-  }, [currentSlide]);
+  }, [currentSlide, index, seen]);
 
   return (
     <Slide className="bg-gradient-to-r from-purple-700 to-pink-700 text-white text-3xl">
@@ -52,5 +52,3 @@ const OtherPrograms = ({ index }: { index: number }) => {
     </Slide>
   );
 };
-
-export default OtherPrograms;

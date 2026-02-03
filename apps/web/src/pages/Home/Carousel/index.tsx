@@ -1,8 +1,10 @@
-import React, { useEffect, useState, createContext } from "react";
-import { useKeenSlider } from "keen-slider/react";
 import "./carousel.css";
 import "keen-slider/keen-slider.min.css";
-import Arrow from "./Arrow";
+
+import { useKeenSlider } from "keen-slider/react";
+import React, { createContext,useEffect, useState } from "react";
+
+import { Arrow } from "./Arrow";
 
 const CarouselContext = createContext(0);
 
@@ -12,7 +14,7 @@ export interface CarouselProps {
   slideContainerClass?: string;
 }
 
-const Carousel = ({
+export const Carousel = ({
   children,
   className,
   slideContainerClass,
@@ -103,7 +105,5 @@ const Carousel = ({
     </div>
   );
 };
-
-export default Carousel;
 
 export { CarouselContext };

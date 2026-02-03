@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { AnalyticsEvent } from "./GA";
+
 import LighterFuelLogo from "@/pages/Home/Projects/assets/LighterFuel512.png";
+
+import { AnalyticsEvent } from "./GA";
 
 export const LighterfuelUninstall = () => {
   useEffect(() => {

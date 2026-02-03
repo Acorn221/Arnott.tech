@@ -1,6 +1,7 @@
+import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import type * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
+
 import { useSlotMachine } from "./SlotMachineContext";
 
 // Handle rotation constants
