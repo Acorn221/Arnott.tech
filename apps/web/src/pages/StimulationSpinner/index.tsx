@@ -6,6 +6,7 @@ import { FTXInvestment } from "@/components/game/FTXInvestment";
 import { Shop } from "@/components/game/Shop";
 import { TechStackSlotMachine as SlotMachine } from "@/components/game/SlotMachine";
 import { TheoVideo } from "@/components/game/TheoVideo";
+import { VCMode } from "@/components/game/VCMode";
 import { decodeGameState } from "@/lib/stateCodec";
 import { useAppDispatch,useAppSelector } from "@/store/hooks";
 import {
@@ -15,6 +16,7 @@ import {
   selectStimulationUnlocked,
   selectTheoModeUnlocked,
   selectUpgradeLevel,
+  selectVcModeUnlocked,
 } from "@/store/slices/gameSlice";
 
 export const StimulationSpinner = () => {
@@ -24,8 +26,10 @@ export const StimulationSpinner = () => {
   const theoModeUnlocked = useAppSelector(selectTheoModeUnlocked);
   const theoLevel = useAppSelector(selectUpgradeLevel("theoMode"));
   const ftxModeUnlocked = useAppSelector(selectFtxModeUnlocked);
+  const vcModeUnlocked = useAppSelector(selectVcModeUnlocked);
   const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
   const [ftxClosed, setFtxClosed] = useState(false);
+  const [vcClosed, setVcClosed] = useState(false);
 
   // Check for state param and restore before deciding to redirect
   useEffect(() => {
@@ -71,6 +75,9 @@ export const StimulationSpinner = () => {
         {ftxModeUnlocked && !ftxClosed && (
           <FTXInvestment className="w-full max-w-[400px]" onClose={() => setFtxClosed(true)} />
         )}
+        {vcModeUnlocked && !vcClosed && (
+          <VCMode className="w-full max-w-[400px]" onClose={() => setVcClosed(true)} />
+        )}
         <SlotMachine className="w-full max-w-[500px] h-[350px]" />
         <div className="text-zinc-500 text-sm text-center pb-4">
           Made in London - Inspired by Neal.fun ❤️
@@ -83,6 +90,13 @@ export const StimulationSpinner = () => {
         {theoModeUnlocked && (
           <div className="absolute top-4 left-4 z-10">
             <TheoVideo level={theoLevel} />
+          </div>
+        )}
+
+        {/* VC Mode - full right side */}
+        {vcModeUnlocked && !vcClosed && (
+          <div className="absolute top-4 right-4 bottom-4 z-10 w-[400px]">
+            <VCMode className="h-full" onClose={() => setVcClosed(true)} />
           </div>
         )}
 
@@ -108,10 +122,12 @@ export const StimulationSpinner = () => {
           </div>
         )}
 
-        {/* SlotMachine - bottom right */}
-        <div className="absolute bottom-4 right-4 w-[500px] h-[450px]">
-          <SlotMachine className="w-full h-full" />
-        </div>
+        {/* SlotMachine - bottom right (hidden when VC mode is open) */}
+        {(!vcModeUnlocked || vcClosed) && (
+          <div className="absolute bottom-4 right-4 w-[500px] h-[450px]">
+            <SlotMachine className="w-full h-full" />
+          </div>
+        )}
 
         {/* Footer */}
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-zinc-500 text-sm">

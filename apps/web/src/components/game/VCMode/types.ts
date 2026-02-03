@@ -88,6 +88,7 @@ export interface VCGameState {
 export interface PendingRound {
   startupId: string;
   event: FundingEvent;
+  createdAtDay: number; // Day when this opportunity appeared
   expiresAtDay: number; // Day when this opportunity closes
 }
 

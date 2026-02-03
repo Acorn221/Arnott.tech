@@ -20,6 +20,7 @@ export const Shop = () => {
   const bearingMaxed = useAppSelector(selectIsUpgradeMaxed("bearingUpgrade"));
   const gamblingLevel = useAppSelector(selectUpgradeLevel("gamblingMode"));
   const stimulationMaxed = useAppSelector(selectIsUpgradeMaxed("stimulationMode"));
+  const ftxLevel = useAppSelector(selectUpgradeLevel("ftxMode"));
 
   if (!shopUnlocked) return null;
 
@@ -53,6 +54,10 @@ export const Shop = () => {
     // FTX mode shows alongside auto spin (after stimulation mode is maxed)
     if (upgrade.id === "ftxMode") {
       return isStimulationPage && stimulationMaxed;
+    }
+    // VC mode shows after FTX mode is purchased
+    if (upgrade.id === "vcMode") {
+      return isStimulationPage && ftxLevel > 0;
     }
     // Continue on Desktop only shows on mobile after all upgrades are maxed
     if (upgrade.id === "continueOnDesktop") {

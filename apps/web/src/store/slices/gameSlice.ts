@@ -98,6 +98,8 @@ export const selectTheoModeUnlocked = (state: RootState) =>
   (state.game.upgrades.theoMode ?? 0) > 0;
 export const selectFtxModeUnlocked = (state: RootState) =>
   (state.game.upgrades.ftxMode ?? 0) > 0;
+export const selectVcModeUnlocked = (state: RootState) =>
+  (state.game.upgrades.vcMode ?? 0) > 0;
 export const selectUpgrades = (state: RootState) => state.game.upgrades;
 
 export default gameSlice.reducer;

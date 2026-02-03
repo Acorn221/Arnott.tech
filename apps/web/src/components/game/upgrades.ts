@@ -1,4 +1,5 @@
 import {
+  Briefcase,
   Cog,
   Dices,
   type LucideIcon,
@@ -74,6 +75,14 @@ export const UPGRADES: UpgradeDefinition[] = [
     description: "Sell before the crash!",
     icon: TrendingUp,
     costs: [3000000],
+    effect: (level) => (level > 0 ? 1 : 0),
+  },
+  {
+    id: "vcMode",
+    name: "VC Mode",
+    description: "Become a venture capitalist!",
+    icon: Briefcase,
+    costs: [5000000],
     effect: (level) => (level > 0 ? 1 : 0),
   },
   {
