@@ -153,7 +153,10 @@ export const TechLabels = () => {
   const { lastResult, isSpinningRef } = useSlotMachine();
 
   // Don't render if no result or still spinning
-  const showLabels = lastResult && !isSpinningRef.current;
+  const showLabels = useMemo(
+    () => lastResult && !isSpinningRef.current,
+    [lastResult, isSpinningRef],
+  );
 
   // Button label positions (in model space, before rotation)
   // These are approximate - adjust based on actual button positions

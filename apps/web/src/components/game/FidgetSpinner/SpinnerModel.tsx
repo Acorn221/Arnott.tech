@@ -127,7 +127,7 @@ export const SpinnerModel = ({
         }
       }
     });
-  }, [isXray]);
+  }, [isXray, scene]);
 
   // Apply slight offset animation (synced across tabs via Date.now)
   useFrame(() => {

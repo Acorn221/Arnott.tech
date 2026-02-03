@@ -16,12 +16,10 @@ export const Backend = ({ index }: { index: number }) => {
   const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
-    if (!seen) {
-      if (currentSlide === index) {
-        setSeen(true);
-      }
+    if (!seen && currentSlide === index) {
+      setSeen(true);
     }
-  }, [currentSlide]);
+  }, [currentSlide, index, seen]);
 
   return (
     <Slide className="bg-gradient-to-r from-fuchsia-700 to-blue-700 text-white text-3xl">

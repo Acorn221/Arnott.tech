@@ -17,12 +17,10 @@ export const DevTools = ({ index }: { index: number }) => {
   const currentSlide = useContext(CarouselContext);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
-    if (!seen) {
-      if (currentSlide === index) {
-        setSeen(true);
-      }
+    if (!seen && currentSlide === index) {
+      setSeen(true);
     }
-  }, [currentSlide]);
+  }, [currentSlide, index, seen]);
 
   return (
     <Slide className="bg-gradient-to-r from-blue-700 to-purple-700 text-white text-3xl">

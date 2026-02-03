@@ -55,10 +55,13 @@ export const Home = () => {
     requestEmail();
   });
 
-  const getGmailLink = () =>
-    `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
-      requestEmail(),
-    )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`;
+  const getGmailLink = useCallback(
+    () =>
+      `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(
+        requestEmail(),
+      )}&su=I'm%20here%20from%20a.rno.tt!&tf=cm`,
+    [requestEmail],
+  );
 
   const handleGmailLinkClick = useCallback(() => {
     ReactGA.send({
@@ -68,7 +71,7 @@ export const Home = () => {
       title: document.title,
     });
     window.open(getGmailLink());
-  }, [email, getGmailLink]);
+  }, [getGmailLink]);
 
   const handleLinkedInLinkClick = useCallback(() => {
     ReactGA.send({
@@ -78,7 +81,7 @@ export const Home = () => {
       title: document.title,
     });
     window.open("https://www.linkedin.com/in/james-arnott-341705143/");
-  }, [email]);
+  }, []);
 
   const handleEmailLinkClick = useCallback(() => {
     ReactGA.send({
@@ -88,7 +91,7 @@ export const Home = () => {
       title: document.title,
     });
     window.open(`mailto:${requestEmail()}`);
-  }, [email]);
+  }, [requestEmail]);
 
   return (
     <div className="h-full text-white">
