@@ -5,6 +5,7 @@ import {
   type HTMLAttributes,
   Suspense,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -30,8 +31,23 @@ export const TechStackSlotMachine = ({
   const spinCount = useAppSelector(selectSpinCount);
   const gamblingUnlocked = useAppSelector(selectGamblingUnlocked);
   const gamblingMultiplier = useAppSelector(selectGamblingMultiplier);
+  const prevMultiplierRef = useRef(gamblingMultiplier);
+  const [freeSpinPending, setFreeSpinPending] = useState(false);
 
   const actualSpinCost = SPIN_COST * gamblingMultiplier;
+
+  // Detect when gambling multiplier increases (upgrade purchased)
+  useEffect(() => {
+    if (gamblingMultiplier > prevMultiplierRef.current && gamblingUnlocked) {
+      // Multiplier increased - trigger free spin
+      setFreeSpinPending(true);
+    }
+    prevMultiplierRef.current = gamblingMultiplier;
+  }, [gamblingMultiplier, gamblingUnlocked]);
+
+  const handleFreeSpinConsumed = useCallback(() => {
+    setFreeSpinPending(false);
+  }, []);
 
   const handleAttemptSpin = useCallback(() => {
     if (spinCount < actualSpinCost) return false;
@@ -138,6 +154,8 @@ export const TechStackSlotMachine = ({
           onSpinComplete={gamblingUnlocked ? handleSpinComplete : undefined}
           gamblingEnabled={gamblingUnlocked}
           gamblingMultiplier={gamblingMultiplier}
+          freeSpinPending={freeSpinPending}
+          onFreeSpinConsumed={handleFreeSpinConsumed}
         >
           <Environment files="/empty_warehouse_01_1k.hdr" background={false} />
 

@@ -43,6 +43,13 @@ export const useSlotMachineHandle = ({
   const springBackProgress = useRef(0);
   const isSpringBackActive = useRef(false);
 
+  // Auto-pull animation state
+  const isAutoPulling = useRef(false);
+  const autoPullProgress = useRef(0);
+  const autoPullCallback = useRef<(() => void) | null>(null);
+  const AUTO_PULL_DURATION = 0.4; // seconds to pull down
+  const AUTO_HOLD_DURATION = 0.1; // seconds to hold at max
+
   // Pointer down handler
   const handlePointerDown = useCallback(
     (event: { object: THREE.Object3D; stopPropagation: () => void }) => {
@@ -144,10 +151,50 @@ export const useSlotMachineHandle = ({
     };
   }, [gl, onTrigger]);
 
+  // Trigger automatic handle pull animation
+  // Optional callback overrides the default onTrigger
+  const triggerAutoPull = useCallback((callback?: () => void) => {
+    if (isSpinningRef.current || isAutoPulling.current) return;
+    isAutoPulling.current = true;
+    autoPullProgress.current = 0;
+    autoPullCallback.current = callback ?? null;
+  }, [isSpinningRef]);
+
   // Animation frame
   useFrame((_, delta) => {
     const pivot = handlePivotRef.current;
     if (!pivot) return;
+
+    // Auto-pull animation (programmatic handle pull)
+    if (isAutoPulling.current) {
+      autoPullProgress.current += delta;
+      const totalDuration = AUTO_PULL_DURATION + AUTO_HOLD_DURATION;
+
+      if (autoPullProgress.current < AUTO_PULL_DURATION) {
+        // Pulling down phase - ease out
+        const t = autoPullProgress.current / AUTO_PULL_DURATION;
+        const eased = 1 - Math.pow(1 - t, 3); // ease out cubic
+        handleRotation.current = MAX_HANDLE_ROTATION * eased;
+      } else if (autoPullProgress.current < totalDuration) {
+        // Hold at max
+        handleRotation.current = MAX_HANDLE_ROTATION;
+      } else {
+        // Done - trigger spin and spring back
+        isAutoPulling.current = false;
+        autoPullProgress.current = 0;
+        // Use custom callback if provided, otherwise default onTrigger
+        if (autoPullCallback.current) {
+          autoPullCallback.current();
+          autoPullCallback.current = null;
+        } else {
+          onTrigger?.();
+        }
+        // Start spring-back
+        springBackStartRotation.current = handleRotation.current;
+        springBackProgress.current = 0;
+        isSpringBackActive.current = true;
+      }
+    }
 
     // Spring back animation with overshoot
     if (isSpringBackActive.current && !isDragging.current) {
@@ -194,5 +241,6 @@ export const useSlotMachineHandle = ({
     handlePointerDown,
     handlePointerOver,
     handlePointerOut,
+    triggerAutoPull,
   };
 };

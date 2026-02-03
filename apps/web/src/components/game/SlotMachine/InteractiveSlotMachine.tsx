@@ -34,6 +34,7 @@ export const InteractiveSlotMachine = ({
   const groupRef = useRef<Group>(null);
   const {
     startGame,
+    freeSpinPending,
     isSpinningRef,
     spinnersRef,
     reelManagersRef,
@@ -90,8 +91,19 @@ export const InteractiveSlotMachine = ({
     }
   }, [triggerRumble, startGame]);
 
-  const { handlePointerDown, handlePointerOver, handlePointerOut } =
+  const { handlePointerDown, handlePointerOver, handlePointerOut, triggerAutoPull } =
     useSlotMachineHandle({ onTrigger: handleTrigger });
+
+  // Trigger auto-pull when a free spin is pending
+  useEffect(() => {
+    if (freeSpinPending && !isSpinningRef.current) {
+      // Small delay to let the UI settle after upgrade
+      const timer = setTimeout(() => {
+        triggerAutoPull(); // Uses default onTrigger, which calls startGame (free spin flag is already set)
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [freeSpinPending, isSpinningRef, triggerAutoPull]);
 
   // Check if object is either share button (walk up parent chain)
   const isShareButton = useCallback(

@@ -87,9 +87,11 @@ export interface SlotMachineContextValue {
   isSpinningRef: React.MutableRefObject<boolean>;
   isInitialized: boolean;
   lastResult: SpinResult | null;
+  freeSpinPending: boolean;
 
   // Actions
   startGame: () => boolean;
+  startFreeGame: () => boolean;
   setHandlePivot: (pivot: THREE.Object3D | null) => void;
   setSpinners: (spinners: Record<string, THREE.Object3D>) => void;
   setKnobMaterial: (material: AnimatedGlowBorderMaterial) => void;
@@ -151,6 +153,8 @@ interface SlotMachineProviderProps {
   onSpinComplete?: (score: number) => void;
   gamblingEnabled?: boolean;
   gamblingMultiplier?: number;
+  freeSpinPending?: boolean;
+  onFreeSpinConsumed?: () => void;
 }
 
 export const SlotMachineProvider = ({
@@ -161,6 +165,8 @@ export const SlotMachineProvider = ({
   onSpinComplete,
   gamblingEnabled,
   gamblingMultiplier = 1,
+  freeSpinPending = false,
+  onFreeSpinConsumed,
 }: SlotMachineProviderProps) => {
   // 3D object refs
   const handlePivotRef = useRef<THREE.Object3D | null>(null);
@@ -193,6 +199,7 @@ export const SlotMachineProvider = ({
   const stopTimers = useRef<number[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastResult, setLastResult] = useState<SpinResult | null>(null);
+  const nextSpinIsFreeRef = useRef(false);
 
   // Initialize reel texture managers
   const initializeReels = useCallback(async () => {
@@ -415,8 +422,15 @@ export const SlotMachineProvider = ({
     );
     if (anyReelActive || !reelManagersRef.current) return false;
 
-    // Check if spin is allowed (has enough spins)
-    if (onAttemptSpin && !onAttemptSpin()) {
+    // Check if this is a free spin
+    const isFree = nextSpinIsFreeRef.current;
+    if (isFree) {
+      nextSpinIsFreeRef.current = false;
+      onFreeSpinConsumed?.();
+    }
+
+    // Check if spin is allowed (has enough spins) - skip for free spins
+    if (!isFree && onAttemptSpin && !onAttemptSpin()) {
       // Show insufficient funds feedback
       displayPlateRef.current?.showInsufficientFunds();
       soundManager.playLose();
@@ -463,7 +477,54 @@ export const SlotMachineProvider = ({
     });
 
     return true;
-  }, [stopReel, onAttemptSpin, gamblingMultiplier]);
+  }, [stopReel, onAttemptSpin, gamblingMultiplier, onFreeSpinConsumed]);
+
+  // Start a free game (no cost check) - used for upgrade bonuses
+  const startFreeGame = useCallback((): boolean => {
+    const anyReelActive = reelStatesRef.current.some(
+      (state) => state.phase !== "stopped",
+    );
+    if (anyReelActive || !reelManagersRef.current) return false;
+
+    // Clear existing timers and result
+    stopTimers.current.forEach(clearTimeout);
+    stopTimers.current = [];
+    setLastResult(null);
+
+    // Shuffle reels before starting
+    reelManagersRef.current.forEach((manager) => shuffleReel(manager));
+
+    // Mark as spinning and pause knob glow
+    isSpinningRef.current = true;
+    knobMaterialRef.current?.setPaused(true);
+    faceplateMaterialRef.current?.setSpinning(true);
+
+    // Update display to show spinning
+    displayPlateRef.current?.showSpinning();
+
+    // Reset swap timers
+    swapTimersRef.current = [0, 0, 0];
+
+    // Start all reels
+    reelStatesRef.current.forEach((state) => {
+      state.velocity = SPIN_SPEED + secureRandom() * 3;
+      state.phase = "spinning";
+      state.lastSwappedFace = -1;
+    });
+
+    // Schedule staggered stops
+    const spinDuration = 2000 + secureRandom() * 1500;
+    [0, 1, 2].forEach((reelIndex) => {
+      const delay = spinDuration + reelIndex * STOP_DELAY * 1000;
+      const timer = window.setTimeout(() => stopReel(reelIndex), delay);
+      stopTimers.current.push(timer);
+    });
+
+    // Consume the free spin
+    onFreeSpinConsumed?.();
+
+    return true;
+  }, [stopReel, onFreeSpinConsumed]);
 
   // Initialize on mount
   useEffect(() => {
@@ -477,6 +538,13 @@ export const SlotMachineProvider = ({
       displayPlateRef.current.reset(gamblingEnabled, actualCost);
     }
   }, [gamblingEnabled, gamblingMultiplier, lastResult]);
+
+  // Set the free spin flag when freeSpinPending becomes true
+  useEffect(() => {
+    if (freeSpinPending) {
+      nextSpinIsFreeRef.current = true;
+    }
+  }, [freeSpinPending]);
 
   const value = useMemo<SlotMachineContextValue>(
     () => ({
@@ -497,7 +565,9 @@ export const SlotMachineProvider = ({
       isSpinningRef,
       isInitialized,
       lastResult,
+      freeSpinPending,
       startGame,
+      startFreeGame,
       setHandlePivot,
       setSpinners,
       setKnobMaterial,
@@ -517,7 +587,9 @@ export const SlotMachineProvider = ({
     [
       isInitialized,
       lastResult,
+      freeSpinPending,
       startGame,
+      startFreeGame,
       setHandlePivot,
       setSpinners,
       setKnobMaterial,
