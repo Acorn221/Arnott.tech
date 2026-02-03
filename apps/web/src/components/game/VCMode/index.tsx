@@ -12,8 +12,6 @@ interface VCModeProps {
   onClose?: () => void;
 }
 
-const MAX_INVEST_AMOUNT = 5_000_000;
-const MIN_INVEST_AMOUNT = 100_000;
 const INVEST_STEPS = [100_000, 500_000, 1_000_000, 2_000_000, 5_000_000];
 
 const formatSpins = (n: number): string => {
@@ -38,7 +36,7 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
 
   const hasStarted = useRef(false);
   const [flashingStartup, setFlashingStartup] = useState<string | null>(null);
-  const [investAmount, setInvestAmount] = useState(MAX_INVEST_AMOUNT);
+  const [investAmount, setInvestAmount] = useState(INVEST_STEPS[INVEST_STEPS.length - 1]);
 
   const handleSpinsReturned = useCallback(
     (amount: number) => {
