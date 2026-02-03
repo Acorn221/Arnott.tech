@@ -14,6 +14,13 @@ import {
 
 import { getUpgradeById } from "./upgrades";
 
+const formatCost = (n: number): string => {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(0)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return n.toLocaleString();
+};
+
 interface UpgradeButtonProps {
   upgradeId: string;
 }
@@ -116,7 +123,7 @@ export const UpgradeButton = ({ upgradeId }: UpgradeButtonProps) => {
       <span
         className={`text-xs ${canAfford ? "text-green-400" : "text-red-400"}`}
       >
-        Cost: {cost}
+        Cost: {formatCost(cost)}
       </span>
     </button>
   );

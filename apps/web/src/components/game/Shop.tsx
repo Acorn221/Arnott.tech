@@ -21,6 +21,7 @@ export const Shop = () => {
   const gamblingLevel = useAppSelector(selectUpgradeLevel("gamblingMode"));
   const stimulationMaxed = useAppSelector(selectIsUpgradeMaxed("stimulationMode"));
   const ftxLevel = useAppSelector(selectUpgradeLevel("ftxMode"));
+  const vcLevel = useAppSelector(selectUpgradeLevel("vcMode"));
 
   if (!shopUnlocked) return null;
 
@@ -58,6 +59,10 @@ export const Shop = () => {
     // VC mode shows after FTX mode is purchased
     if (upgrade.id === "vcMode") {
       return isStimulationPage && ftxLevel > 0;
+    }
+    // Final prize shows after VC mode is purchased
+    if (upgrade.id === "finalPrize") {
+      return isStimulationPage && vcLevel > 0;
     }
     // Continue on Desktop only shows on mobile after all upgrades are maxed
     if (upgrade.id === "continueOnDesktop") {

@@ -8,6 +8,7 @@ import {
   Share2,
   Sparkles,
   TrendingUp,
+  Trophy,
   Tv,
 } from "lucide-react";
 
@@ -83,6 +84,14 @@ export const UPGRADES: UpgradeDefinition[] = [
     description: "Become a venture capitalist!",
     icon: Briefcase,
     costs: [5000000],
+    effect: (level) => (level > 0 ? 1 : 0),
+  },
+  {
+    id: "finalPrize",
+    name: "The Final Prize",
+    description: "You've earned it...",
+    icon: Trophy,
+    costs: [100_000_000_000], // 100 billion
     effect: (level) => (level > 0 ? 1 : 0),
   },
   {

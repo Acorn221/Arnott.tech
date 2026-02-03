@@ -5,6 +5,7 @@ import { FidgetSpinner } from "@/components/game/FidgetSpinner";
 import { FTXInvestment } from "@/components/game/FTXInvestment";
 import { Shop } from "@/components/game/Shop";
 import { TechStackSlotMachine as SlotMachine } from "@/components/game/SlotMachine";
+import { StopProcrastinating } from "@/components/game/StopProcrastinating";
 import { TheoVideo } from "@/components/game/TheoVideo";
 import { VCMode } from "@/components/game/VCMode";
 import { decodeGameState } from "@/lib/stateCodec";
@@ -27,6 +28,7 @@ export const StimulationSpinner = () => {
   const theoLevel = useAppSelector(selectUpgradeLevel("theoMode"));
   const ftxModeUnlocked = useAppSelector(selectFtxModeUnlocked);
   const vcModeUnlocked = useAppSelector(selectVcModeUnlocked);
+  const finalPrizeLevel = useAppSelector(selectUpgradeLevel("finalPrize"));
   const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
   const [ftxClosed, setFtxClosed] = useState(false);
   const [vcClosed, setVcClosed] = useState(false);
@@ -54,6 +56,11 @@ export const StimulationSpinner = () => {
   // Redirect to home if not unlocked
   if (!isUnlocked) {
     return <Navigate to="/" replace />;
+  }
+
+  // Show stop procrastinating overlay when final prize is purchased
+  if (finalPrizeLevel > 0) {
+    return <StopProcrastinating />;
   }
 
   return (

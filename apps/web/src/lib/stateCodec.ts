@@ -12,6 +12,8 @@ const UPGRADE_ORDER = [
   "autoSpin",
   "theoMode",
   "ftxMode",
+  "vcMode",
+  "finalPrize",
 ];
 
 // Simple checksum - not secure, just deters casual editing
