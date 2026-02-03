@@ -143,17 +143,15 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
       </div>
 
       {/* Portfolio */}
-      {state.totalInvested > 0 && (
-        <div className="px-3 py-2 border-b border-zinc-700/50 flex justify-between items-center">
-          <div>
-            <p className="text-lg font-bold">{formatSpins(Math.floor(totalValue))}</p>
-            <p className="text-xs text-zinc-500">Invested: {formatSpins(state.totalInvested)}</p>
-          </div>
-          <p className={`font-medium ${gainLossPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {gainLossPercent >= 0 ? '+' : ''}{gainLossPercent.toFixed(0)}%
-          </p>
+      <div className="px-3 py-2 border-b border-zinc-700/50 flex justify-between items-center">
+        <div>
+          <p className="text-lg font-bold">{formatSpins(Math.floor(totalValue))}</p>
+          <p className="text-xs text-zinc-500">Invested: {formatSpins(state.totalInvested)}</p>
         </div>
-      )}
+        <p className={`font-medium ${gainLossPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          {gainLossPercent >= 0 ? '+' : ''}{gainLossPercent.toFixed(0)}%
+        </p>
+      </div>
 
       {/* Pending rounds - grows to fill space */}
       <div className="px-3 py-2 border-b border-zinc-700/50 overflow-hidden flex-1 flex flex-col">
