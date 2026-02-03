@@ -19,7 +19,6 @@ export const Shop = () => {
   const allMaxed = useAppSelector(selectAllUpgradesMaxed);
   const bearingMaxed = useAppSelector(selectIsUpgradeMaxed("bearingUpgrade"));
   const gamblingLevel = useAppSelector(selectUpgradeLevel("gamblingMode"));
-  const gamblingMaxed = useAppSelector(selectIsUpgradeMaxed("gamblingMode"));
   const stimulationMaxed = useAppSelector(selectIsUpgradeMaxed("stimulationMode"));
 
   if (!shopUnlocked) return null;
