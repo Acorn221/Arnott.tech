@@ -13,8 +13,8 @@ interface HighSpeedRendererProps {
 }
 
 /**
- * High-speed renderer - monitors speed for future frame caching optimization.
- * Currently a placeholder that tracks high-speed state.
+ * High-speed renderer - monitors speed and tracks high-speed state.
+ * Provides hysteresis to prevent flickering at the speed threshold.
  */
 export const HighSpeedRenderer: FC<HighSpeedRendererProps> = ({
   children,
@@ -34,7 +34,7 @@ export const HighSpeedRenderer: FC<HighSpeedRendererProps> = ({
       isHighSpeed.current = false;
     }
 
-    // TODO: Implement frame caching when isHighSpeed.current is true
+    // High-speed state tracked for potential future optimizations
   });
 
   return <>{children}</>;

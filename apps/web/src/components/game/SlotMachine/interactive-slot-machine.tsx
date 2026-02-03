@@ -12,30 +12,14 @@ import {
   getRandomUnusedTech,
   updateReelFace,
 } from "./config/reel-textures";
+import {
+  RUMBLE,
+  REEL,
+  BUTTON,
+  SOUND,
+  SPINNER_NAMES,
+} from "./config/animation-constants";
 import { soundManager } from "./sounds";
-
-// Rumble configuration
-const RUMBLE_DURATION = 0.5;
-const RUMBLE_INTENSITY = 0.02;
-const RUMBLE_FREQUENCY = 6;
-
-// Reel animation constants
-const GEOMETRY_FACES = 8;
-const FRICTION = 0.92;
-const MIN_VELOCITY = 0.5;
-const SWAP_INTERVAL = 0.4; // Optimization 5: Increased from 0.3 for fewer texture swaps
-// Offset to center faces (360/8/2 = 22.5 degrees = π/8 radians)
-const FACE_ALIGNMENT_OFFSET = Math.PI / 8;
-
-// Share button animation
-const SHARE_BUTTON_PRESS_DEPTH = 0.0006; // Deeper press for more satisfying click
-const SHARE_BUTTON_PRESS_DURATION = 0.08; // Snappier press
-
-const SPINNER_NAMES = [
-  "slot-spinner-1",
-  "slot-spinner-2",
-  "slot-spinner-3",
-] as const;
 
 type InteractiveSlotMachineProps = ThreeElements["group"] & {
   scale: number;
@@ -91,7 +75,6 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
   // Sound effect state
   const prevPhasesRef = useRef<string[]>(["stopped", "stopped", "stopped"]);
   const clickTimerRef = useRef(0);
-  const CLICK_INTERVAL = 0.08; // Time between clicks during spin
 
   const triggerRumble = useCallback(() => {
     isRumblingRef.current = true;
@@ -215,7 +198,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (managers && state.phase === "spinning") {
         swapTimersRef.current[i] += delta;
 
-        if (swapTimersRef.current[i] >= SWAP_INTERVAL) {
+        if (swapTimersRef.current[i] >= REEL.SWAP_INTERVAL) {
           swapTimersRef.current[i] = 0;
 
           const hiddenFaces = getHiddenFaces(state.angle);
@@ -235,13 +218,13 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
       if (state.phase === "spinning") {
         state.angle += state.velocity * delta;
       } else if (state.phase === "decelerating") {
-        state.velocity *= FRICTION;
+        state.velocity *= REEL.FRICTION;
         state.angle += state.velocity * delta;
-        if (state.velocity < MIN_VELOCITY) {
+        if (state.velocity < REEL.MIN_VELOCITY) {
           state.phase = "settling";
         }
       } else if (state.phase === "settling") {
-        const radiansPerFace = (Math.PI * 2) / GEOMETRY_FACES;
+        const radiansPerFace = (Math.PI * 2) / REEL.GEOMETRY_FACES;
         const nearestSlot =
           Math.round(state.angle / radiansPerFace) * radiansPerFace;
         const diff = state.angle - nearestSlot;
@@ -255,7 +238,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
         }
       }
 
-      spinner.rotation.x = -state.angle + FACE_ALIGNMENT_OFFSET;
+      spinner.rotation.x = -state.angle + REEL.FACE_ALIGNMENT_OFFSET;
 
       // Play stop sound when reel transitions to stopped
       if (state.phase === "stopped" && prevPhasesRef.current[i] !== "stopped") {
@@ -267,7 +250,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     // Play clicking sounds during spin
     if (isSpinningRef.current) {
       clickTimerRef.current += delta;
-      if (clickTimerRef.current >= CLICK_INTERVAL) {
+      if (clickTimerRef.current >= SOUND.CLICK_INTERVAL) {
         clickTimerRef.current = 0;
         soundManager.playReelClick();
       }
@@ -361,7 +344,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
       // Press animation
       if (isSpinButtonPressed.current) {
-        spinButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
+        spinButtonPressProgress.current += delta / BUTTON.PRESS_DURATION;
         if (spinButtonPressProgress.current >= 1.5) {
           isSpinButtonPressed.current = false;
           spinButtonPressProgress.current = 0;
@@ -371,7 +354,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           const release = Math.max(0, spinButtonPressProgress.current - 1) * 2;
           const depth = press * (1 - release);
           spinButton.position.z =
-            spinButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+            spinButtonBaseZ.current + BUTTON.PRESS_DEPTH * depth;
           spinButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }
@@ -407,7 +390,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
       // Press animation
       if (isShareButtonPressed.current) {
-        shareButtonPressProgress.current += delta / SHARE_BUTTON_PRESS_DURATION;
+        shareButtonPressProgress.current += delta / BUTTON.PRESS_DURATION;
         if (shareButtonPressProgress.current >= 1.5) {
           isShareButtonPressed.current = false;
           shareButtonPressProgress.current = 0;
@@ -417,7 +400,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
           const release = Math.max(0, shareButtonPressProgress.current - 1) * 2;
           const depth = press * (1 - release);
           shareButton.position.z =
-            shareButtonBaseZ.current + SHARE_BUTTON_PRESS_DEPTH * depth;
+            shareButtonBaseZ.current + BUTTON.PRESS_DEPTH * depth;
           shareButtonMaterial.material.emissiveIntensity = 1.8;
         }
       }
@@ -428,7 +411,7 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
 
     rumbleTimeRef.current += delta;
 
-    if (rumbleTimeRef.current >= RUMBLE_DURATION) {
+    if (rumbleTimeRef.current >= RUMBLE.DURATION) {
       isRumblingRef.current = false;
       groupRef.current.position.set(...basePosition.current);
       groupRef.current.rotation.set(0, 0, 0);
@@ -436,10 +419,10 @@ const InteractiveSlotMachine: FC<InteractiveSlotMachineProps> = ({
     }
 
     // Bell curve intensity (slow -> fast -> slow)
-    const progress = rumbleTimeRef.current / RUMBLE_DURATION;
+    const progress = rumbleTimeRef.current / RUMBLE.DURATION;
     const bellCurve = Math.sin(progress * Math.PI);
-    const time = rumbleTimeRef.current * RUMBLE_FREQUENCY;
-    const intensity = RUMBLE_INTENSITY * bellCurve;
+    const time = rumbleTimeRef.current * RUMBLE.FREQUENCY;
+    const intensity = RUMBLE.INTENSITY * bellCurve;
 
     // Apply shake
     const offsetX = Math.sin(time * 4.7) * intensity;

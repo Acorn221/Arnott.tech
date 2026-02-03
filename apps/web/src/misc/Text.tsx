@@ -5,7 +5,7 @@ import LinkedOutLogo from "@/pages/Home/Projects/assets/LinkedOutLogo.png";
 import DeathMailLogo from "@/pages/Home/Projects/assets/DeathMail.svg";
 import CubeAuthn from "@/pages/Home/Projects/assets/CubeAuthn.png";
 
-export type textType = {
+export type TextType = {
   home: {
     title: string;
     intro: {
@@ -67,7 +67,7 @@ export type textType = {
     };
   };
 };
-const Text: textType = {
+const Text: TextType = {
   home: {
     title: "James Arnott",
     intro: {
