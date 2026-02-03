@@ -24,4 +24,18 @@ export default defineConfig({
   define: {
     _global: {},
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Three.js and 3D rendering (largest)
+          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          // React core
+          react: ["react", "react-dom", "react-router-dom"],
+          // Redux state management
+          redux: ["@reduxjs/toolkit", "react-redux"],
+        },
+      },
+    },
+  },
 });
