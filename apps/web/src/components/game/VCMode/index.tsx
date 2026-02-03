@@ -12,7 +12,9 @@ interface VCModeProps {
   onClose?: () => void;
 }
 
-const INVEST_AMOUNT = 5_000_000;
+const MAX_INVEST_AMOUNT = 5_000_000;
+const MIN_INVEST_AMOUNT = 100_000;
+const INVEST_STEPS = [100_000, 500_000, 1_000_000, 2_000_000, 5_000_000];
 
 const formatSpins = (n: number): string => {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
@@ -36,6 +38,7 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
 
   const hasStarted = useRef(false);
   const [flashingStartup, setFlashingStartup] = useState<string | null>(null);
+  const [investAmount, setInvestAmount] = useState(MAX_INVEST_AMOUNT);
 
   const handleSpinsReturned = useCallback(
     (amount: number) => {
@@ -105,7 +108,7 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
   }, [state.gameOver, handleExit]);
 
   const doInvest = (startupId: string) => {
-    invest(startupId, INVEST_AMOUNT);
+    invest(startupId, investAmount);
     // Flash animation
     setFlashingStartup(startupId);
     setTimeout(() => setFlashingStartup(null), 300);
@@ -119,7 +122,7 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
       <div className="px-3 py-2 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between">
         <span className="text-sm font-medium">{formatDate(currentDate)}</span>
         <div className="flex items-center gap-1">
-          {[1, 2, 4].map((s) => (
+          {[0.25, 0.5, 1, 2, 4].map((s) => (
             <button
               key={s}
               onClick={() => setSpeed(s)}
@@ -171,7 +174,12 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
             const isExpired = daysRemaining <= 0;
             const isUrgent = timeRemainingPercent < 0.3;
 
-            const canAfford = spinCount >= INVEST_AMOUNT && !isExpired;
+            // Calculate max investable amount
+            const existingInvestment = state.investments.find((inv) => inv.startupId === pr.startupId);
+            const alreadyInvested = existingInvestment?.amountInvested ?? 0;
+            const roundRemaining = pr.event.raised - alreadyInvested;
+            const maxInvestable = Math.min(investAmount, roundRemaining, spinCount);
+            const canInvest = maxInvestable > 0 && !isExpired;
             const isFlashing = flashingStartup === pr.startupId;
 
             return (
@@ -191,14 +199,14 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
                       <>
                         <button
                           onClick={() => doInvest(pr.startupId)}
-                          disabled={!canAfford}
+                          disabled={!canInvest}
                           className={`px-3 py-1 text-xs rounded font-medium ${
-                            canAfford
+                            canInvest
                               ? 'bg-green-600 hover:bg-green-500'
                               : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
                           }`}
                         >
-                          5M
+                          {formatSpins(maxInvestable)}
                         </button>
                         <button
                           onClick={() => passOnRound(pr.startupId)}
@@ -251,11 +259,31 @@ export const VCMode = ({ className, onClose }: VCModeProps) => {
         </div>
       )}
 
+      {/* Invest amount slider */}
+      <div className="px-3 py-2 border-t border-zinc-700/50">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-zinc-400">Invest Amount</span>
+          <span className="text-xs font-medium">{formatSpins(investAmount)}</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={INVEST_STEPS.length - 1}
+          value={INVEST_STEPS.indexOf(investAmount)}
+          onChange={(e) => setInvestAmount(INVEST_STEPS[parseInt(e.target.value)])}
+          className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+        />
+        <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
+          <span>100K</span>
+          <span>5M</span>
+        </div>
+      </div>
+
       {/* Exit button */}
       <div className="px-3 py-2 border-t border-zinc-700/50">
         <button
           onClick={handleExit}
-          className="w-full py-1.5 text-xs bg-zinc-700 hover:bg-zinc-600 rounded font-medium"
+          className="w-full py-1.5 text-xs bg-red-600 hover:bg-red-500 rounded font-medium"
         >
           Exit {portfolioValue > 0 ? `(+${formatSpins(Math.floor(portfolioValue))})` : ''}
         </button>
