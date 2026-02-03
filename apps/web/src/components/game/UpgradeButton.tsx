@@ -65,7 +65,7 @@ export const UpgradeButton = ({ upgradeId }: UpgradeButtonProps) => {
     // Navigate to stimulation spinner page after purchasing
     if (upgradeId === "stimulationMode") {
       setTimeout(() => {
-        navigate("/stimulation-spinner");
+        void navigate("/stimulation-spinner");
       }, 100);
     }
   }, [dispatch, upgradeId, navigate, spinCount, upgrades]);
