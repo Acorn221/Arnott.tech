@@ -73,10 +73,9 @@ export const Text: TextType = {
     intro: {
       title: "About Me",
       text:
-        "I'm a Computer Science Graduate and Software Developer " +
-        "from Royal Holloway, University of London. " +
+        "I'm the founder of AmIBeingPwned " +
         "I like doing everything to push startups forward, " +
-        "with a focus on full stack development, along with a variety of machine learning and cryptography based projects",
+        "with a focus on cybersecurity, along with a variety of machine learning and cryptography based projects",
     },
     projects: {
       title: "Here are some of my projects.",
